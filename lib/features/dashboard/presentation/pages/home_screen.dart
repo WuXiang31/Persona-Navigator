@@ -7,6 +7,7 @@ import '../../../../core/widgets/p5_background.dart';
 import '../../../../core/widgets/p5_bottom_nav.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/stat_radar_chart.dart';
+import '../../domain/logic/xp_engine.dart';
 
 /// The main dashboard screen displaying stats, Morgana, and quests.
 class HomeScreen extends ConsumerWidget {
@@ -15,6 +16,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardState = ref.watch(dashboardProvider);
+    final xpCalculator = ref.watch(xpCalculatorProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
@@ -28,7 +30,10 @@ class HomeScreen extends ConsumerWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                child: StatRadarChart(stats: dashboardState.stats),
+                child: StatRadarChart(
+                  stats: dashboardState.stats,
+                  xpCalculator: xpCalculator,
+                ),
               ),
             ),
             

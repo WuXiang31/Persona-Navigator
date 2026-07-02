@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/p5_clipper.dart';
 import '../../domain/models/quest_model.dart';
@@ -9,19 +10,21 @@ class QuestCard extends StatelessWidget {
   final Quest quest;
   final int currentXpForStat;
   final VoidCallback onComplete;
+  final IXpCalculator xpCalculator;
 
   const QuestCard({
     super.key,
     required this.quest,
     required this.currentXpForStat,
     required this.onComplete,
+    required this.xpCalculator,
   });
 
   @override
   Widget build(BuildContext context) {
     final statName = quest.targetStat.name.toUpperCase();
-    final progress = XpEngine.calculateProgress(currentXpForStat);
-    final currentRank = XpEngine.calculateRank(currentXpForStat);
+    final progress = xpCalculator.calculateProgress(currentXpForStat);
+    final currentRank = xpCalculator.calculateRank(currentXpForStat);
     // Dummy UserStats to get rank label
     final rankLabel = const UserStats().getRankLabel(quest.targetStat.name, currentRank).toUpperCase();
     

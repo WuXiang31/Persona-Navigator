@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/models/user_stats.dart';
+import '../../domain/logic/xp_engine.dart';
 import '../../../../core/widgets/p5_clipper.dart';
 
 class StatRadarChart extends StatelessWidget {
   final UserStats stats;
+  final IXpCalculator xpCalculator;
 
-  const StatRadarChart({super.key, required this.stats});
+  const StatRadarChart({super.key, required this.stats, required this.xpCalculator});
 
   @override
   Widget build(BuildContext context) {
@@ -24,34 +26,37 @@ class StatRadarChart extends StatelessWidget {
               // The Radar Chart Custom Paint
               CustomPaint(
                 size: Size(size * 0.6, size * 0.6), // The web is smaller to leave room for labels
-                painter: _RadarChartPainter(stats: stats),
+                painter: _RadarChartPainter(
+                  stats: stats,
+                  xpCalculator: xpCalculator,
+                ),
               ),
               
               // We could add the labels as positioned widgets here
               // For a true responsive layout, we place them around the center.
               _buildLabel(
                 context, 
-                label: 'KNOWLEDGE\n${stats.getRankLabel('knowledge', stats.knowledge)}', 
+                label: 'KNOWLEDGE\n${stats.getRankLabel('knowledge', xpCalculator.calculateRank(stats.knowledgeXp))}', 
                 alignment: const Alignment(0, -1.0),
               ),
               _buildLabel(
                 context, 
-                label: 'GUTS\n${stats.getRankLabel('guts', stats.guts)}', 
+                label: 'GUTS\n${stats.getRankLabel('guts', xpCalculator.calculateRank(stats.gutsXp))}', 
                 alignment: const Alignment(1.0, -0.2),
               ),
               _buildLabel(
                 context, 
-                label: 'PROFICIENCY\n${stats.getRankLabel('proficiency', stats.proficiency)}', 
+                label: 'PROFICIENCY\n${stats.getRankLabel('proficiency', xpCalculator.calculateRank(stats.proficiencyXp))}', 
                 alignment: const Alignment(0.8, 0.8),
               ),
               _buildLabel(
                 context, 
-                label: 'KINDNESS\n${stats.getRankLabel('kindness', stats.kindness)}', 
+                label: 'KINDNESS\n${stats.getRankLabel('kindness', xpCalculator.calculateRank(stats.kindnessXp))}', 
                 alignment: const Alignment(-0.8, 0.8),
               ),
               _buildLabel(
                 context, 
-                label: 'CHARM\n${stats.getRankLabel('charm', stats.charm)}', 
+                label: 'CHARM\n${stats.getRankLabel('charm', xpCalculator.calculateRank(stats.charmXp))}', 
                 alignment: const Alignment(-1.0, -0.2),
               ),
             ],
@@ -91,8 +96,9 @@ class StatRadarChart extends StatelessWidget {
 
 class _RadarChartPainter extends CustomPainter {
   final UserStats stats;
+  final IXpCalculator xpCalculator;
 
-  _RadarChartPainter({required this.stats});
+  _RadarChartPainter({required this.stats, required this.xpCalculator});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -133,18 +139,18 @@ class _RadarChartPainter extends CustomPainter {
 
     // Draw the actual stat polygon
     final statValues = [
-      stats.knowledge,
-      stats.guts,
-      stats.proficiency,
-      stats.kindness,
-      stats.charm
+      xpCalculator.calculateRank(stats.knowledgeXp),
+      xpCalculator.calculateRank(stats.gutsXp),
+      xpCalculator.calculateRank(stats.proficiencyXp),
+      xpCalculator.calculateRank(stats.kindnessXp),
+      xpCalculator.calculateRank(stats.charmXp)
     ];
 
     final path = Path();
     for (int i = 0; i < sides; i++) {
       final rank = statValues[i];
       // Map rank (1-5) to radius ratio (0.2-1.0)
-      final radius = (maxRadius / UserStats.maxRank) * rank;
+      final radius = (maxRadius / 5) * rank;
       final angle = (math.pi * 2 / sides) * i - (math.pi / 2);
       
       final point = Offset(

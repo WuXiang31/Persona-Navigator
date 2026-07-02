@@ -19,16 +19,6 @@ class UserStats {
     this.charmXp = 0,
   });
 
-  /// The max possible rank for a stat.
-  static const int maxRank = 5;
-
-  // Computed Ranks
-  int get knowledge => XpEngine.calculateRank(knowledgeXp);
-  int get guts => XpEngine.calculateRank(gutsXp);
-  int get proficiency => XpEngine.calculateRank(proficiencyXp);
-  int get kindness => XpEngine.calculateRank(kindnessXp);
-  int get charm => XpEngine.calculateRank(charmXp);
-
   UserStats copyWith({
     int? knowledgeXp,
     int? gutsXp,
@@ -46,7 +36,6 @@ class UserStats {
   }
 
   /// Helper to get a label based on the rank.
-  /// Standard P5 labels for Knowledge, for example.
   String getRankLabel(String statName, int rank) {
     switch (statName.toLowerCase()) {
       case 'knowledge':

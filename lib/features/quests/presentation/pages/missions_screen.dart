@@ -6,50 +6,16 @@ import '../../../../core/widgets/p5_background.dart';
 import '../../domain/models/quest_model.dart';
 import '../widgets/quest_card.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
+import '../../../dashboard/domain/logic/xp_engine.dart';
+import '../providers/quests_provider.dart';
 
-class MissionsScreen extends ConsumerStatefulWidget {
+class MissionsScreen extends ConsumerWidget {
   const MissionsScreen({super.key});
 
   @override
-  ConsumerState<MissionsScreen> createState() => _MissionsScreenState();
-}
-
-class _MissionsScreenState extends ConsumerState<MissionsScreen> {
-  // Dummy Quests for MVP
-  List<Quest> activeQuests = [
-    const Quest(
-      id: 'q1',
-      title: 'Study at the Diner',
-      targetStat: StatType.knowledge,
-      xpReward: 50,
-      timeSlot: TimeSlot.afternoon,
-    ),
-    const Quest(
-      id: 'q2',
-      title: 'Intense Gym Session',
-      targetStat: StatType.guts,
-      xpReward: 75,
-      timeSlot: TimeSlot.evening,
-    ),
-    const Quest(
-      id: 'q3',
-      title: 'Help a Friend Move',
-      targetStat: StatType.kindness,
-      xpReward: 100,
-      timeSlot: TimeSlot.morning,
-    ),
-  ];
-
-  void _completeQuest(int index) {
-    setState(() {
-      activeQuests[index] = activeQuests[index].copyWith(isCompleted: true);
-    });
-    // In a real app, this would dispatch an event to the DashboardNotifier to increase XP
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dashboardState = ref.watch(dashboardProvider);
+    final questsState = ref.watch(questsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
@@ -76,38 +42,43 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
             
             // Quest List
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 100),
-                itemCount: activeQuests.length,
-                itemBuilder: (context, index) {
-                  final quest = activeQuests[index];
-                  // Find current XP for this stat
-                  int currentXp = 0;
-                  switch (quest.targetStat) {
-                    case StatType.knowledge:
-                      currentXp = dashboardState.stats.knowledgeXp;
-                      break;
-                    case StatType.guts:
-                      currentXp = dashboardState.stats.gutsXp;
-                      break;
-                    case StatType.proficiency:
-                      currentXp = dashboardState.stats.proficiencyXp;
-                      break;
-                    case StatType.kindness:
-                      currentXp = dashboardState.stats.kindnessXp;
-                      break;
-                    case StatType.charm:
-                      currentXp = dashboardState.stats.charmXp;
-                      break;
-                  }
+              child: questsState.isLoading 
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primaryRed))
+                : ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 100),
+                    itemCount: questsState.activeQuests.length,
+                    itemBuilder: (context, index) {
+                      final quest = questsState.activeQuests[index];
+                      // Find current XP for this stat
+                      int currentXp = 0;
+                      switch (quest.targetStat) {
+                        case StatType.knowledge:
+                          currentXp = dashboardState.stats.knowledgeXp;
+                          break;
+                        case StatType.guts:
+                          currentXp = dashboardState.stats.gutsXp;
+                          break;
+                        case StatType.proficiency:
+                          currentXp = dashboardState.stats.proficiencyXp;
+                          break;
+                        case StatType.kindness:
+                          currentXp = dashboardState.stats.kindnessXp;
+                          break;
+                        case StatType.charm:
+                          currentXp = dashboardState.stats.charmXp;
+                          break;
+                      }
 
-                  return QuestCard(
-                    quest: quest,
-                    currentXpForStat: currentXp,
-                    onComplete: () => _completeQuest(index),
-                  );
-                },
-              ),
+                      return QuestCard(
+                        quest: quest,
+                        currentXpForStat: currentXp,
+                        xpCalculator: ref.watch(xpCalculatorProvider),
+                        onComplete: () {
+                          ref.read(questsProvider.notifier).completeQuest(quest.id);
+                        },
+                      );
+                    },
+                  ),
             ),
           ],
         ),
