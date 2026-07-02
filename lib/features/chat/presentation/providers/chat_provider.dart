@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../domain/models/chat_message.dart';
 import '../../domain/services/chat_service.dart';
+import '../../domain/repositories/api_key_repository.dart';
 import '../../../dashboard/domain/logic/xp_engine.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../quests/presentation/providers/quests_provider.dart';
@@ -29,7 +30,7 @@ class ChatState {
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
       hasApiKey: hasApiKey ?? this.hasApiKey,
-      errorMessage: errorMessage, // We want to be able to nullify it
+      errorMessage: errorMessage, // Intentionally nullable to allow clearing
     );
   }
 }
@@ -38,18 +39,26 @@ class ChatNotifier extends Notifier<ChatState> {
   @override
   ChatState build() {
     _checkApiKey();
-    return const ChatState(
-      messages: [
-        // Hardcoded initial greeting
-      ],
-    );
+    return const ChatState();
   }
 
   Future<void> _checkApiKey() async {
     final service = ref.read(chatServiceProvider);
     final hasKey = await service.hasApiKey();
     
-    // If they have a key, we add Morgana's greeting
+    // Validate key length - if it's corrupted/truncated, clear it
+    if (hasKey) {
+      final repo = ref.read(apiKeyRepositoryProvider);
+      final key = await repo.getApiKey();
+      if (key != null && key.length < 10) {
+        debugPrint('[Morgana] Stored key is corrupted (${key.length} chars). Clearing.');
+        await repo.clearApiKey();
+        state = state.copyWith(hasApiKey: false, messages: []);
+        return;
+      }
+    }
+
+    // If they have a valid key, add Morgana's greeting
     List<ChatMessage> initialMessages = [];
     if (hasKey) {
       initialMessages.add(
@@ -80,22 +89,31 @@ class ChatNotifier extends Notifier<ChatState> {
       errorMessage: null,
     );
 
-    // 2. Fetch Context
+    // 2. Fetch Context from other providers
     final dashboardState = ref.read(dashboardProvider);
     final xpCalculator = ref.read(xpCalculatorProvider);
     final questsState = ref.read(questsProvider);
     final service = ref.read(chatServiceProvider);
 
-    // 3. Convert our Message history into Gemini's Content history
-    final history = state.messages
-        .where((m) => m != userMsg) // Don't include the one we just sent in history
-        .map((m) => m.role == MessageRole.user 
-            ? Content.text(m.text) 
-            : Content.model([TextPart(m.text)]))
-        .toList();
+    // 3. Build conversation history as simple Maps for the REST API.
+    // We skip the hardcoded greeting (index 0) and the message we just added,
+    // because the REST API expects history to alternate user/model.
+    final history = <Map<String, dynamic>>[];
+    for (final m in state.messages) {
+      if (m == userMsg) continue; // Skip current message (sent separately)
+      if (state.messages.indexOf(m) == 0 && m.role == MessageRole.morgana) continue; // Skip greeting
+      
+      history.add({
+        'role': m.role == MessageRole.user ? 'user' : 'model',
+        'parts': [{'text': m.text}],
+      });
+    }
+
+    debugPrint('[Morgana] Sending message: "$text"');
+    debugPrint('[Morgana] History length: ${history.length}');
 
     try {
-      // 4. Send to Gemini
+      // 4. Send to Gemini REST API
       final responseText = await service.sendMessage(
         text,
         history,
@@ -105,16 +123,20 @@ class ChatNotifier extends Notifier<ChatState> {
         questsState.activeQuests,
       );
 
+      debugPrint('[Morgana] Response received: "$responseText"');
+
       // 5. Add Morgana's response to UI
       final morganaMsg = ChatMessage(text: responseText, role: MessageRole.morgana);
       state = state.copyWith(
         messages: [...state.messages, morganaMsg],
         isLoading: false,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[Morgana] ERROR: $e');
+      debugPrint('[Morgana] Stack: $stackTrace');
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Failed to communicate with Morgana. Is your API key valid?',
+        errorMessage: 'Failed to reach Morgana: ${e.toString()}',
       );
     }
   }

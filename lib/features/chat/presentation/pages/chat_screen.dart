@@ -82,20 +82,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildChatList(ChatState chatState) {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: chatState.messages.length + (chatState.isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == chatState.messages.length && chatState.isLoading) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: CircularProgressIndicator(color: AppColors.primaryRed),
+    return Column(
+      children: [
+        // Error banner
+        if (chatState.errorMessage != null)
+          Container(
+            width: double.infinity,
+            color: Colors.red.shade900,
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              chatState.errorMessage!,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-          );
-        }
+          ),
+        // Messages
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: chatState.messages.length + (chatState.isLoading ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == chatState.messages.length && chatState.isLoading) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: CircularProgressIndicator(color: AppColors.primaryRed),
+                  ),
+                );
+              }
 
         final message = chatState.messages[index];
         final isUser = message.role == MessageRole.user;
@@ -122,6 +137,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         );
       },
+    ),
+        ),
+      ],
     );
   }
 

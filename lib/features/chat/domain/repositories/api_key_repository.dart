@@ -13,13 +13,14 @@ class SharedPrefsApiKeyRepository implements IApiKeyRepository {
   @override
   Future<String?> getApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyPref);
+    final key = prefs.getString(_keyPref);
+    return key?.trim(); // Trim whitespace to prevent auth errors
   }
 
   @override
   Future<void> saveApiKey(String key) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyPref, key);
+    await prefs.setString(_keyPref, key.trim()); // Trim on save too
   }
 
   @override
