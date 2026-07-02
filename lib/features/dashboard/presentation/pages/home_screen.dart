@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/p5_clipper.dart';
 import '../../../../core/widgets/p5_background.dart';
@@ -123,7 +124,9 @@ class HomeScreen extends ConsumerWidget {
               child: Material(
                 color: AppColors.primaryWhite,
                 child: InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    context.push('/missions');
+                  },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Center(

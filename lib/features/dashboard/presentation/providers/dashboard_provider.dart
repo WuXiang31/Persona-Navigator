@@ -29,11 +29,11 @@ class DashboardNotifier extends Notifier<DashboardState> {
     // Initial dummy state for MVP
     return const DashboardState(
       stats: UserStats(
-        knowledge: 5,
-        guts: 4,
-        proficiency: 3,
-        kindness: 2,
-        charm: 1,
+        knowledgeXp: 1200, // Rank 5
+        gutsXp: 750,       // Rank 4
+        proficiencyXp: 450,// Rank 3
+        kindnessXp: 200,   // Rank 2
+        charmXp: 50,       // Rank 1
       ),
       morganaMessage: "Looking sharp, Leader!\nYou've got a study session in 30 minutes.",
     );

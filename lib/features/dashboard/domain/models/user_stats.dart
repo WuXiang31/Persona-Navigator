@@ -1,38 +1,47 @@
 import 'package:flutter/foundation.dart';
+import '../logic/xp_engine.dart';
 
 /// Represents the 5 core stats of the user's Persona.
+/// We track the raw XP, and compute the rank dynamically.
 @immutable
 class UserStats {
-  final int knowledge;
-  final int guts;
-  final int proficiency;
-  final int kindness;
-  final int charm;
+  final int knowledgeXp;
+  final int gutsXp;
+  final int proficiencyXp;
+  final int kindnessXp;
+  final int charmXp;
 
   const UserStats({
-    this.knowledge = 1,
-    this.guts = 1,
-    this.proficiency = 1,
-    this.kindness = 1,
-    this.charm = 1,
+    this.knowledgeXp = 0,
+    this.gutsXp = 0,
+    this.proficiencyXp = 0,
+    this.kindnessXp = 0,
+    this.charmXp = 0,
   });
 
   /// The max possible rank for a stat.
   static const int maxRank = 5;
 
+  // Computed Ranks
+  int get knowledge => XpEngine.calculateRank(knowledgeXp);
+  int get guts => XpEngine.calculateRank(gutsXp);
+  int get proficiency => XpEngine.calculateRank(proficiencyXp);
+  int get kindness => XpEngine.calculateRank(kindnessXp);
+  int get charm => XpEngine.calculateRank(charmXp);
+
   UserStats copyWith({
-    int? knowledge,
-    int? guts,
-    int? proficiency,
-    int? kindness,
-    int? charm,
+    int? knowledgeXp,
+    int? gutsXp,
+    int? proficiencyXp,
+    int? kindnessXp,
+    int? charmXp,
   }) {
     return UserStats(
-      knowledge: knowledge ?? this.knowledge,
-      guts: guts ?? this.guts,
-      proficiency: proficiency ?? this.proficiency,
-      kindness: kindness ?? this.kindness,
-      charm: charm ?? this.charm,
+      knowledgeXp: knowledgeXp ?? this.knowledgeXp,
+      gutsXp: gutsXp ?? this.gutsXp,
+      proficiencyXp: proficiencyXp ?? this.proficiencyXp,
+      kindnessXp: kindnessXp ?? this.kindnessXp,
+      charmXp: charmXp ?? this.charmXp,
     );
   }
 
