@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocationUsageDescription</key>
+	<string>We need your location to fetch the local weather and apply Persona stat bonuses.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to fetch the local weather and apply Persona stat bonuses.</string>
 </dict>
 </plist>

@@ -1,24 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/quest_model.dart';
+import '../../domain/models/weather_condition.dart';
 import '../../domain/repositories/quest_repository.dart';
 import '../../domain/services/quest_generator_service.dart';
+import '../../domain/services/weather_service.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 
 class QuestsState {
   final List<Quest> activeQuests;
+  final WeatherCondition weather;
   final bool isLoading;
 
   const QuestsState({
     this.activeQuests = const [],
+    this.weather = WeatherCondition.clear,
     this.isLoading = false,
   });
 
   QuestsState copyWith({
     List<Quest>? activeQuests,
+    WeatherCondition? weather,
     bool? isLoading,
   }) {
     return QuestsState(
       activeQuests: activeQuests ?? this.activeQuests,
+      weather: weather ?? this.weather,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -27,13 +33,22 @@ class QuestsState {
 class QuestsNotifier extends Notifier<QuestsState> {
   @override
   QuestsState build() {
-    _loadOrCreateQuests();
+    _loadData();
     return const QuestsState(isLoading: true);
   }
 
-  Future<void> _loadOrCreateQuests() async {
-    final repo = ref.read(questRepositoryProvider);
-    var quests = await repo.getActiveQuests();
+  Future<void> _loadData() async {
+    final questRepo = ref.read(questRepositoryProvider);
+    final weatherService = ref.read(weatherServiceProvider);
+    
+    // Fetch weather and quests concurrently
+    final results = await Future.wait([
+      questRepo.getActiveQuests(),
+      weatherService.getLocalWeather(),
+    ]);
+
+    var quests = results[0] as List<Quest>;
+    final weather = results[1] as WeatherCondition;
 
     // If no quests exist (e.g. new day), generate them!
     if (quests.isEmpty) {
@@ -43,11 +58,11 @@ class QuestsNotifier extends Notifier<QuestsState> {
       if (!dashboardState.isLoading) {
         final generator = ref.read(questGeneratorProvider);
         quests = generator.generateDailyQuests(dashboardState.stats);
-        await repo.saveQuests(quests);
+        await questRepo.saveQuests(quests);
       }
     }
 
-    state = state.copyWith(activeQuests: quests, isLoading: false);
+    state = state.copyWith(activeQuests: quests, weather: weather, isLoading: false);
   }
 
   Future<void> completeQuest(String questId) async {
@@ -66,8 +81,23 @@ class QuestsNotifier extends Notifier<QuestsState> {
       state = state.copyWith(activeQuests: quests);
       await repo.saveQuest(completedQuest);
       
-      // 3. Award XP!
-      await dashboard.addXp(completedQuest.targetStat.name, completedQuest.xpReward);
+      // 3. Award XP! Check if we get a weather bonus.
+      int finalXp = completedQuest.xpReward;
+      
+      // Weather Bonus Logic:
+      // If the quest targets the stat that is currently boosted by weather, add 50% XP!
+      bool getsBonus = false;
+      if (state.weather == WeatherCondition.rainy && completedQuest.targetStat == StatType.knowledge) getsBonus = true;
+      if (state.weather == WeatherCondition.cloudy && completedQuest.targetStat == StatType.proficiency) getsBonus = true;
+      if (state.weather == WeatherCondition.snowy && completedQuest.targetStat == StatType.guts) getsBonus = true;
+      if (state.weather == WeatherCondition.clear && completedQuest.targetStat == StatType.charm) getsBonus = true;
+      if (state.weather == WeatherCondition.thunderstorm) getsBonus = true; // All get bonus
+      
+      if (getsBonus) {
+        finalXp = (finalXp * 1.5).round();
+      }
+
+      await dashboard.addXp(completedQuest.targetStat.name, finalXp);
     }
   }
 }

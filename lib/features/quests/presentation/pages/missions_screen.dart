@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/p5_clipper.dart';
 import '../../../../core/widgets/p5_background.dart';
 import '../../domain/models/quest_model.dart';
+import '../../domain/models/weather_condition.dart';
 import '../widgets/quest_card.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../dashboard/domain/logic/xp_engine.dart';
@@ -23,7 +24,7 @@ class MissionsScreen extends ConsumerWidget {
         child: Column(
           children: [
             // Top Bar / Weather Banner
-            _buildWeatherBanner(context),
+            _buildWeatherBanner(context, questsState),
             
             // Title
             Padding(
@@ -91,41 +92,45 @@ class MissionsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWeatherBanner(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 20, left: 16, right: 16),
+  Widget _buildWeatherBanner(BuildContext context, QuestsState state) {
+    // Determine banner color based on weather
+    Color bannerColor;
+    if (state.weather == WeatherCondition.clear) bannerColor = AppColors.primaryRed;
+    else if (state.weather == WeatherCondition.thunderstorm) bannerColor = Colors.deepPurple;
+    else if (state.weather == WeatherCondition.snowy) bannerColor = Colors.lightBlue;
+    else bannerColor = AppColors.primaryWhite.withOpacity(0.9);
+
+    final textColor = (bannerColor == AppColors.primaryRed || bannerColor == Colors.deepPurple) 
+        ? AppColors.primaryWhite 
+        : AppColors.backgroundDark;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 60.0, left: 16, right: 16),
       child: ClipPath(
-        clipper: P5SlantedClipper(slant: 10.0),
+        clipper: P5SlantedClipper(slant: 8.0),
         child: Container(
-          color: AppColors.primaryRed,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          width: double.infinity,
+          color: bannerColor,
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.water_drop, color: AppColors.primaryWhite, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'CONDITION RAINY',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: AppColors.primaryWhite,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              Text(
+                state.isLoading ? 'FETCHING WEATHER...' : 'CONDITION ${state.weather.displayName}',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                color: AppColors.backgroundDark,
-                child: Text(
-                  'BONUS: KNOWLEDGE+',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.primaryWhite,
+              if (!state.isLoading)
+                Text(
+                  state.weather.statBonusDisplay,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: textColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
             ],
           ),
         ),
