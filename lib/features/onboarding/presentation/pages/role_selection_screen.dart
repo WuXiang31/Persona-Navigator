@@ -24,50 +24,60 @@ class RoleSelectionScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Tell me about yourself...',
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'What is your primary focus?',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.primaryRed,
-              ),
-            ),
-            const SizedBox(height: 48),
-            
-            // Render a button for each role
-            ...UserRole.values.map((role) {
-              final isSelected = role == selectedRole;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: P5Button(
-                  text: role.displayName,
-                  isPrimary: isSelected,
-                  onPressed: () {
-                    ref.read(onboardingProvider.notifier).setRole(role);
-                  },
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Tell me about yourself...',
+                      style: Theme.of(context).textTheme.displayMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'What is your primary focus?',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.primaryRed,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    
+                    // Render a button for each role
+                    ...UserRole.values.map((role) {
+                      final isSelected = role == selectedRole;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: P5Button(
+                          text: role.displayName,
+                          isPrimary: isSelected,
+                          onPressed: () {
+                            ref.read(onboardingProvider.notifier).setRole(role);
+                          },
+                        ),
+                      );
+                    }),
+                    
+                    const Spacer(),
+                    const SizedBox(height: 32),
+                    
+                    // Only show Next button if a role is selected
+                    if (selectedRole != null)
+                      P5Button(
+                        text: 'NEXT',
+                        onPressed: () {
+                          context.push('/age-picker');
+                        },
+                      ),
+                    const SizedBox(height: 32),
+                  ],
                 ),
-              );
-            }),
-            
-            const Spacer(),
-            
-            // Only show Next button if a role is selected
-            if (selectedRole != null)
-              P5Button(
-                text: 'NEXT',
-                onPressed: () {
-                  context.push('/age-picker');
-                },
               ),
-            const SizedBox(height: 32),
+            ),
           ],
         ),
       ),

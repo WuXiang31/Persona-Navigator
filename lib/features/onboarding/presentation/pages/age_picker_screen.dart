@@ -25,56 +25,66 @@ class AgePickerScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'I see...',
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'And how many years have you wandered this world?',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.primaryRed,
-              ),
-            ),
-            const SizedBox(height: 48),
-            
-            // Age Selection Options
-            ...ageOptions.map((ageValue) {
-              final isSelected = selectedAge == ageValue;
-              
-              String label;
-              if (ageValue == 18) label = 'Under 25';
-              else if (ageValue == 25) label = '25 - 34';
-              else if (ageValue == 35) label = '35 - 44';
-              else label = '45+';
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: P5Button(
-                  text: label,
-                  isPrimary: isSelected,
-                  onPressed: () {
-                    ref.read(onboardingProvider.notifier).setAge(ageValue);
-                  },
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'I see...',
+                      style: Theme.of(context).textTheme.displayMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'And how many years have you wandered this world?',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.primaryRed,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    
+                    // Age Selection Options
+                    ...ageOptions.map((ageValue) {
+                      final isSelected = selectedAge == ageValue;
+                      
+                      String label;
+                      if (ageValue == 18) label = 'Under 25';
+                      else if (ageValue == 25) label = '25 - 34';
+                      else if (ageValue == 35) label = '35 - 44';
+                      else label = '45+';
+        
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: P5Button(
+                          text: label,
+                          isPrimary: isSelected,
+                          onPressed: () {
+                            ref.read(onboardingProvider.notifier).setAge(ageValue);
+                          },
+                        ),
+                      );
+                    }),
+                    
+                    const Spacer(),
+                    const SizedBox(height: 32),
+                    
+                    if (selectedAge != null)
+                      P5Button(
+                        text: 'NEXT',
+                        onPressed: () {
+                          context.push('/goal-setting');
+                        },
+                      ),
+                    const SizedBox(height: 32),
+                  ],
                 ),
-              );
-            }),
-            
-            const Spacer(),
-            
-            if (selectedAge != null)
-              P5Button(
-                text: 'NEXT',
-                onPressed: () {
-                  context.push('/goal-setting');
-                },
               ),
-            const SizedBox(height: 32),
+            ),
           ],
         ),
       ),
