@@ -55,9 +55,11 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildMorganaDialogue(BuildContext context, String message) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-      child: Row(
+    return GestureDetector(
+      onTap: () => context.push('/chat'),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Avatar placeholder
@@ -92,6 +94,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
+    ),
     );
   }
 

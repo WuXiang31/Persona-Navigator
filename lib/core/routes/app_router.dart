@@ -8,6 +8,7 @@ import '../../features/onboarding/presentation/pages/age_picker_screen.dart';
 import '../../features/onboarding/presentation/pages/goal_setting_screen.dart';
 import '../../features/onboarding/presentation/pages/morgana_intro_screen.dart';
 import '../../features/quests/presentation/pages/missions_screen.dart';
+import '../../features/chat/presentation/pages/chat_screen.dart';
 
 import '../../features/dashboard/presentation/pages/home_screen.dart';
 
@@ -72,6 +73,22 @@ final GoRouter appRouter = GoRouter(
           return SlideTransition(
             position: Tween<Offset>(
               begin: const Offset(0.0, 1.0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
+            child: child,
+          );
+        },
+      ),
+    ),
+    GoRoute(
+      path: '/chat',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const ChatScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
               end: Offset.zero,
             ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
             child: child,
