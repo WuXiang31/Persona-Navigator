@@ -8,12 +8,7 @@ import '../../features/onboarding/presentation/pages/age_picker_screen.dart';
 import '../../features/onboarding/presentation/pages/goal_setting_screen.dart';
 import '../../features/onboarding/presentation/pages/morgana_intro_screen.dart';
 
-// Placeholder for Home
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('HOME')));
-}
+import '../../features/dashboard/presentation/pages/home_screen.dart';
 
 /// Central routing configuration for the application using GoRouter.
 /// 
@@ -29,7 +24,19 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/role-selection',
-      builder: (context, state) => const RoleSelectionScreen(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const RoleSelectionScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
+            child: child,
+          );
+        },
+      ),
     ),
     GoRoute(
       path: '/age-picker',
@@ -47,7 +54,13 @@ final GoRouter appRouter = GoRouter(
     // --- Main App ---
     GoRoute(
       path: '/home',
-      builder: (context, state) => const HomeScreen(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     ),
   ],
 );
