@@ -1,13 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../domain/models/user_profile.dart';
+import '../../domain/models/user_profile.dart';
 
-/// StateNotifier that manages the UserProfile during the onboarding flow.
+/// Notifier that manages the UserProfile during the onboarding flow.
 /// 
 /// Logic: We start with an empty UserProfile. As the user navigates through
 /// the Velvet Room screens, we update the state. Once complete, this data
 /// will be persisted to local storage (or a backend).
-class OnboardingNotifier extends StateNotifier<UserProfile> {
-  OnboardingNotifier() : super(const UserProfile());
+class OnboardingNotifier extends Notifier<UserProfile> {
+  @override
+  UserProfile build() {
+    return const UserProfile();
+  }
 
   /// Updates the user's role and triggers a state rebuild.
   void setRole(UserRole role) {
@@ -46,7 +49,6 @@ class OnboardingNotifier extends StateNotifier<UserProfile> {
 }
 
 /// The global provider for accessing the OnboardingNotifier state.
-/// We use StateNotifierProvider to expose both the state and methods to modify it.
-final onboardingProvider = StateNotifierProvider<OnboardingNotifier, UserProfile>((ref) {
+final onboardingProvider = NotifierProvider<OnboardingNotifier, UserProfile>(() {
   return OnboardingNotifier();
 });

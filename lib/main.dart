@@ -25,38 +25,4 @@ class PersonaNavigatorApp extends StatelessWidget {
   }
 }
 
-class TestScreen extends StatelessWidget {
-  const TestScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'THE VELVET ROOM',
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
-            const SizedBox(height: 40),
-            P5Button(
-              text: 'START JOURNEY',
-              onPressed: () {
-                debugPrint('Start pressed');
-              },
-            ),
-            const SizedBox(height: 20),
-            P5Button(
-              text: 'OPTIONS',
-              isPrimary: false,
-              onPressed: () {
-                debugPrint('Options pressed');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
