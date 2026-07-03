@@ -11,6 +11,7 @@ import '../../features/quests/presentation/pages/missions_screen.dart';
 import '../../features/chat/presentation/pages/chat_screen.dart';
 
 import '../../features/dashboard/presentation/pages/home_screen.dart';
+import '../../features/calendar/presentation/pages/calendar_screen.dart';
 
 /// Central routing configuration for the application using GoRouter.
 /// 
@@ -59,6 +60,16 @@ GoRouter createRouter(String initialLocation) => GoRouter(
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
         child: const HomeScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    ),
+    GoRoute(
+      path: '/calendar',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const CalendarScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

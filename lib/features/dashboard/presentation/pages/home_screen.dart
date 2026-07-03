@@ -44,8 +44,13 @@ class HomeScreen extends ConsumerWidget {
             P5BottomNav(
               currentIndex: 0,
               onTap: (index) {
-                // Future routing logic
-                debugPrint('Tapped nav index: $index');
+                if (index == 0) {
+                  context.go('/home');
+                } else if (index == 1) {
+                  context.go('/calendar');
+                } else if (index == 2) {
+                  // stats route if any
+                }
               },
             ),
           ],

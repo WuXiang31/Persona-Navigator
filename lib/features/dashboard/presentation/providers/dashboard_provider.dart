@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_stats.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../domain/logic/stat_decay_engine.dart';
+import '../../../quests/domain/repositories/calendar_repository.dart';
 
 /// State of the Dashboard
 class DashboardState {
@@ -50,7 +51,13 @@ class DashboardNotifier extends Notifier<DashboardState> {
     final now = DateTime.now();
     final decayedStats = decayEngine.applyDecay(stats, now);
     
-    String morganaMsg = "Looking sharp, Leader!\nYou've got a study session in 30 minutes.";
+    String morganaMsg = "Today's a free day! Let's train your stats.";
+    
+    final calendarRepo = ref.read(calendarRepositoryProvider);
+    final events = await calendarRepo.getTodayEvents();
+    if (events.isNotEmpty) {
+      morganaMsg = "Looking sharp, Leader!\nYou have ${events.first.title} later today.";
+    }
     
     if (stats.lastActiveDate != null) {
       final daysMissed = now.difference(stats.lastActiveDate!).inDays;

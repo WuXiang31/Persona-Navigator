@@ -7,6 +7,8 @@ import '../../domain/services/quest_generator_service.dart';
 import '../../domain/services/weather_service.dart';
 import '../../domain/models/calendar_event.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
+import '../../../dashboard/domain/repositories/user_repository.dart';
+import '../../../dashboard/domain/models/user_stats.dart';
 
 class QuestsState {
   final List<Quest> activeQuests;
@@ -58,13 +60,18 @@ class QuestsNotifier extends Notifier<QuestsState> {
     // If no quests exist (e.g. new day), generate them!
     if (quests.isEmpty) {
       final dashboardState = ref.read(dashboardProvider);
+      final generator = ref.read(questGeneratorProvider);
       
-      // Only generate if dashboard has loaded the user stats
+      UserStats stats;
       if (!dashboardState.isLoading) {
-        final generator = ref.read(questGeneratorProvider);
-        quests = generator.generateDailyQuests(dashboardState.stats, calendarEvents);
-        await questRepo.saveQuests(quests);
+        stats = dashboardState.stats;
+      } else {
+        final userRepo = ref.read(userRepositoryProvider);
+        stats = await userRepo.getUserStats() ?? const UserStats();
       }
+      
+      quests = generator.generateDailyQuests(stats, calendarEvents);
+      await questRepo.saveQuests(quests);
     }
 
     state = state.copyWith(activeQuests: quests, weather: weather, isLoading: false);
