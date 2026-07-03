@@ -10,3 +10,12 @@ Whenever implementing a new feature in this app, you MUST test it to ensure it w
 1. **Automated Testing:** Check if there are existing test files. If they exist, run them. If they do not exist, write them.
 2. **Manual/UI Testing:** You must also test the UI visually using integration testing (`integration_test` package) to simulate moving the cursor, tapping buttons, and showing the flow to the user on their screen.
 3. **Iteration:** If a test fails, you must debug it, fix the code, and test it again until it is fully working and good to go. Do not start implementing a new feature until the current one passes these tests.
+
+## The 6-Part Development Lifecycle
+All feature development must follow this strict 6-part pipeline. When possible, these phases should be delegated to specialized subagents:
+1. **Planning:** Researching requirements, exploring the codebase, and creating the `implementation_plan.md` artifact.
+2. **Design:** Defining the UI/UX aesthetics, layout, and visual assets (must match the Persona 5 style).
+3. **Engineering:** Architecting the data models, state management (Riverpod), and logic.
+4. **Implement (Developing):** Writing the actual Dart/Flutter code and assembling the UI components.
+5. **Testing:** Writing and running automated unit and UI integration tests to verify functionality.
+6. **Documentation:** Updating `technical_overview.md` and `walkthrough.md` with the new changes.
