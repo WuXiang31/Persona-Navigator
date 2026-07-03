@@ -1,18 +1,54 @@
 /// Defines the primary roles a user can select during onboarding.
 /// This determines their default stat labels and starting quests.
 enum UserRole {
-  student,
+  scholar,
   professional,
-  creative;
+  creative,
+  athlete,
+  explorer;
 
   String get displayName {
     switch (this) {
-      case UserRole.student:
-        return 'Student';
+      case UserRole.scholar:
+        return 'The Scholar';
       case UserRole.professional:
-        return 'Professional';
+        return 'The Professional';
       case UserRole.creative:
-        return 'Creative';
+        return 'The Creative';
+      case UserRole.athlete:
+        return 'The Athlete';
+      case UserRole.explorer:
+        return 'The Explorer';
+    }
+  }
+
+  String get numeral {
+    switch (this) {
+      case UserRole.scholar:
+        return 'I';
+      case UserRole.professional:
+        return 'II';
+      case UserRole.creative:
+        return 'III';
+      case UserRole.athlete:
+        return 'IV';
+      case UserRole.explorer:
+        return 'V';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case UserRole.scholar:
+        return 'Focuses on Knowledge and Proficiency. For those who study the world.';
+      case UserRole.professional:
+        return 'Focuses on Charm and Knowledge. For those who navigate society.';
+      case UserRole.creative:
+        return 'Focuses on Proficiency and Charm. For those who make things.';
+      case UserRole.athlete:
+        return 'Focuses on Guts and Kindness (Vitality). For those who push their limits.';
+      case UserRole.explorer:
+        return 'Focuses on Guts and Proficiency. For those who seek the unknown.';
     }
   }
 }
@@ -51,7 +87,7 @@ class UserProfile {
       role: json['role'] != null
           ? UserRole.values.firstWhere(
               (e) => e.name == json['role'],
-              orElse: () => UserRole.student,
+              orElse: () => UserRole.scholar,
             )
           : null,
       age: json['age'] as int?,

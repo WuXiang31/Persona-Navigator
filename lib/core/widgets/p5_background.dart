@@ -5,16 +5,24 @@ import '../constants/app_colors.dart';
 /// halftone dots and abstract jagged shapes.
 class P5Background extends StatelessWidget {
   final Widget child;
+  final bool isVelvet;
 
-  const P5Background({super.key, required this.child});
+  const P5Background({super.key, required this.child, this.isVelvet = false});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         // Base dark color
-        Container(color: AppColors.backgroundDark),
+        Container(color: isVelvet ? AppColors.velvetBg : AppColors.backgroundDark),
         
+        if (isVelvet)
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _DiagonalStripePainter(),
+            ),
+          ),
+          
         // Halftone dots using CustomPainter
         Positioned.fill(
           child: CustomPaint(
@@ -50,19 +58,38 @@ class _HalftonePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
+      ..color = Colors.black.withOpacity(0.28)
       ..style = PaintingStyle.fill;
 
-    const double spacing = 12.0;
-    const double radius = 2.0;
+    const double spacing = 11.0;
+    const double radius = 1.6;
 
     for (double x = 0; x < size.width; x += spacing) {
       for (double y = 0; y < size.height; y += spacing) {
-        // Create a gradient effect by changing radius based on position
-        // Top right has smaller dots, bottom left has larger
-        double adjustedRadius = radius * (1 - (x / size.width) * 0.5);
-        canvas.drawCircle(Offset(x, y), adjustedRadius, paint);
+        canvas.drawCircle(Offset(x, y), radius, paint);
       }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DiagonalStripePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.velvetAccent.withOpacity(0.1)
+      ..strokeWidth = 3.0
+      ..style = PaintingStyle.stroke;
+
+    // A simple diagonal stripe pattern (-55deg approx)
+    for (double i = -size.height; i < size.width; i += 26.0) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height * 1.5, size.height * 1.5),
+        paint,
+      );
     }
   }
 

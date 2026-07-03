@@ -41,34 +41,53 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      body: P5Background(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.only(top: 60.0, left: 16.0, right: 16.0, bottom: 8.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'COMPANION',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: AppColors.primaryWhite,
-                    fontWeight: FontWeight.w900,
-                  ),
+      body: SafeArea(
+        bottom: false,
+        child: P5Background(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0, left: 16.0, right: 16.0, bottom: 16.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'MORGANA ONLINE',
+                      style: TextStyle(
+                        color: AppColors.primaryWhite,
+                        fontWeight: FontWeight.w900,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 28,
+                        letterSpacing: 2.0,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Transform(
+                        transform: Matrix4.skewX(-0.5),
+                        child: Container(
+                          height: 6,
+                          color: AppColors.primaryRed,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-
-            // Main Content Area
-            Expanded(
-              child: !chatState.hasApiKey 
-                ? _buildApiKeyPrompt() 
-                : _buildChatList(chatState),
-            ),
-
-            // Input Area
-            if (chatState.hasApiKey) _buildInputArea(chatState),
-          ],
+  
+              // Main Content Area
+              Expanded(
+                child: !chatState.hasApiKey 
+                  ? _buildApiKeyPrompt() 
+                  : _buildChatList(chatState),
+              ),
+  
+              // Input Area
+              if (chatState.hasApiKey) _buildInputArea(chatState),
+            ],
+          ),
         ),
       ),
     );
@@ -105,32 +124,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 );
               }
 
-        final message = chatState.messages[index];
-        final isUser = message.role == MessageRole.user;
+              final message = chatState.messages[index];
+              final isUser = message.role == MessageRole.user;
 
-        return Align(
-          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-            child: ClipPath(
-              clipper: P5SlantedClipper(slant: 5.0),
-              child: Container(
-                color: isUser ? AppColors.primaryWhite : AppColors.primaryRed,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Text(
-                  message.text,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: isUser ? AppColors.backgroundDark : AppColors.primaryWhite,
-                    fontWeight: FontWeight.bold,
+              return Align(
+                alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                  child: Transform(
+                    transform: Matrix4.skewX(-0.14),
+                    child: ClipPath(
+                      clipper: isUser ? P5SlantedClipper(slant: 8.0) : P5JaggedBubbleClipper(jagDepth: 6.0),
+                      child: Container(
+                        color: isUser ? AppColors.primaryWhite : AppColors.primaryRed,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        child: Transform(
+                          transform: Matrix4.skewX(0.14),
+                          child: Text(
+                            message.text,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: isUser ? AppColors.backgroundDark : AppColors.primaryWhite,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
-        );
-      },
-    ),
         ),
       ],
     );

@@ -15,28 +15,31 @@ class AppTheme {
         background: AppColors.backgroundDark,
       ),
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.rubik(
+        displayLarge: GoogleFonts.anybody(
           fontSize: 48,
           fontWeight: FontWeight.w900,
+          fontStyle: FontStyle.italic,
           color: AppColors.primaryWhite,
           letterSpacing: 2,
         ),
-        displayMedium: GoogleFonts.rubik(
+        displayMedium: GoogleFonts.anybody(
           fontSize: 32,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
+          fontStyle: FontStyle.italic,
           color: AppColors.primaryWhite,
         ),
-        titleLarge: GoogleFonts.rubik(
+        titleLarge: GoogleFonts.anybody(
           fontSize: 24,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w900,
+          fontStyle: FontStyle.italic,
           color: AppColors.primaryWhite,
         ),
-        bodyLarge: GoogleFonts.rubik(
+        bodyLarge: GoogleFonts.outfit(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: AppColors.primaryWhite,
         ),
-        bodyMedium: GoogleFonts.rubik(
+        bodyMedium: GoogleFonts.outfit(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: AppColors.primaryWhite,
@@ -46,8 +49,9 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryRed,
           foregroundColor: AppColors.primaryWhite,
-          textStyle: GoogleFonts.rubik(
-            fontWeight: FontWeight.bold,
+          textStyle: GoogleFonts.anybody(
+            fontWeight: FontWeight.w900,
+            fontStyle: FontStyle.italic,
             fontSize: 18,
             letterSpacing: 1.5,
           ),

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:ital,wght@0,700;0,900;1,800;1,900&family=Outfit:wght@500;600;700;800&display=swap">
+  <style>
+    body { margin: 0; }
+    @keyframes navToastIn { 0% { transform: translateX(-50%) skewX(-8deg) scale(1.6); opacity: 0; } 100% { transform: translateX(-50%) skewX(-8deg) scale(1); opacity: 1; } }
+    @keyframes navPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+    ::-webkit-scrollbar { width: 0; height: 0; }
+  </style>
+</helmet>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+  <div style="position: relative; width: 100%; height: 100%; background: #111111; color: #F2F2F2; font-family: 'Outfit', sans-serif; overflow: hidden; user-select: none;">
+
+    <!-- ══════════ WELCOME ══════════ -->
+    <sc-if value="{{ isWelcome }}" hint-placeholder-val="{{ true }}">
+      <div style="position: absolute; inset: 0; background: #0A0F2E; display: flex; flex-direction: column; justify-content: center; padding: 32px 28px; box-sizing: border-box;">
+        <div style="position: absolute; inset: 0; background-image: repeating-linear-gradient(-55deg, rgba(43,58,143,0.35) 0px, rgba(43,58,143,0.35) 3px, transparent 3px, transparent 26px);"></div>
+        <div style="position: absolute; top: 90px; right: -30px; width: 220px; height: 220px; background-image: radial-gradient(rgba(255,255,255,0.14) 1.5px, transparent 1.5px); background-size: 12px 12px; transform: skewX(-12deg);"></div>
+        <div style="position: relative; display: flex; flex-direction: column; gap: 0;">
+          <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: 6px; color: #55AAFF;">WELCOME TO THE THRESHOLD</div>
+          <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 62px; line-height: 0.92; color: #F2F2F2; margin-top: 14px; text-transform: uppercase;">Persona<br>Navi&shy;gator</div>
+          <div style="margin-top: 22px; display: inline-block; align-self: flex-start; background: #F2F2F2; color: #0A0F2E; transform: skewX(-8deg); padding: 8px 16px; font-weight: 800; font-size: 15px; letter-spacing: 1px;">YOUR REAL LIFE IS THE DUNGEON.</div>
+          <div style="display: inline-block; align-self: flex-start; background: #E50000; color: #F2F2F2; transform: skewX(-8deg); padding: 8px 16px; margin-top: 8px; font-weight: 800; font-size: 15px; letter-spacing: 1px;">TIME TO CLEAR IT.</div>
+        </div>
+        <div onClick="{{ begin }}" style="position: relative; margin-top: 56px; align-self: flex-start; background: #E50000; color: #fff; transform: skewX(-8deg) rotate(-2deg); padding: 18px 54px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 28px; letter-spacing: 3px; cursor: pointer; box-shadow: 8px 8px 0 #000;" style-hover="background: #FF1A1A; box-shadow: 4px 4px 0 #000;">BEGIN</div>
+        <div style="position: absolute; bottom: 46px; left: 28px; font-size: 11px; letter-spacing: 4px; color: rgba(242,242,242,0.35); font-weight: 700;">TAKE IT ONE DAY AT A TIME</div>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ ROLE SELECT ══════════ -->
+    <sc-if value="{{ isRole }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: #111111; display: flex; flex-direction: column; padding: 74px 22px 30px; box-sizing: border-box;">
+        <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 40px; line-height: 0.95; text-transform: uppercase;">Choose<br>your mask</div>
+        <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #888;">YOUR ROLE TUNES WHICH STATS MATTER MOST.</div>
+        <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 12px; flex: 1; overflow-y: auto; padding: 4px 6px;">
+          <sc-for list="{{ roles }}" as="r" hint-placeholder-count="5">
+            <div onClick="{{ r.pick }}" style="transform: skewX(-8deg); background: {{ r.bg }}; color: {{ r.fg }}; border: 2px solid {{ r.border }}; padding: 14px 18px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;" style-hover="border-color: #E50000;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 34px; height: 34px; background: {{ r.chipBg }}; color: {{ r.chipFg }}; display: flex; align-items: center; justify-content: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-size: 16px; flex-shrink: 0;">{{ r.numeral }}</div>
+                <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 20px; letter-spacing: 1px;">{{ r.name }}</div>
+              </div>
+              <sc-if value="{{ r.selected }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size: 13px; font-weight: 600; line-height: 1.35; padding-left: 46px;">{{ r.desc }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasSelected }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ confirmRole }}" style="margin-top: 14px; align-self: center; background: #E50000; color: #fff; transform: skewX(-8deg); padding: 14px 60px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 20px; letter-spacing: 2px; cursor: pointer; box-shadow: 6px 6px 0 #000;" style-hover="background: #FF1A1A;">CONFIRM</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ HOME ══════════ -->
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; box-sizing: border-box; background: #111111;">
+
+        <!-- variant A: SLASH -->
+        <sc-if value="{{ vSlash }}" hint-placeholder-val="{{ false }}">
+          <div style="flex: 1; display: flex; flex-direction: column; padding: 66px 20px 0; box-sizing: border-box; overflow: hidden; position: relative;">
+            <div style="position: absolute; top: 0; right: -60px; width: 240px; height: 130%; background: #E50000; transform: skewX(-14deg); opacity: 0.08;"></div>
+            <div style="display: flex; gap: 12px; align-items: flex-start; position: relative;">
+              <div style="width: 52px; height: 52px; background: #E50000; transform: skewX(-8deg) rotate(-3deg); display: flex; align-items: center; justify-content: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 26px; color: #fff; flex-shrink: 0; box-shadow: 4px 4px 0 #000;">V</div>
+              <div onClick="{{ goChat }}" style="background: #F2F2F2; color: #111; padding: 12px 16px; font-size: 13px; font-weight: 700; line-height: 1.35; cursor: pointer; clip-path: polygon(3% 0%, 100% 2%, 98% 96%, 55% 100%, 50% 88%, 2% 92%, 0% 45%);" style-hover="background: #fff;">{{ vesperMsg }}</div>
+            </div>
+            <div style="margin-top: 16px; display: flex; align-items: baseline; gap: 10px; position: relative;">
+              <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 44px; text-transform: uppercase; line-height: 1;">Status</div>
+              <div style="height: 8px; flex: 1; background: #E50000; transform: skewX(-30deg);"></div>
+            </div>
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; position: relative;">
+              <svg viewBox="0 0 280 236" style="width: 100%; max-width: 330px;">
+                <sc-for list="{{ ringList }}" as="ring" hint-placeholder-count="5">
+                  <polygon points="{{ ring.points }}" fill="none" stroke="rgba(242,242,242,0.16)" stroke-width="1"></polygon>
+                </sc-for>
+                <sc-for list="{{ axes }}" as="ax" hint-placeholder-count="5">
+                  <line x1="{{ ax.x1 }}" y1="{{ ax.y1 }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="rgba(242,242,242,0.16)" stroke-width="1"></line>
+                </sc-for>
+                <polygon points="{{ valuePoints }}" fill="rgba(229,0,0,0.45)" stroke="#E50000" stroke-width="2.5"></polygon>
+                <sc-for list="{{ radarLabels }}" as="lb" hint-placeholder-count="5">
+                  <text x="{{ lb.x }}" y="{{ lb.y }}" text-anchor="{{ lb.anchor }}" fill="#F2F2F2" font-size="12" font-weight="800" font-family="Outfit, sans-serif">{{ lb.name }}</text>
+                  <text x="{{ lb.x }}" y="{{ lb.y2 }}" text-anchor="{{ lb.anchor }}" fill="{{ lb.rankColor }}" font-size="10" font-weight="800" font-family="Outfit, sans-serif">{{ lb.rankLabel }}</text>
+                </sc-for>
+              </svg>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- variant B: HALFTONE -->
+        <sc-if value="{{ vHalftone }}" hint-placeholder-val="{{ false }}">
+          <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="background: #E50000; padding: 66px 20px 26px; position: relative; clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);">
+              <div style="position: absolute; inset: 0; background-image: radial-gradient(rgba(0,0,0,0.28) 1.6px, transparent 1.6px); background-size: 11px 11px;"></div>
+              <div style="display: flex; gap: 12px; align-items: flex-start; position: relative;">
+                <div style="width: 52px; height: 52px; background: #111; transform: skewX(-8deg) rotate(-3deg); display: flex; align-items: center; justify-content: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 26px; color: #E50000; flex-shrink: 0; box-shadow: 4px 4px 0 rgba(0,0,0,0.4);">V</div>
+                <div onClick="{{ goChat }}" style="background: #111; color: #F2F2F2; padding: 12px 16px; font-size: 13px; font-weight: 700; line-height: 1.35; cursor: pointer; clip-path: polygon(3% 0%, 100% 2%, 98% 96%, 55% 100%, 50% 88%, 2% 92%, 0% 45%);">{{ vesperMsg }}</div>
+              </div>
+              <div style="margin-top: 14px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 44px; color: #fff; text-transform: uppercase; position: relative; line-height: 1;">Status</div>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 18px 22px 8px; display: flex; flex-direction: column; gap: 11px;">
+              <sc-for list="{{ statList }}" as="s" hint-placeholder-count="5">
+                <div style="transform: skewX(-8deg); background: #1E1E1E; padding: 11px 16px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #E50000; font-size: 15px;">{{ s.glyph }}</span>
+                    <span style="font-weight: 800; font-size: 14px; letter-spacing: 1.5px;">{{ s.name }}</span>
+                    <span style="margin-left: auto; background: {{ s.rankColor }}; color: #111; font-weight: 800; font-size: 10px; padding: 2px 8px; letter-spacing: 1px;">{{ s.rankLabel }}</span>
+                  </div>
+                  <div style="height: 7px; background: #000; position: relative;">
+                    <div style="position: absolute; inset: 0; width: {{ s.barW }}; background: #E50000;"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- variant D: HYBRID (red halftone header + case file) -->
+        <sc-if value="{{ vHybrid }}" hint-placeholder-val="{{ false }}">
+          <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="background: #E50000; padding: 66px 20px 30px; position: relative; clip-path: polygon(0 0, 100% 0, 100% 86%, 0 100%);">
+              <div style="position: absolute; inset: 0; background-image: radial-gradient(rgba(0,0,0,0.28) 1.6px, transparent 1.6px); background-size: 11px 11px;"></div>
+              <div style="display: flex; gap: 12px; align-items: flex-start; position: relative;">
+                <div style="width: 52px; height: 52px; background: #111; transform: skewX(-8deg) rotate(-3deg); display: flex; align-items: center; justify-content: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 26px; color: #E50000; flex-shrink: 0; box-shadow: 4px 4px 0 rgba(0,0,0,0.4);">V</div>
+                <div onClick="{{ goChat }}" style="background: #111; color: #F2F2F2; padding: 12px 16px; font-size: 13px; font-weight: 700; line-height: 1.35; cursor: pointer; clip-path: polygon(3% 0%, 100% 2%, 98% 96%, 55% 100%, 50% 88%, 2% 92%, 0% 45%);">{{ vesperMsg }}</div>
+              </div>
+              <div style="margin-top: 12px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 44px; color: #fff; text-transform: uppercase; position: relative; line-height: 1;">Status</div>
+            </div>
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 6px 20px 0; min-height: 0;">
+              <div style="background: #F2F2F2; transform: rotate(-2deg); padding: 14px 16px 10px; width: 100%; max-width: 320px; box-sizing: border-box; box-shadow: 10px 10px 0 rgba(229,0,0,0.85); clip-path: polygon(0% 2%, 4% 0%, 96% 1%, 100% 5%, 99% 95%, 95% 100%, 5% 99%, 0% 96%);">
+                <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                  <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 24px; color: #111; text-transform: uppercase;">Case file</div>
+                  <div style="font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #E50000;">CONFIDENTIAL</div>
+                </div>
+                <svg viewBox="0 0 280 236" style="width: 100%;">
+                  <sc-for list="{{ ringList }}" as="ring3" hint-placeholder-count="5">
+                    <polygon points="{{ ring3.points }}" fill="none" stroke="rgba(17,17,17,0.18)" stroke-width="1"></polygon>
+                  </sc-for>
+                  <polygon points="{{ valuePoints }}" fill="rgba(229,0,0,0.5)" stroke="#B00000" stroke-width="2.5"></polygon>
+                  <sc-for list="{{ radarLabels }}" as="lb3" hint-placeholder-count="5">
+                    <text x="{{ lb3.x }}" y="{{ lb3.y }}" text-anchor="{{ lb3.anchor }}" fill="#111" font-size="12" font-weight="800" font-family="Outfit, sans-serif">{{ lb3.name }}</text>
+                  </sc-for>
+                </svg>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; justify-content: center; padding: 10px 0 4px; flex-wrap: wrap;">
+              <sc-for list="{{ statList }}" as="s3" hint-placeholder-count="5">
+                <div style="transform: skewX(-8deg); background: #1E1E1E; padding: 5px 10px; display: flex; gap: 6px; align-items: center;">
+                  <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px;">{{ s3.short }}</span>
+                  <span style="color: {{ s3.rankColor }}; font-weight: 800; font-size: 10px;">{{ s3.rankNum }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- variant C: DOSSIER -->
+        <sc-if value="{{ vDossier }}" hint-placeholder-val="{{ false }}">
+          <div style="flex: 1; display: flex; flex-direction: column; padding: 66px 20px 0; box-sizing: border-box; overflow: hidden; position: relative; background-image: repeating-linear-gradient(-55deg, rgba(229,0,0,0.06) 0px, rgba(229,0,0,0.06) 2px, transparent 2px, transparent 22px);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="width: 52px; height: 52px; background: #E50000; transform: skewX(-8deg) rotate(-3deg); display: flex; align-items: center; justify-content: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 26px; color: #fff; flex-shrink: 0; box-shadow: 4px 4px 0 #000;">V</div>
+              <div onClick="{{ goChat }}" style="background: #F2F2F2; color: #111; padding: 12px 16px; font-size: 13px; font-weight: 700; line-height: 1.35; cursor: pointer; clip-path: polygon(3% 0%, 100% 2%, 98% 96%, 55% 100%, 50% 88%, 2% 92%, 0% 45%);">{{ vesperMsg }}</div>
+            </div>
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
+              <div style="background: #F2F2F2; transform: rotate(-2deg); padding: 18px 16px 12px; width: 100%; max-width: 330px; box-sizing: border-box; box-shadow: 10px 10px 0 rgba(229,0,0,0.85); clip-path: polygon(0% 2%, 4% 0%, 96% 1%, 100% 5%, 99% 95%, 95% 100%, 5% 99%, 0% 96%);">
+                <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                  <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 26px; color: #111; text-transform: uppercase;">Case file</div>
+                  <div style="font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #E50000;">CONFIDENTIAL</div>
+                </div>
+                <svg viewBox="0 0 280 236" style="width: 100%;">
+                  <sc-for list="{{ ringList }}" as="ring2" hint-placeholder-count="5">
+                    <polygon points="{{ ring2.points }}" fill="none" stroke="rgba(17,17,17,0.18)" stroke-width="1"></polygon>
+                  </sc-for>
+                  <polygon points="{{ valuePoints }}" fill="rgba(229,0,0,0.5)" stroke="#B00000" stroke-width="2.5"></polygon>
+                  <sc-for list="{{ radarLabels }}" as="lb2" hint-placeholder-count="5">
+                    <text x="{{ lb2.x }}" y="{{ lb2.y }}" text-anchor="{{ lb2.anchor }}" fill="#111" font-size="12" font-weight="800" font-family="Outfit, sans-serif">{{ lb2.name }}</text>
+                  </sc-for>
+                </svg>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; justify-content: center; padding-bottom: 10px; flex-wrap: wrap;">
+              <sc-for list="{{ statList }}" as="s2" hint-placeholder-count="5">
+                <div style="transform: skewX(-8deg); background: #1E1E1E; padding: 5px 10px; display: flex; gap: 6px; align-items: center;">
+                  <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px;">{{ s2.short }}</span>
+                  <span style="color: {{ s2.rankColor }}; font-weight: 800; font-size: 10px;">{{ s2.rankNum }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- home action buttons -->
+        <div style="display: flex; gap: 12px; padding: 10px 22px 14px;">
+          <div onClick="{{ toggleLog }}" style="flex: 1; background: #E50000; color: #fff; transform: skewX(-8deg); padding: 15px 0; text-align: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 17px; letter-spacing: 1px; cursor: pointer; box-shadow: 5px 5px 0 #000;" style-hover="background: #FF1A1A;">QUICK LOG</div>
+          <div onClick="{{ goMissions }}" style="flex: 1; background: #F2F2F2; color: #111; transform: skewX(-8deg); padding: 15px 0; text-align: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 17px; letter-spacing: 1px; cursor: pointer; box-shadow: 5px 5px 0 #E50000;" style-hover="background: #fff;">MISSIONS</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ MISSIONS ══════════ -->
+    <sc-if value="{{ isMissions }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; background: #111111; padding-top: 62px; box-sizing: border-box;">
+        <div style="margin: 0 14px; background: {{ weatherBg }}; color: {{ weatherFg }}; transform: skewX(-6deg); padding: 10px 18px; display: flex; align-items: center; gap: 12px;">
+          <span style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 17px; letter-spacing: 2px;">{{ weatherLabel }}</span>
+          <span style="margin-left: auto; font-weight: 800; font-size: 12px; letter-spacing: 1px;">TODAY&rsquo;S BONUS: {{ weatherBonus }} &times;1.5</span>
+        </div>
+        <div style="padding: 14px 22px 0; display: flex; align-items: center; gap: 10px;">
+          <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 46px; text-transform: uppercase; line-height: 1;">Missions</div>
+          <div style="height: 8px; flex: 1; background: #E50000; transform: skewX(-30deg);"></div>
+          <div onClick="{{ toggleSelect }}" title="Select multiple" style="flex-shrink: 0; transform: skewX(-6deg); background: {{ selBtnBg }}; color: {{ selBtnFg }}; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 12px; letter-spacing: 1px; box-shadow: {{ selBtnShadow }};">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink: 0;">
+              <path d="M2 6 L4.5 8.5 L9 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"></path>
+              <rect x="12" y="5.2" width="10" height="2.6" fill="currentColor"></rect>
+              <path d="M2 16 L4.5 18.5 L9 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"></path>
+              <rect x="12" y="15.2" width="10" height="2.6" fill="currentColor"></rect>
+            </svg>
+            <span>{{ selBtnLabel }}</span>
+          </div>
+        </div>
+        <sc-if value="{{ selectMode }}" hint-placeholder-val="{{ false }}">
+          <div style="margin: 12px 14px 0; transform: skewX(-6deg); background: #1E1E1E; border-left: 5px solid #FFD700; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-weight: 800; font-size: 12px; letter-spacing: 1px; color: #F2F2F2;">{{ selCountLabel }}</span>
+            <span style="font-weight: 800; font-size: 12px; color: #FFD700;">{{ selXpLabel }}</span>
+            <div onClick="{{ completeSelected }}" style="margin-left: auto; background: {{ selDoBg }}; color: #fff; transform: skewX(-2deg); padding: 8px 12px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 12px; letter-spacing: 1px; cursor: {{ selDoCursor }};">COMPLETE</div>
+          </div>
+        </sc-if>
+        <div style="flex: 1; overflow-y: auto; padding: 16px 22px 90px; display: flex; flex-direction: column; gap: 13px;">
+          <sc-for list="{{ questList }}" as="q" hint-placeholder-count="4">
+            <div onClick="{{ q.toggle }}" style="transform: skewX(-8deg); background: {{ q.bg }}; padding: 14px 18px; cursor: pointer; position: relative; border-left: 5px solid {{ q.edge }};" style-hover="background: #262626;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 24px; height: 24px; border: 2px solid {{ q.boxBorder }}; background: {{ q.boxBg }}; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 14px; flex-shrink: 0;">{{ q.check }}</div>
+                <div style="font-weight: 800; font-size: 15px; letter-spacing: 0.5px; text-decoration: {{ q.strike }}; text-decoration-color: #E50000; text-decoration-thickness: 3px; color: {{ q.titleColor }};">{{ q.title }}</div>
+              </div>
+              <div style="display: flex; gap: 10px; margin-top: 8px; padding-left: 34px; align-items: center;">
+                <span style="color: #E50000; font-size: 13px;">{{ q.glyph }}</span>
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #888;">{{ q.statName }}</span>
+                <span style="margin-left: auto; font-weight: 800; font-size: 13px; color: {{ q.xpColor }};">{{ q.xpLabel }}</span>
+              </div>
+              <sc-if value="{{ q.done }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; right: 14px; top: -8px; background: #E50000; color: #fff; transform: rotate(6deg); padding: 2px 10px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 12px; letter-spacing: 2px;">COMPLETE</div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div onClick="{{ openNew }}" style="transform: skewX(-8deg); background: transparent; border: 2px dashed #E50000; padding: 14px 18px; cursor: pointer; display: flex; align-items: center; gap: 10px;" style-hover="background: #1E1E1E;">
+            <div style="width: 24px; height: 24px; background: #E50000; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 17px; flex-shrink: 0;">+</div>
+            <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: 1px; color: #E50000;">ADD NEW MISSION</div>
+          </div>
+          <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #555; text-align: center; margin-top: 6px;">MISSIONS MATCHING TODAY&rsquo;S WEATHER PAY &times;1.5 XP</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ CHAT ══════════ -->
+    <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; background: #111111; padding-top: 62px; box-sizing: border-box;">
+        <div style="padding: 0 22px; display: flex; align-items: baseline; gap: 10px;">
+          <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 40px; text-transform: uppercase; line-height: 1;">Vesper</div>
+          <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #E50000;">NAVIGATOR ONLINE</div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 16px 20px 8px; display: flex; flex-direction: column; gap: 12px;" ref="{{ chatRef }}">
+          <sc-for list="{{ chatMsgs }}" as="m" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: {{ m.dir }}; gap: 9px; align-items: flex-end;">
+              <div style="width: 34px; height: 34px; background: {{ m.avBg }}; color: {{ m.avFg }}; transform: skewX(-8deg) rotate(-3deg); display: flex; align-items: center; justify-content: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: {{ m.avSize }}; flex-shrink: 0; box-shadow: 3px 3px 0 rgba(0,0,0,0.5);">{{ m.avLabel }}</div>
+              <div style="max-width: 72%; background: {{ m.bg }}; color: {{ m.fg }}; padding: 11px 15px; font-size: 13.5px; font-weight: 600; line-height: 1.4; clip-path: polygon(2% 4%, 98% 0%, 100% 50%, 97% 97%, 4% 100%, 0% 92%);">{{ m.text }}</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 9px; align-items: flex-end;">
+              <div style="width: 34px; height: 34px; background: #E50000; color: #fff; transform: skewX(-8deg) rotate(-3deg); display: flex; align-items: center; justify-content: center; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 17px; flex-shrink: 0; box-shadow: 3px 3px 0 rgba(0,0,0,0.5);">V</div>
+              <div style="background: #E50000; color: #fff; padding: 11px 15px; font-size: 13px; font-weight: 800; letter-spacing: 3px; clip-path: polygon(2% 4%, 98% 0%, 100% 50%, 97% 97%, 4% 100%, 0% 92%); animation: navPulse 1s infinite;">&hellip;</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 10px 20px 12px;">
+          <input value="{{ chatInput }}" onChange="{{ onChatInput }}" onKeyDown="{{ onChatKey }}" placeholder="SAY SOMETHING&hellip;" style="flex: 1; background: #1E1E1E; border: 2px solid #333; color: #F2F2F2; padding: 12px 14px; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; outline: none; transform: skewX(-6deg);">
+          <div onClick="{{ sendChat }}" style="background: #E50000; color: #fff; transform: skewX(-6deg); padding: 12px 20px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center;" style-hover="background: #FF1A1A;">SEND</div>
+        </div>
+        <div style="height: 68px; flex-shrink: 0;"></div>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ BOTTOM NAV ══════════ -->
+    <sc-if value="{{ onApp }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 68px; background: #000; display: flex; align-items: center; justify-content: center; gap: 10px; padding-bottom: 12px; box-sizing: border-box; z-index: 30;">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="3">
+          <div onClick="{{ n.go }}" style="transform: skewX(-10deg); background: {{ n.bg }}; color: {{ n.fg }}; padding: 9px 18px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 13px; letter-spacing: 2px; cursor: pointer;" style-hover="color: #fff;">{{ n.label }}</div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ QUICK LOG OVERLAY ══════════ -->
+    <sc-if value="{{ showLog }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ toggleLog }}" style="position: absolute; inset: 0; background: rgba(0,0,0,0.78); z-index: 40; display: flex; align-items: center; justify-content: center;">
+        <div style="background: #1A1A1A; border: 3px solid #E50000; transform: skewX(-4deg) rotate(-1deg); padding: 22px 24px; width: 300px; box-shadow: 10px 10px 0 rgba(229,0,0,0.5);">
+          <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 26px; text-transform: uppercase;">Quick log</div>
+          <div style="font-size: 11px; font-weight: 700; color: #888; letter-spacing: 1px; margin-top: 2px;">TAP WHAT YOU DID. +15 XP EACH.</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+            <sc-for list="{{ statList }}" as="ls" hint-placeholder-count="5">
+              <div onClick="{{ ls.log }}" style="display: flex; align-items: center; gap: 10px; background: #262626; padding: 10px 14px; cursor: pointer; transform: skewX(-6deg);" style-hover="background: #E50000;">
+                <span style="font-size: 14px;">{{ ls.glyph }}</span>
+                <span style="font-weight: 800; font-size: 13px; letter-spacing: 1.5px;">{{ ls.name }}</span>
+                <span style="margin-left: auto; font-weight: 800; font-size: 12px; color: #FFD700;">+15</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ NEW MISSION OVERLAY ══════════ -->
+    <sc-if value="{{ showNew }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeNew }}" style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 45; display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div onClick="{{ stop }}" style="background: #1A1A1A; border: 3px solid #E50000; transform: skewX(-3deg) rotate(-1deg); padding: 22px 22px; width: 100%; max-width: 330px; box-sizing: border-box; box-shadow: 10px 10px 0 rgba(229,0,0,0.5);">
+          <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 28px; text-transform: uppercase;">New mission</div>
+          <div style="font-size: 11px; font-weight: 700; color: #888; letter-spacing: 1px; margin-top: 2px;">NAME IT. PICK A STAT. SET REWARD.</div>
+          <input value="{{ newTitle }}" onChange="{{ onNewTitle }}" placeholder="MISSION NAME&hellip;" style="width: 100%; box-sizing: border-box; background: #262626; border: 2px solid #333; color: #F2F2F2; padding: 11px 13px; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 13px; outline: none; margin-top: 14px; transform: skewX(-4deg);">
+          <div style="font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #888; margin: 14px 0 8px;">TARGET STAT</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+            <sc-for list="{{ statPicks }}" as="sp" hint-placeholder-count="5">
+              <div onClick="{{ sp.pick }}" style="transform: skewX(-6deg); background: {{ sp.bg }}; color: {{ sp.fg }}; padding: 7px 11px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 800; font-size: 11px; letter-spacing: 1px;">
+                <span>{{ sp.glyph }}</span><span>{{ sp.name }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #888; margin: 14px 0 8px;">XP REWARD &mdash; {{ newXp }}</div>
+          <input type="range" min="10" max="60" step="5" value="{{ newXp }}" onChange="{{ onNewXp }}" style="width: 100%; accent-color: #E50000;">
+          <div style="display: flex; gap: 9px; margin-top: 18px;">
+            <div onClick="{{ closeNew }}" style="flex: 1; text-align: center; background: #262626; color: #888; transform: skewX(-6deg); padding: 12px 0; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: 1px; cursor: pointer;" style-hover="color: #fff;">CANCEL</div>
+            <div onClick="{{ createMission }}" style="flex: 2; text-align: center; background: {{ createBg }}; color: #fff; transform: skewX(-6deg); padding: 12px 0; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: 1px; cursor: {{ createCursor }}; box-shadow: 4px 4px 0 #000;" style-hover="background: #FF1A1A;">ADD MISSION</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ══════════ XP TOAST ══════════ -->
+    <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; top: 70px; left: 50%; transform: translateX(-50%) skewX(-8deg); background: #FFD700; color: #111; padding: 10px 22px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 17px; letter-spacing: 1px; z-index: 50; box-shadow: 5px 5px 0 #E50000; animation: navToastIn 0.18s ease-out; white-space: nowrap;">{{ toastText }}</div>
+    </sc-if>
+
+  </div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 402, &quot;height&quot;: 874 },
+  &quot;variant&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;slash&quot;, &quot;halftone&quot;, &quot;dossier&quot;, &quot;hybrid&quot;], &quot;default&quot;: &quot;slash&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Layout&quot; },
+  &quot;weather&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;clear&quot;, &quot;rainy&quot;, &quot;cloudy&quot;, &quot;snowy&quot;, &quot;storm&quot;], &quot;default&quot;: &quot;rainy&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Simulation&quot; },
+  &quot;personality&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;sassy&quot;, &quot;encouraging&quot;, &quot;concerned&quot;], &quot;default&quot;: &quot;sassy&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Simulation&quot; }
+}">
+const STAT_DEFS = [
+  { key: 'knowledge', name: 'KNOWLEDGE', short: 'KNW', glyph: '\u25C6' },
+  { key: 'vitality',  name: 'VITALITY',  short: 'VIT', glyph: '\u25B2' },
+  { key: 'charm',     name: 'CHARM',     short: 'CHM', glyph: '\u2605' },
+  { key: 'craft',     name: 'CRAFT',     short: 'CRF', glyph: '\u2B22' },
+  { key: 'nerve',     name: 'NERVE',     short: 'NRV', glyph: '\u26A1' },
+];
+const RANK_NAMES = ['NOVICE', 'APPRENTICE', 'ADEPT', 'EXPERT', 'MASTER'];
+const RANK_COLORS = ['#888888', '#55AAFF', '#55FF55', '#FF8800', '#FFD700'];
+const WEATHER = {
+  clear:  { label: '\u2600 CLEAR',  bonus: 'CHARM',     bg: '#E50000', fg: '#fff' },
+  rainy:  { label: '\u2602 RAINY',  bonus: 'KNOWLEDGE', bg: '#F2F2F2', fg: '#111' },
+  cloudy: { label: '\u2601 CLOUDY', bonus: 'CRAFT',     bg: '#F2F2F2', fg: '#111' },
+  snowy:  { label: '\u2744 SNOWY',  bonus: 'NERVE',     bg: '#A8D8FF', fg: '#111' },
+  storm:  { label: '\u26A1 STORM',  bonus: 'ALL',       bg: '#3A1F6E', fg: '#fff' },
+};
+const ROLES = [
+  { id: 'scholar',      name: 'THE SCHOLAR',      numeral: 'I',   desc: 'Study, read, learn. Knowledge quests pay extra; exams are your boss fights.' },
+  { id: 'professional', name: 'THE PROFESSIONAL', numeral: 'II',  desc: 'Ship work, build networks. Craft and Charm lead your build.' },
+  { id: 'creative',     name: 'THE CREATIVE',     numeral: 'III', desc: 'Make things daily. Craft is king; Nerve gets you to publish.' },
+  { id: 'athlete',      name: 'THE ATHLETE',      numeral: 'IV',  desc: 'Train, sleep, fuel. Vitality quests dominate your day.' },
+  { id: 'explorer',     name: 'THE EXPLORER',     numeral: 'V',   desc: 'A balanced generalist build. All five stats matter equally.' },
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'welcome',
+    selectedRole: null,
+    stats: { knowledge: 180, vitality: 240, charm: 120, craft: 300, nerve: 90 },
+    quests: [
+      { id: 1, title: 'SPEAK FIRST IN ONE MEETING', stat: 'nerve',     xp: 30, done: false },
+      { id: 2, title: 'READ 30 MINUTES',            stat: 'knowledge', xp: 25, done: false },
+      { id: 3, title: 'TEXT A FRIEND YOU MISS',     stat: 'charm',     xp: 20, done: false },
+      { id: 4, title: '20-MINUTE WORKOUT',          stat: 'vitality',  xp: 25, done: false },
+    ],
+    showLog: false,
+    showNew: false,
+    newTitle: '',
+    newStat: 'knowledge',
+    newXp: 25,
+    nextId: 5,
+    selectMode: false,
+    selected: [],
+    toast: null,
+    chatMsgs: [{ from: 'v', text: "So you actually showed up. It's raining — Knowledge missions pay 1.5\u00D7 today. Don't waste it." }],
+    chatInput: '',
+    thinking: false,
+  };
+
+  chatRef = React.createRef();
+  toastTimer = null;
+
+  componentDidUpdate() {
+    const el = this.chatRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+  componentWillUnmount() { clearTimeout(this.toastTimer); }
+
+  weather() { return WEATHER[this.props.weather ?? 'rainy'] ?? WEATHER.rainy; }
+  personality() { return this.props.personality ?? 'sassy'; }
+  rank(v) { return Math.min(5, Math.floor(v / 100) + 1); }
+
+  pushToast(text) {
+    clearTimeout(this.toastTimer);
+    this.setState({ toast: text });
+    this.toastTimer = setTimeout(() => this.setState({ toast: null }), 1800);
+  }
+
+  addXp(key, amt) {
+    this.setState(s => {
+      const cur = s.stats[key];
+      const next = Math.min(500, cur + amt);
+      if (this.rank(next) > this.rank(cur)) {
+        setTimeout(() => this.pushToast('RANK UP! ' + key.toUpperCase() + ' \u2192 ' + RANK_NAMES[this.rank(next) - 1]), 900);
+      }
+      return { stats: { ...s.stats, [key]: next } };
+    });
+  }
+
+  boostFor(statKey) {
+    const w = this.weather();
+    const def = STAT_DEFS.find(d => d.key === statKey);
+    return (w.bonus === 'ALL' || w.bonus === def.name) ? 1.5 : 1;
+  }
+
+  weakest() {
+    const st = this.state.stats;
+    return STAT_DEFS.reduce((a, b) => (st[a.key] <= st[b.key] ? a : b));
+  }
+
+  vesperMsg() {
+    const wk = this.weakest();
+    const p = this.personality();
+    const doneCount = this.state.quests.filter(q => q.done).length;
+    if (doneCount === this.state.quests.length) {
+      return p === 'concerned' ? 'All missions cleared. Please tell me you also drank water.' :
+             p === 'encouraging' ? 'Full clear! You are unstoppable today. Rest up — tomorrow we go again.' :
+             'Full clear?! Fine, I\u2019m impressed. Don\u2019t let it go to your head.';
+    }
+    const lines = {
+      sassy: 'Your ' + wk.name + ' is embarrassing. Do something about it before I disown you.',
+      encouraging: 'Your ' + wk.name + ' just needs a little love today. One small mission — you\u2019ve got this!',
+      concerned: 'I\u2019ve been watching your ' + wk.name + ' slip for days\u2026 can we work on it together today?',
+    };
+    return lines[p] || lines.sassy;
+  }
+
+  radar() {
+    const cx = 140, cy = 122, R = 92;
+    const pt = (i, r) => {
+      const a = (-90 + i * 72) * Math.PI / 180;
+      return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1);
+    };
+    const ringList = [1, 2, 3, 4, 5].map(k => ({ points: STAT_DEFS.map((_, i) => pt(i, R * k / 5)).join(' ') }));
+    const axes = STAT_DEFS.map((_, i) => {
+      const a = (-90 + i * 72) * Math.PI / 180;
+      return { x1: cx, y1: cy, x2: (cx + R * Math.cos(a)).toFixed(1), y2: (cy + R * Math.sin(a)).toFixed(1) };
+    });
+    const st = this.state.stats;
+    const valuePoints = STAT_DEFS.map((d, i) => pt(i, Math.max(10, R * st[d.key] / 500))).join(' ');
+    const radarLabels = STAT_DEFS.map((d, i) => {
+      const a = (-90 + i * 72) * Math.PI / 180;
+      const lx = cx + (R + 16) * Math.cos(a), ly = cy + (R + 16) * Math.sin(a);
+      const anchor = Math.abs(Math.cos(a)) < 0.3 ? 'middle' : (Math.cos(a) > 0 ? 'start' : 'end');
+      const rk = this.rank(st[d.key]);
+      return { x: lx.toFixed(1), y: (ly + (Math.sin(a) > 0.3 ? 8 : 0)).toFixed(1), y2: (ly + 13 + (Math.sin(a) > 0.3 ? 8 : 0)).toFixed(1), anchor, name: d.name, rankLabel: RANK_NAMES[rk - 1], rankColor: RANK_COLORS[rk - 1] };
+    });
+    return { ringList, axes, valuePoints, radarLabels };
+  }
+
+  buildSystemPrompt() {
+    const st = this.state.stats;
+    const w = this.weather();
+    const statLines = STAT_DEFS.map(d => d.name + ': rank ' + this.rank(st[d.key]) + ' (' + RANK_NAMES[this.rank(st[d.key]) - 1] + ', ' + st[d.key] + '/500 XP)').join('; ');
+    const questLines = this.state.quests.map(q => q.title + (q.done ? ' [DONE]' : ' [OPEN]')).join('; ');
+    const tone = { sassy: 'snarky, teasing, but secretly protective', encouraging: 'warm, upbeat, celebratory', concerned: 'gentle, worried, caring' }[this.personality()];
+    return 'You are VESPER, a masked fox spirit who acts as the user\u2019s "navigator" in a stylish RPG-flavored self-improvement app called Persona Navigator. You are an ORIGINAL character (not from any game). Personality: ' + tone + '. You hate being called a pet. Keep every reply under 45 words, punchy, in character. Reference their real data when relevant.\nUSER DATA \u2014 Stats: ' + statLines + '. Weather: ' + w.label + ' (bonus stat today: ' + w.bonus + ' \u00D71.5). Missions: ' + questLines + '.';
+  }
+
+  async sendChat() {
+    const text = this.state.chatInput.trim();
+    if (!text || this.state.thinking) return;
+    const msgs = [...this.state.chatMsgs, { from: 'u', text }];
+    this.setState({ chatMsgs: msgs, chatInput: '', thinking: true });
+    try {
+      const history = msgs.map(m => ({ role: m.from === 'u' ? 'user' : 'assistant', content: m.text }));
+      const reply = await window.claude.complete({ system: this.buildSystemPrompt(), messages: history, max_tokens: 300 });
+      this.setState(s => ({ chatMsgs: [...s.chatMsgs, { from: 'v', text: reply }], thinking: false }));
+    } catch (e) {
+      this.setState(s => ({ chatMsgs: [...s.chatMsgs, { from: 'v', text: 'Tch. The connection cut out. Say that again?' }], thinking: false }));
+    }
+  }
+
+  createMission() {
+    const title = this.state.newTitle.trim();
+    if (!title) return;
+    this.setState(s => ({
+      quests: [...s.quests, { id: s.nextId, title: title.toUpperCase(), stat: s.newStat, xp: s.newXp, done: false }],
+      nextId: s.nextId + 1,
+      showNew: false, newTitle: '', newStat: 'knowledge', newXp: 25,
+    }));
+    this.pushToast('MISSION ADDED');
+  }
+
+  completeSelected() {
+    const ids = this.state.selected;
+    if (!ids.length) return;
+    const toDo = this.state.quests.filter(q => ids.includes(q.id) && !q.done);
+    toDo.forEach(q => this.addXp(q.stat, Math.round(q.xp * this.boostFor(q.stat))));
+    this.setState(s => ({
+      quests: s.quests.map(q => (ids.includes(q.id) ? { ...q, done: true } : q)),
+      selected: [], selectMode: false,
+    }));
+    if (toDo.length) this.pushToast(toDo.length + ' MISSIONS CLEARED');
+  }
+
+  renderVals() {
+    const { screen, stats, quests, selectedRole, showLog, toast, chatMsgs, chatInput, thinking, selectMode, selected } = this.state;
+    const w = this.weather();
+    const variant = this.props.variant ?? 'slash';
+    const radar = this.radar();
+
+    const statList = STAT_DEFS.map(d => {
+      const v = stats[d.key];
+      const rk = this.rank(v);
+      return {
+        name: d.name, short: d.short, glyph: d.glyph,
+        rankLabel: RANK_NAMES[rk - 1], rankNum: 'RANK ' + rk, rankColor: RANK_COLORS[rk - 1],
+        barW: Math.round(v / 5) + '%',
+        log: () => { this.addXp(d.key, 15); this.pushToast('+15 XP ' + d.name); this.setState({ showLog: false }); },
+      };
+    });
+
+    const selGain = quests.filter(q => selected.includes(q.id) && !q.done)
+      .reduce((sum, q) => sum + Math.round(q.xp * this.boostFor(q.stat)), 0);
+
+    const questList = quests.map(q => {
+      const def = STAT_DEFS.find(d => d.key === q.stat);
+      const boost = this.boostFor(q.stat);
+      const gain = Math.round(q.xp * boost);
+      const isSel = selected.includes(q.id);
+      return {
+        title: q.title, statName: def.name, glyph: def.glyph, done: q.done,
+        bg: q.done ? '#161616' : (selectMode && isSel ? '#2A2410' : '#1E1E1E'),
+        edge: selectMode && isSel ? '#FFD700' : (q.done ? '#333' : (boost > 1 ? '#FFD700' : '#E50000')),
+        boxBorder: selectMode ? (isSel ? '#FFD700' : '#555') : (q.done ? '#E50000' : '#555'),
+        boxBg: selectMode ? (isSel ? '#FFD700' : 'transparent') : (q.done ? '#E50000' : 'transparent'),
+        check: selectMode ? (isSel ? '\u2713' : '') : (q.done ? '\u2713' : ''),
+        strike: q.done && !selectMode ? 'line-through' : 'none',
+        titleColor: q.done && !selectMode ? '#666' : '#F2F2F2',
+        xpLabel: (q.done ? 'EARNED ' : '') + '+' + gain + ' XP' + (boost > 1 && !q.done ? ' \u26A1' : ''),
+        xpColor: boost > 1 ? '#FFD700' : '#F2F2F2',
+        toggle: () => {
+          if (selectMode) {
+            this.setState(s => ({ selected: s.selected.includes(q.id) ? s.selected.filter(i => i !== q.id) : [...s.selected, q.id] }));
+            return;
+          }
+          this.setState(s => ({ quests: s.quests.map(x => x.id === q.id ? { ...x, done: !x.done } : x) }));
+          if (!q.done) { this.addXp(q.stat, gain); this.pushToast('+' + gain + ' XP ' + def.name); }
+          else { this.addXp(q.stat, -gain); }
+        },
+      };
+    });
+
+    const go = s => () => this.setState({ screen: s, showLog: false });
+    const navItems = ['home', 'missions', 'chat'].map(s => ({
+      label: s.toUpperCase(),
+      bg: screen === s ? '#E50000' : 'transparent',
+      fg: screen === s ? '#fff' : '#777',
+      go: go(s),
+    }));
+
+    return {
+      isWelcome: screen === 'welcome', isRole: screen === 'role',
+      isHome: screen === 'home', isMissions: screen === 'missions', isChat: screen === 'chat',
+      onApp: ['home', 'missions', 'chat'].includes(screen),
+      vSlash: variant === 'slash', vHalftone: variant === 'halftone', vDossier: variant === 'dossier', vHybrid: variant === 'hybrid',
+      begin: () => this.setState({ screen: 'role' }),
+      roles: ROLES.map(r => ({
+        ...r,
+        selected: selectedRole === r.id,
+        bg: selectedRole === r.id ? '#E50000' : '#1E1E1E',
+        fg: '#F2F2F2',
+        border: selectedRole === r.id ? '#E50000' : '#333',
+        chipBg: selectedRole === r.id ? '#111' : '#E50000',
+        chipFg: selectedRole === r.id ? '#E50000' : '#fff',
+        pick: () => this.setState({ selectedRole: r.id }),
+      })),
+      hasSelected: !!selectedRole,
+      confirmRole: () => { this.setState({ screen: 'home' }); this.pushToast('MASK EQUIPPED'); },
+      vesperMsg: this.vesperMsg(),
+      ...radar,
+      statList,
+      questList,
+      weatherLabel: w.label, weatherBonus: w.bonus, weatherBg: w.bg, weatherFg: w.fg,
+      navItems,
+      goChat: go('chat'), goMissions: go('missions'),
+      showLog,
+      toggleLog: () => this.setState(s => ({ showLog: !s.showLog })),
+      showNew: this.state.showNew,
+      openNew: () => this.setState({ showNew: true }),
+      closeNew: () => this.setState({ showNew: false }),
+      stop: e => e.stopPropagation(),
+      newTitle: this.state.newTitle, newXp: this.state.newXp,
+      onNewTitle: e => this.setState({ newTitle: e.target.value }),
+      onNewXp: e => this.setState({ newXp: Number(e.target.value) }),
+      statPicks: STAT_DEFS.map(d => ({
+        name: d.name, glyph: d.glyph,
+        bg: this.state.newStat === d.key ? '#E50000' : '#262626',
+        fg: this.state.newStat === d.key ? '#fff' : '#888',
+        pick: () => this.setState({ newStat: d.key }),
+      })),
+      createBg: this.state.newTitle.trim() ? '#E50000' : '#3a1414',
+      createCursor: this.state.newTitle.trim() ? 'pointer' : 'not-allowed',
+      createMission: () => this.createMission(),
+      selectMode,
+      toggleSelect: () => this.setState(s => ({ selectMode: !s.selectMode, selected: [] })),
+      completeSelected: () => this.completeSelected(),
+      selBtnBg: selectMode ? '#E50000' : '#1E1E1E',
+      selBtnFg: selectMode ? '#fff' : '#888',
+      selBtnShadow: selectMode ? '3px 3px 0 #000' : 'none',
+      selBtnLabel: selectMode ? 'DONE' : 'SELECT',
+      selCountLabel: selected.length + ' SELECTED',
+      selXpLabel: selGain > 0 ? '+' + selGain + ' XP' : '',
+      selDoBg: selected.length ? '#E50000' : '#3a1414',
+      selDoCursor: selected.length ? 'pointer' : 'not-allowed',
+      hasToast: !!toast, toastText: toast,
+      chatMsgs: chatMsgs.map(m => ({
+        text: m.text,
+        dir: m.from === 'u' ? 'row-reverse' : 'row',
+        bg: m.from === 'u' ? '#F2F2F2' : '#E50000',
+        fg: m.from === 'u' ? '#111' : '#fff',
+        avBg: m.from === 'u' ? '#F2F2F2' : '#E50000',
+        avFg: m.from === 'u' ? '#111' : '#fff',
+        avLabel: m.from === 'u' ? 'ME' : 'V',
+        avSize: m.from === 'u' ? '12px' : '17px',
+      })),
+      chatInput, thinking,
+      chatRef: this.chatRef,
+      onChatInput: e => this.setState({ chatInput: e.target.value }),
+      onChatKey: e => { if (e.key === 'Enter') this.sendChat(); },
+      sendChat: () => this.sendChat(),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -87,3 +87,43 @@ class P5SlantedClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
+
+class P5JaggedBubbleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    // 2% 4%, 98% 0%, 100% 50%, 97% 97%, 4% 100%, 0% 92%
+    path.moveTo(size.width * 0.02, size.height * 0.04);
+    path.lineTo(size.width * 0.98, size.height * 0.00);
+    path.lineTo(size.width * 1.00, size.height * 0.50);
+    path.lineTo(size.width * 0.97, size.height * 0.97);
+    path.lineTo(size.width * 0.04, size.height * 1.00);
+    path.lineTo(size.width * 0.00, size.height * 0.92);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class P5CaseFileClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    // 0% 2%, 4% 0%, 96% 1%, 100% 5%, 99% 95%, 95% 100%, 5% 99%, 0% 96%
+    path.moveTo(size.width * 0.00, size.height * 0.02);
+    path.lineTo(size.width * 0.04, size.height * 0.00);
+    path.lineTo(size.width * 0.96, size.height * 0.01);
+    path.lineTo(size.width * 1.00, size.height * 0.05);
+    path.lineTo(size.width * 0.99, size.height * 0.95);
+    path.lineTo(size.width * 0.95, size.height * 1.00);
+    path.lineTo(size.width * 0.05, size.height * 0.99);
+    path.lineTo(size.width * 0.00, size.height * 0.96);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}

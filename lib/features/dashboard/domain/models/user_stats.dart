@@ -65,19 +65,6 @@ class UserStats {
 
   /// Helper to get a label based on the rank.
   String getRankLabel(String statName, int rank) {
-    switch (statName.toLowerCase()) {
-      case 'knowledge':
-        return ['Oblivious', 'Learned', 'Scholarly', 'Encyclopedic', 'Erudite'][rank - 1];
-      case 'guts':
-        return ['Milquetoast', 'Bold', 'Staunch', 'Dauntless', 'Badass'][rank - 1];
-      case 'proficiency':
-        return ['Bumbling', 'Decent', 'Skilled', 'Masterful', 'Transcendent'][rank - 1];
-      case 'kindness':
-        return ['Inoffensive', 'Considerate', 'Empathetic', 'Selfless', 'Angelic'][rank - 1];
-      case 'charm':
-        return ['Existent', 'Head-turning', 'Suave', 'Charismatic', 'Debonair'][rank - 1];
-      default:
-        return 'Rank $rank';
-    }
+    return ['Novice', 'Apprentice', 'Adept', 'Expert', 'Master'][rank - 1];
   }
 }

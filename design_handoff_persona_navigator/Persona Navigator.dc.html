@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:ital,wght@1,900&family=Outfit:wght@600;800&display=swap">
+  <style> body { margin: 0; background: #0C0C0C; } </style>
+</helmet>
+<section style="padding: 48px 48px 0; display: flex; flex-direction: column; gap: 24px; font-family: 'Outfit', sans-serif;">
+  <div style="display: flex; align-items: baseline; gap: 16px;">
+    <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 28px; color: #F2F2F2; text-transform: uppercase;">Turn 2 &mdash; Combined</div>
+    <div style="font-size: 13px; font-weight: 600; color: #888;"><a href="#1b" style="color: #E50000;">1B</a> red halftone header + <a href="#1c" style="color: #E50000;">1C</a> case-file card. Chat now shows profile avatars on every bubble (all variants).</div>
+  </div>
+  <div id="2a" style="display: flex; flex-direction: column; gap: 14px; align-self: flex-start;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="background: #E50000; color: #fff; transform: skewX(-8deg); padding: 3px 12px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px;">2A</div>
+      <div style="color: #F2F2F2; font-weight: 800; font-size: 14px; letter-spacing: 2px;">HYBRID &mdash; red header + case file</div>
+    </div>
+    <dc-import name="Navigator App" variant="hybrid" weather="{{ weather }}" personality="{{ personality }}" hint-size="402px,874px"></dc-import>
+  </div>
+</section>
+<section style="padding: 48px; display: flex; flex-direction: column; gap: 24px; font-family: 'Outfit', sans-serif;">
+  <div style="display: flex; align-items: baseline; gap: 16px;">
+    <div style="font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 34px; color: #F2F2F2; text-transform: uppercase;">Persona Navigator</div>
+    <div style="font-size: 13px; font-weight: 600; color: #888;">Interactive prototype &mdash; three home-screen directions. Every phone is fully tappable: onboarding &rarr; role &rarr; home &rarr; missions &rarr; live AI chat.</div>
+  </div>
+  <div style="display: flex; gap: 56px; align-items: flex-start; flex-wrap: wrap;">
+    <div id="1a" style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="background: #E50000; color: #fff; transform: skewX(-8deg); padding: 3px 12px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px;">1A</div>
+        <div style="color: #F2F2F2; font-weight: 800; font-size: 14px; letter-spacing: 2px;">SLASH &mdash; radar hero on black</div>
+      </div>
+      <dc-import name="Navigator App" variant="slash" weather="{{ weather }}" personality="{{ personality }}" hint-size="402px,874px"></dc-import>
+    </div>
+    <div id="1b" style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="background: #E50000; color: #fff; transform: skewX(-8deg); padding: 3px 12px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px;">1B</div>
+        <div style="color: #F2F2F2; font-weight: 800; font-size: 14px; letter-spacing: 2px;">HALFTONE &mdash; red header, stat bars</div>
+      </div>
+      <dc-import name="Navigator App" variant="halftone" weather="{{ weather }}" personality="{{ personality }}" hint-size="402px,874px"></dc-import>
+    </div>
+    <div id="1c" style="display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="background: #E50000; color: #fff; transform: skewX(-8deg); padding: 3px 12px; font-family: 'Anybody', sans-serif; font-weight: 900; font-style: italic; font-size: 15px;">1C</div>
+        <div style="color: #F2F2F2; font-weight: 800; font-size: 14px; letter-spacing: 2px;">DOSSIER &mdash; torn case-file card</div>
+      </div>
+      <dc-import name="Navigator App" variant="dossier" weather="{{ weather }}" personality="{{ personality }}" hint-size="402px,874px"></dc-import>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;weather&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;clear&quot;, &quot;rainy&quot;, &quot;cloudy&quot;, &quot;snowy&quot;, &quot;storm&quot;], &quot;default&quot;: &quot;rainy&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Simulation&quot; },
+  &quot;personality&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;sassy&quot;, &quot;encouraging&quot;, &quot;concerned&quot;], &quot;default&quot;: &quot;sassy&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Simulation&quot; }
+}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      weather: this.props.weather ?? 'rainy',
+      personality: this.props.personality ?? 'sassy',
+    };
+  }
+}
+</script>
+</body>
+</html>

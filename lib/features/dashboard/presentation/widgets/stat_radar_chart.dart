@@ -67,28 +67,32 @@ class StatRadarChart extends StatelessWidget {
   }
 
   Widget _buildLabel(BuildContext context, {required String label, required Alignment alignment}) {
-    // The jagged label box as seen in the mockup
+    // Labels are placed around the chart. Since we are on a white background, we can just use dark text,
+    // or keep the red boxes. Let's use clean text based on the design spec.
+    final parts = label.split('\n');
     return Align(
       alignment: alignment,
-      child: ClipPath(
-        clipper: P5SlantedClipper(slant: 6.0),
-        child: Container(
-          color: AppColors.primaryWhite,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Container(
-            color: AppColors.primaryRed,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Text(
-              label.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.primaryWhite,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            parts[0].toUpperCase(),
+            style: const TextStyle(
+              color: AppColors.backgroundDark,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 1.0,
             ),
           ),
-        ),
+          Text(
+            parts[1].toUpperCase(),
+            style: const TextStyle(
+              color: AppColors.primaryRed,
+              fontWeight: FontWeight.w900,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -108,18 +112,18 @@ class _RadarChartPainter extends CustomPainter {
     const int levels = 5;
 
     final gridPaint = Paint()
-      ..color = AppColors.primaryWhite
+      ..color = Colors.black12
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 1.0;
 
     final fillPaint = Paint()
-      ..color = AppColors.primaryRed.withOpacity(0.85)
+      ..color = AppColors.primaryRed.withOpacity(0.5)
       ..style = PaintingStyle.fill;
 
     final fillStrokePaint = Paint()
-      ..color = AppColors.primaryRed
+      ..color = const Color(0xFFB00000)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
+      ..strokeWidth = 2.5;
 
     // Draw the 5 concentric pentagons (Grid)
     for (int i = 1; i <= levels; i++) {

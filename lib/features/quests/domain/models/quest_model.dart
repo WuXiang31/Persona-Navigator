@@ -51,3 +51,20 @@ class Quest {
     );
   }
 }
+
+extension StatTypeExtension on StatType {
+  String get glyph {
+    switch (this) {
+      case StatType.knowledge:
+        return '◆';
+      case StatType.guts:
+        return '▲';
+      case StatType.proficiency:
+        return '⬢';
+      case StatType.kindness:
+        return '⚡';
+      case StatType.charm:
+        return '★';
+    }
+  }
+}
