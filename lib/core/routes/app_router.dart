@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 // Import screens (We will create these next)
 import '../../features/onboarding/presentation/pages/welcome_screen.dart';
 import '../../features/onboarding/presentation/pages/role_selection_screen.dart';
-import '../../features/onboarding/presentation/pages/age_picker_screen.dart';
-import '../../features/onboarding/presentation/pages/goal_setting_screen.dart';
-import '../../features/onboarding/presentation/pages/morgana_intro_screen.dart';
+
 import '../../features/quests/presentation/pages/missions_screen.dart';
 import '../../features/chat/presentation/pages/chat_screen.dart';
 
@@ -44,18 +42,7 @@ GoRouter createRouter(String initialLocation) => GoRouter(
         },
       ),
     ),
-    GoRoute(
-      path: '/age-picker',
-      builder: (context, state) => const AgePickerScreen(),
-    ),
-    GoRoute(
-      path: '/goal-setting',
-      builder: (context, state) => const GoalSettingScreen(),
-    ),
-    GoRoute(
-      path: '/morgana-intro',
-      builder: (context, state) => const MorganaIntroScreen(),
-    ),
+
     
     // --- Main App ---
     ShellRoute(
