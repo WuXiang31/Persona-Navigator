@@ -46,6 +46,27 @@ class UserProfile {
     );
   }
 
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      role: json['role'] != null
+          ? UserRole.values.firstWhere(
+              (e) => e.name == json['role'],
+              orElse: () => UserRole.student,
+            )
+          : null,
+      age: json['age'] as int?,
+      goals: (json['goals'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'role': role?.name,
+      'age': age,
+      'goals': goals,
+    };
+  }
+
   /// Validates if the onboarding profile is complete
   bool get isComplete => role != null && age != null && goals.isNotEmpty;
 }

@@ -35,6 +35,26 @@ class UserStats {
     );
   }
 
+  factory UserStats.fromJson(Map<String, dynamic> json) {
+    return UserStats(
+      knowledgeXp: json['knowledgeXp'] as int? ?? 0,
+      gutsXp: json['gutsXp'] as int? ?? 0,
+      proficiencyXp: json['proficiencyXp'] as int? ?? 0,
+      kindnessXp: json['kindnessXp'] as int? ?? 0,
+      charmXp: json['charmXp'] as int? ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'knowledgeXp': knowledgeXp,
+      'gutsXp': gutsXp,
+      'proficiencyXp': proficiencyXp,
+      'kindnessXp': kindnessXp,
+      'charmXp': charmXp,
+    };
+  }
+
   /// Helper to get a label based on the rank.
   String getRankLabel(String statName, int rank) {
     switch (statName.toLowerCase()) {

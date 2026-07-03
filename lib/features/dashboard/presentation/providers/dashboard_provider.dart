@@ -43,7 +43,7 @@ class DashboardNotifier extends Notifier<DashboardState> {
 
   Future<void> _loadStats() async {
     final repo = ref.read(userRepositoryProvider);
-    final stats = await repo.getUserStats();
+    final stats = await repo.getUserStats() ?? const UserStats();
     
     state = state.copyWith(
       stats: stats,

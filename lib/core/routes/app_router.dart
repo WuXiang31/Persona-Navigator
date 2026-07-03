@@ -16,8 +16,8 @@ import '../../features/dashboard/presentation/pages/home_screen.dart';
 /// 
 /// Logic: Uses declarative routing to manage application state and deep links.
 /// The initial route is set to the Velvet Room welcome screen.
-final GoRouter appRouter = GoRouter(
-  initialLocation: '/welcome',
+GoRouter createRouter(String initialLocation) => GoRouter(
+  initialLocation: initialLocation,
   routes: [
     // --- Onboarding Flow ---
     GoRoute(

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_profile.dart';
+import '../../../dashboard/domain/repositories/user_repository.dart';
+import '../../../dashboard/domain/models/user_stats.dart';
 
 /// Notifier that manages the UserProfile during the onboarding flow.
 /// 
@@ -43,8 +45,19 @@ class OnboardingNotifier extends Notifier<UserProfile> {
   Future<void> completeOnboarding() async {
     if (!state.isComplete) return;
     
-    // TODO: Persist data using SharedPreferences or repository
-    // For MVP, we just assume it's successful in memory.
+    final repo = ref.read(userRepositoryProvider);
+    
+    UserStats stats = const UserStats();
+    if (state.role == UserRole.student) {
+      stats = stats.copyWith(knowledgeXp: 50);
+    } else if (state.role == UserRole.professional) {
+      stats = stats.copyWith(proficiencyXp: 50);
+    } else if (state.role == UserRole.creative) {
+      stats = stats.copyWith(charmXp: 50);
+    }
+
+    await repo.saveUserProfile(state);
+    await repo.saveUserStats(stats);
   }
 }
 
