@@ -131,6 +131,29 @@ class QuestsNotifier extends Notifier<QuestsState> {
     state = state.copyWith(activeQuests: quests);
     await repo.saveQuests(quests);
   }
+
+  Future<void> deleteQuest(String questId) async {
+    final repo = ref.read(questRepositoryProvider);
+    final quests = state.activeQuests.where((q) => q.id != questId).toList();
+    state = state.copyWith(activeQuests: quests);
+    await repo.saveQuests(quests);
+  }
+
+  Future<void> updateQuest(String questId, {String? title, StatType? targetStat, TimeSlot? timeSlot, int? xpReward}) async {
+    final repo = ref.read(questRepositoryProvider);
+    final quests = state.activeQuests.toList();
+    final index = quests.indexWhere((q) => q.id == questId);
+    if (index != -1) {
+      quests[index] = quests[index].copyWith(
+        title: title,
+        targetStat: targetStat,
+        timeSlot: timeSlot,
+        xpReward: xpReward,
+      );
+      state = state.copyWith(activeQuests: quests);
+      await repo.saveQuests(quests);
+    }
+  }
 }
 
 final questsProvider = NotifierProvider<QuestsNotifier, QuestsState>(() {

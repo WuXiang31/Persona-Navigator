@@ -78,6 +78,8 @@ class MissionsScreen extends ConsumerWidget {
                         onComplete: () {
                           ref.read(questsProvider.notifier).completeQuest(quest.id);
                         },
+                        onEdit: () => _showEditQuestDialog(context, ref, quest),
+                        onDelete: () => _showDeleteConfirmation(context, ref, quest),
                       );
                     },
                   ),
@@ -322,6 +324,213 @@ class MissionsScreen extends ConsumerWidget {
                               },
                               child: Text(isAutoMode ? 'AUTO-DECIDE & SAVE' : 'SAVE MISSION', style: const TextStyle(fontWeight: FontWeight.bold)),
                             ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, Quest quest) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipPath(
+            clipper: P5SlantedClipper(),
+            child: Container(
+              color: AppColors.backgroundDark,
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'DELETE MISSION?',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '"${quest.title}" will be permanently removed.',
+                    style: const TextStyle(color: AppColors.primaryWhite),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: AppColors.primaryWhite,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        ),
+                        onPressed: () {
+                          ref.read(questsProvider.notifier).deleteQuest(quest.id);
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditQuestDialog(BuildContext context, WidgetRef ref, Quest quest) {
+    String title = quest.title;
+    StatType selectedStat = quest.targetStat;
+    TimeSlot selectedTimeSlot = quest.timeSlot;
+    double xpValue = quest.xpReward.toDouble();
+    final titleController = TextEditingController(text: quest.title);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: ClipPath(
+                clipper: P5SlantedClipper(),
+                child: Container(
+                  color: AppColors.backgroundDark,
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'EDIT MISSION',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.primaryRed,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: titleController,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Mission Title',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed, width: 2)),
+                        ),
+                        onChanged: (value) => title = value,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<TimeSlot>(
+                        value: selectedTimeSlot,
+                        dropdownColor: AppColors.backgroundDark,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Time of Day',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                        ),
+                        items: TimeSlot.values.map((slot) {
+                          return DropdownMenuItem(
+                            value: slot,
+                            child: Text(slot.name.toUpperCase()),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) setState(() => selectedTimeSlot = value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<StatType>(
+                        value: selectedStat,
+                        dropdownColor: AppColors.backgroundDark,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Target Stat',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                        ),
+                        items: StatType.values.map((stat) {
+                          return DropdownMenuItem(
+                            value: stat,
+                            child: Text(stat.name.toUpperCase()),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) setState(() => selectedStat = value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Text('XP Reward:', style: TextStyle(color: Colors.grey)),
+                          Expanded(
+                            child: Slider(
+                              value: xpValue,
+                              min: 10,
+                              max: 100,
+                              divisions: 90,
+                              activeColor: AppColors.primaryRed,
+                              inactiveColor: Colors.grey,
+                              label: xpValue.round().toString(),
+                              onChanged: (val) {
+                                setState(() {
+                                  xpValue = val;
+                                });
+                              },
+                            ),
+                          ),
+                          Text('${xpValue.round()}', style: const TextStyle(color: AppColors.primaryWhite)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: AppColors.primaryWhite,
+                              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                            ),
+                            onPressed: () {
+                              if (title.isNotEmpty) {
+                                ref.read(questsProvider.notifier).updateQuest(
+                                  quest.id,
+                                  title: title,
+                                  targetStat: selectedStat,
+                                  timeSlot: selectedTimeSlot,
+                                  xpReward: xpValue.round(),
+                                );
+                                Navigator.of(context).pop();
+                              }
+                            },
+                            child: const Text('UPDATE MISSION', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
                         ],
                       ),
                     ],

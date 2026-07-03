@@ -10,6 +10,8 @@ class QuestCard extends StatelessWidget {
   final Quest quest;
   final int currentXpForStat;
   final VoidCallback onComplete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final IXpCalculator xpCalculator;
 
   const QuestCard({
@@ -17,6 +19,8 @@ class QuestCard extends StatelessWidget {
     required this.quest,
     required this.currentXpForStat,
     required this.onComplete,
+    this.onEdit,
+    this.onDelete,
     required this.xpCalculator,
   });
 
@@ -28,7 +32,11 @@ class QuestCard extends StatelessWidget {
     // Dummy UserStats to get rank label
     final rankLabel = const UserStats().getRankLabel(quest.targetStat.name, currentRank).toUpperCase();
     
-    return Container(
+    return GestureDetector(
+      onLongPressStart: quest.isCompleted ? null : (details) {
+        _showQuestMenu(context, details.globalPosition);
+      },
+      child: Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ClipPath(
         clipper: P5JaggedClipper(jagRight: true, jagDepth: 6.0),
@@ -136,6 +144,37 @@ class QuestCard extends StatelessWidget {
           ),
         ),
       ),
+      ),
+    );
+  }
+
+  void _showQuestMenu(BuildContext context, Offset position) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx + 1, position.dy + 1),
+      color: AppColors.backgroundDark,
+      items: [
+        PopupMenuItem(
+          onTap: onEdit,
+          child: const Row(
+            children: [
+              Icon(Icons.edit, color: AppColors.primaryRed, size: 20),
+              SizedBox(width: 8),
+              Text('EDIT MISSION', style: TextStyle(color: AppColors.primaryWhite, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          onTap: onDelete,
+          child: const Row(
+            children: [
+              Icon(Icons.delete, color: Colors.red, size: 20),
+              SizedBox(width: 8),
+              Text('DELETE MISSION', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
