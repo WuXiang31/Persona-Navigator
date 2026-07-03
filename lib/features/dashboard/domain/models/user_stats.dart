@@ -10,6 +10,7 @@ class UserStats {
   final int proficiencyXp;
   final int kindnessXp;
   final int charmXp;
+  final DateTime? lastActiveDate;
 
   const UserStats({
     this.knowledgeXp = 0,
@@ -17,6 +18,7 @@ class UserStats {
     this.proficiencyXp = 0,
     this.kindnessXp = 0,
     this.charmXp = 0,
+    this.lastActiveDate,
   });
 
   UserStats copyWith({
@@ -25,6 +27,7 @@ class UserStats {
     int? proficiencyXp,
     int? kindnessXp,
     int? charmXp,
+    DateTime? lastActiveDate,
   }) {
     return UserStats(
       knowledgeXp: knowledgeXp ?? this.knowledgeXp,
@@ -32,6 +35,7 @@ class UserStats {
       proficiencyXp: proficiencyXp ?? this.proficiencyXp,
       kindnessXp: kindnessXp ?? this.kindnessXp,
       charmXp: charmXp ?? this.charmXp,
+      lastActiveDate: lastActiveDate ?? this.lastActiveDate,
     );
   }
 
@@ -42,6 +46,9 @@ class UserStats {
       proficiencyXp: json['proficiencyXp'] as int? ?? 0,
       kindnessXp: json['kindnessXp'] as int? ?? 0,
       charmXp: json['charmXp'] as int? ?? 0,
+      lastActiveDate: json['lastActiveDate'] != null 
+          ? DateTime.tryParse(json['lastActiveDate'] as String) 
+          : null,
     );
   }
 
@@ -52,6 +59,7 @@ class UserStats {
       'proficiencyXp': proficiencyXp,
       'kindnessXp': kindnessXp,
       'charmXp': charmXp,
+      if (lastActiveDate != null) 'lastActiveDate': lastActiveDate!.toIso8601String(),
     };
   }
 

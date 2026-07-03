@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_stats.dart';
 import '../../domain/repositories/user_repository.dart';
+import '../../domain/logic/stat_decay_engine.dart';
 
 /// State of the Dashboard
 class DashboardState {
@@ -45,9 +46,25 @@ class DashboardNotifier extends Notifier<DashboardState> {
     final repo = ref.read(userRepositoryProvider);
     final stats = await repo.getUserStats() ?? const UserStats();
     
+    final decayEngine = ref.read(statDecayEngineProvider);
+    final now = DateTime.now();
+    final decayedStats = decayEngine.applyDecay(stats, now);
+    
+    String morganaMsg = "Looking sharp, Leader!\nYou've got a study session in 30 minutes.";
+    
+    if (stats.lastActiveDate != null) {
+      final daysMissed = now.difference(stats.lastActiveDate!).inDays;
+      if (daysMissed > 0) {
+        morganaMsg = "You slacked off for $daysMissed days! Your stats decayed...";
+      }
+    }
+
+    // Persist the decayed stats
+    await repo.saveUserStats(decayedStats);
+    
     state = state.copyWith(
-      stats: stats,
-      morganaMessage: "Looking sharp, Leader!\nYou've got a study session in 30 minutes.",
+      stats: decayedStats,
+      morganaMessage: morganaMsg,
       isLoading: false,
     );
   }
@@ -79,6 +96,8 @@ class DashboardNotifier extends Notifier<DashboardState> {
       default:
         return;
     }
+
+    newStats = newStats.copyWith(lastActiveDate: DateTime.now());
 
     state = state.copyWith(stats: newStats);
     await repo.saveUserStats(newStats);
