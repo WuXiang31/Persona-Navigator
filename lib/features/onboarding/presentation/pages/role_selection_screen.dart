@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/models/user_profile.dart';
 import '../providers/onboarding_provider.dart';
+import '../../../../core/widgets/toast_manager.dart';
 
 class RoleSelectionScreen extends ConsumerWidget {
   const RoleSelectionScreen({super.key});
@@ -134,7 +135,13 @@ class RoleSelectionScreen extends ConsumerWidget {
                 Align(
                   alignment: Alignment.center,
                   child: GestureDetector(
-                    onTap: () => context.push('/age-picker'),
+                    onTap: () async {
+                      await ref.read(onboardingProvider.notifier).completeOnboarding();
+                      if (context.mounted) {
+                        ref.read(toastProvider.notifier).showToast(title: 'MASK EQUIPPED', message: '');
+                        context.go('/home');
+                      }
+                    },
                     child: Transform(
                       transform: Matrix4.skewX(-0.14),
                       child: Container(

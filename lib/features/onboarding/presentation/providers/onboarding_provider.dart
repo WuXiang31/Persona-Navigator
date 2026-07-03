@@ -19,26 +19,6 @@ class OnboardingNotifier extends Notifier<UserProfile> {
     state = state.copyWith(role: role);
   }
 
-  /// Updates the user's age and triggers a state rebuild.
-  void setAge(int age) {
-    state = state.copyWith(age: age);
-  }
-
-  /// Adds or removes a goal from the user's list.
-  /// Enforces a maximum of 3 goals.
-  void toggleGoal(String goal) {
-    final currentGoals = List<String>.from(state.goals);
-    
-    if (currentGoals.contains(goal)) {
-      currentGoals.remove(goal);
-    } else {
-      if (currentGoals.length < 3) {
-        currentGoals.add(goal);
-      }
-    }
-    
-    state = state.copyWith(goals: currentGoals);
-  }
 
   /// Finalizes the onboarding process.
   /// (In a real app, this would save to SharedPreferences/Firestore)

@@ -104,5 +104,5 @@ class UserProfile {
   }
 
   /// Validates if the onboarding profile is complete
-  bool get isComplete => role != null && age != null && goals.isNotEmpty;
+  bool get isComplete => role != null;
 }
