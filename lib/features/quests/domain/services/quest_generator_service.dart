@@ -1,19 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/quest_model.dart';
+import '../models/calendar_event.dart';
 import '../../../dashboard/domain/models/user_stats.dart';
 
 abstract class IQuestGeneratorService {
   /// Generates a list of recommended daily quests based on the user's current stats.
-  List<Quest> generateDailyQuests(UserStats stats, {int count = 2});
+  List<Quest> generateDailyQuests(UserStats stats, List<CalendarEvent> events, {int count = 2});
 }
 
 class PersonaQuestGenerator implements IQuestGeneratorService {
   final _uuid = const Uuid();
 
   @override
-  List<Quest> generateDailyQuests(UserStats stats, {int count = 2}) {
-    // 1. Find the lowest stats to target for improvement
+  List<Quest> generateDailyQuests(UserStats stats, List<CalendarEvent> events, {int count = 2}) {
+    // 1. Build the Gemini Prompt (to be used later when integrated with actual Gemini API)
+    final promptBuilder = StringBuffer();
+    promptBuilder.writeln("The user has the following real-life events today:");
+    for (var event in events) {
+      promptBuilder.writeln("- ${event.title} from ${event.startTime} to ${event.endTime}");
+    }
+    promptBuilder.writeln("Transform them into Palace infiltrations...");
+    print(promptBuilder.toString());
+
+    // 2. Find the lowest stats to target for improvement
     final statMap = {
       StatType.knowledge: stats.knowledgeXp,
       StatType.guts: stats.gutsXp,

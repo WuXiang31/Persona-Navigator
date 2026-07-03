@@ -32,5 +32,7 @@
 	<string>We need your location to fetch the local weather and apply Persona stat bonuses.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to fetch the local weather and apply Persona stat bonuses.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>We need full access to your calendar to generate quests from your events.</string>
 </dict>
 </plist>

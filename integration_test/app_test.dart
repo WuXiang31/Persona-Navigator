@@ -2,7 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:persona_navigator/main.dart' as app;
+import 'package:persona_navigator/features/quests/domain/repositories/calendar_repository.dart';
+import 'package:persona_navigator/features/quests/domain/models/calendar_event.dart';
+
+class MockCalendarRepository implements ICalendarRepository {
+  @override
+  Future<List<CalendarEvent>> getTodayEvents() async {
+    return [
+      CalendarEvent(title: 'Integration Test Meeting', startTime: DateTime.now(), endTime: DateTime.now().add(const Duration(hours: 1))),
+    ];
+  }
+}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -11,8 +23,15 @@ void main() {
     // 1. Clear storage to force the onboarding flow
     SharedPreferences.setMockInitialValues({});
     
-    // Launch the app
-    app.main();
+    // Set up app with overridden provider
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          calendarRepositoryProvider.overrideWithValue(MockCalendarRepository()),
+        ],
+        child: const app.PersonaNavigatorApp(initialRoute: '/welcome'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // Small delay so user can see it launch

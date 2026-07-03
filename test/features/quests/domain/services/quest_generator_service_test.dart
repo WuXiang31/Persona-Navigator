@@ -13,7 +13,7 @@ void main() {
 
     test('Generates requested number of quests', () {
       final stats = const UserStats();
-      final quests = generator.generateDailyQuests(stats, count: 2);
+      final quests = generator.generateDailyQuests(stats, [], count: 2);
       expect(quests.length, 2);
     });
 
@@ -27,7 +27,7 @@ void main() {
         kindnessXp: 300,
       );
 
-      final quests = generator.generateDailyQuests(stats, count: 2);
+      final quests = generator.generateDailyQuests(stats, [], count: 2);
 
       expect(quests.length, 2);
       

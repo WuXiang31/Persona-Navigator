@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/quest_model.dart';
 import '../../domain/models/weather_condition.dart';
 import '../../domain/repositories/quest_repository.dart';
+import '../../domain/repositories/calendar_repository.dart';
 import '../../domain/services/quest_generator_service.dart';
 import '../../domain/services/weather_service.dart';
+import '../../domain/models/calendar_event.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 
 class QuestsState {
@@ -40,15 +42,18 @@ class QuestsNotifier extends Notifier<QuestsState> {
   Future<void> _loadData() async {
     final questRepo = ref.read(questRepositoryProvider);
     final weatherService = ref.read(weatherServiceProvider);
+    final calendarRepo = ref.read(calendarRepositoryProvider);
     
-    // Fetch weather and quests concurrently
+    // Fetch weather, quests, and calendar concurrently
     final results = await Future.wait([
       questRepo.getActiveQuests(),
       weatherService.getLocalWeather(),
+      calendarRepo.getTodayEvents(),
     ]);
 
     var quests = results[0] as List<Quest>;
     final weather = results[1] as WeatherCondition;
+    final calendarEvents = results[2] as List<CalendarEvent>;
 
     // If no quests exist (e.g. new day), generate them!
     if (quests.isEmpty) {
@@ -57,7 +62,7 @@ class QuestsNotifier extends Notifier<QuestsState> {
       // Only generate if dashboard has loaded the user stats
       if (!dashboardState.isLoading) {
         final generator = ref.read(questGeneratorProvider);
-        quests = generator.generateDailyQuests(dashboardState.stats);
+        quests = generator.generateDailyQuests(dashboardState.stats, calendarEvents);
         await questRepo.saveQuests(quests);
       }
     }
