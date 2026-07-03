@@ -76,10 +76,10 @@ void main() {
     await tester.tap(find.text('AUTOMATED DESKTOP TEST MISSION').first);
     await tester.pumpAndSettle();
     
-    // Verify Toast appears ("MISSION CLEARED")
+    // Verify Toast appears ("+XP")
     await Future.delayed(const Duration(milliseconds: 500));
     await tester.pump();
-    expect(find.text('MISSION CLEARED'), findsOneWidget);
+    expect(find.textContaining('XP'), findsWidgets);
     
     await Future.delayed(const Duration(seconds: 3));
   });

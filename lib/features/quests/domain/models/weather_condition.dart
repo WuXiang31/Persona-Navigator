@@ -10,15 +10,15 @@ extension WeatherConditionExtension on WeatherCondition {
   String get displayName {
     switch (this) {
       case WeatherCondition.clear:
-        return '☀ CLEAR';
+        return 'CLEAR';
       case WeatherCondition.cloudy:
-        return '☁ CLOUDY';
+        return 'CLOUDY';
       case WeatherCondition.rainy:
-        return '☂ RAINY';
+        return 'RAINY';
       case WeatherCondition.snowy:
-        return '❄ SNOWY';
+        return 'SNOWY';
       case WeatherCondition.thunderstorm:
-        return '⚡ STORM';
+        return 'STORM';
     }
   }
 
@@ -26,20 +26,15 @@ extension WeatherConditionExtension on WeatherCondition {
   String get statBonusDisplay {
     switch (this) {
       case WeatherCondition.clear:
-        return 'BONUS: CHARM+';
+        return 'TODAY\'S BONUS: CHARM ×1.5';
       case WeatherCondition.cloudy:
-        return 'BONUS: PROFICIENCY+';
+        return 'TODAY\'S BONUS: PROFICIENCY ×1.5';
       case WeatherCondition.rainy:
-        return 'BONUS: KNOWLEDGE+';
+        return 'TODAY\'S BONUS: KNOWLEDGE ×1.5';
       case WeatherCondition.snowy:
-        return 'BONUS: GUTS+'; // The task description says "Update stat bonus mappings to align with new weather rules but old stat names". Wait...
-        // cloudy -> craft -> proficiency
-        // rainy -> knowledge -> knowledge
-        // clear -> charm -> charm
-        // snowy -> nerve -> kindness
-        // Let me fix that wait. I'll just apply it.
+        return 'TODAY\'S BONUS: GUTS ×1.5';
       case WeatherCondition.thunderstorm:
-        return 'BONUS: ALL+';
+        return 'TODAY\'S BONUS: ALL ×1.5';
     }
   }
 }
