@@ -14,6 +14,7 @@ import '../../features/dashboard/presentation/pages/home_screen.dart';
 import '../../features/calendar/presentation/pages/calendar_screen.dart';
 
 import '../../features/dashboard/presentation/pages/desktop_layout.dart';
+import '../../core/widgets/toast_manager.dart';
 
 /// Central routing configuration for the application using GoRouter.
 /// 
@@ -59,10 +60,10 @@ GoRouter createRouter(String initialLocation) => GoRouter(
     // --- Main App ---
     ShellRoute(
       builder: (context, state, child) {
-        if (MediaQuery.of(context).size.width > 800) {
-          return DesktopLayout(child: child);
-        }
-        return child;
+        final content = MediaQuery.of(context).size.width > 800
+            ? DesktopLayout(child: child)
+            : child;
+        return ToastOverlay(child: content);
       },
       routes: [
         GoRoute(

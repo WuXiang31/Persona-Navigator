@@ -47,15 +47,24 @@ class QuestsNotifier extends Notifier<QuestsState> {
     final calendarRepo = ref.read(calendarRepositoryProvider);
     
     // Fetch weather, quests, and calendar concurrently
-    final results = await Future.wait([
-      questRepo.getActiveQuests(),
-      weatherService.getLocalWeather(),
-      calendarRepo.getTodayEvents(),
-    ]);
-
-    var quests = results[0] as List<Quest>;
-    final weather = results[1] as WeatherCondition;
-    final calendarEvents = results[2] as List<CalendarEvent>;
+    // If calendar fails (e.g., permissions denied), catch the error so it doesn't freeze the app.
+    List<Quest> quests = [];
+    WeatherCondition weather = WeatherCondition.clear;
+    List<CalendarEvent> calendarEvents = [];
+    
+    try {
+      final results = await Future.wait([
+        questRepo.getActiveQuests(),
+        weatherService.getLocalWeather(),
+        calendarRepo.getTodayEvents().catchError((_) => <CalendarEvent>[]),
+      ]);
+      quests = results[0] as List<Quest>;
+      weather = results[1] as WeatherCondition;
+      calendarEvents = results[2] as List<CalendarEvent>;
+    } catch (e) {
+      // Fallback if anything else catastrophically fails
+      quests = await questRepo.getActiveQuests();
+    }
 
     // If no quests exist (e.g. new day), generate them!
     if (quests.isEmpty) {

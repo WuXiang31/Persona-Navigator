@@ -202,7 +202,10 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
                         xpCalculator: ref.watch(xpCalculatorProvider),
                         onComplete: () {
                           ref.read(questsProvider.notifier).completeQuest(quest.id);
-                          ref.read(toastProvider.notifier).showToast(title: "MISSION CLEARED", message: quest.title);
+                          ref.read(toastProvider.notifier).showToast(
+                            title: "+${quest.xpReward} XP ${quest.targetStat.name.toUpperCase()}", 
+                            message: "",
+                          );
                         },
                         onTap: () => _showEditQuestDialog(context, quest),
                         isSelectMode: _isSelectMode,
@@ -232,7 +235,11 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
                   heroTag: 'back_btn',
                   backgroundColor: AppColors.primaryWhite,
                   child: const Icon(Icons.arrow_back, color: AppColors.backgroundDark),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    }
+                  },
                 ),
                 const SizedBox(width: 16),
                 FloatingActionButton(
