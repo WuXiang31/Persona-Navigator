@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/p5_clipper.dart';
 import '../../../../core/widgets/p5_background.dart';
+import '../../../../core/widgets/toast_manager.dart';
 import '../../domain/models/quest_model.dart';
 import '../../domain/models/weather_condition.dart';
 import '../widgets/quest_card.dart';
@@ -201,6 +202,7 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
                         xpCalculator: ref.watch(xpCalculatorProvider),
                         onComplete: () {
                           ref.read(questsProvider.notifier).completeQuest(quest.id);
+                          ref.read(toastProvider.notifier).showToast(title: "MISSION CLEARED", message: quest.title);
                         },
                         onTap: () => _showEditQuestDialog(context, quest),
                         isSelectMode: _isSelectMode,
@@ -610,6 +612,7 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
                                         ref.read(questsProvider.notifier).addCustomQuest(
                                           title, stat, selectedTimeSlot, xpReward: xp,
                                         );
+                                        ref.read(toastProvider.notifier).showToast(title: "MISSION ADDED", message: title);
                                         Navigator.of(context).pop();
                                       }
                                     } catch (e) {
@@ -624,6 +627,7 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
                                     ref.read(questsProvider.notifier).addCustomQuest(
                                       title, selectedStat, selectedTimeSlot, xpReward: xpValue.round(),
                                     );
+                                    ref.read(toastProvider.notifier).showToast(title: "MISSION ADDED", message: title);
                                     Navigator.of(context).pop();
                                   }
                                 },

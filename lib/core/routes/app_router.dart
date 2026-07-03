@@ -13,6 +13,8 @@ import '../../features/chat/presentation/pages/chat_screen.dart';
 import '../../features/dashboard/presentation/pages/home_screen.dart';
 import '../../features/calendar/presentation/pages/calendar_screen.dart';
 
+import '../../features/dashboard/presentation/pages/desktop_layout.dart';
+
 /// Central routing configuration for the application using GoRouter.
 /// 
 /// Logic: Uses declarative routing to manage application state and deep links.
@@ -55,57 +57,67 @@ GoRouter createRouter(String initialLocation) => GoRouter(
     ),
     
     // --- Main App ---
-    GoRoute(
-      path: '/home',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        key: state.pageKey,
-        child: const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    ),
-    GoRoute(
-      path: '/calendar',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        key: state.pageKey,
-        child: const CalendarScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    ),
-    GoRoute(
-      path: '/missions',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        key: state.pageKey,
-        child: const MissionsScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.0, 1.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
-            child: child,
-          );
-        },
-      ),
-    ),
-    GoRoute(
-      path: '/chat',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        key: state.pageKey,
-        child: const ChatScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
-            child: child,
-          );
-        },
-      ),
+    ShellRoute(
+      builder: (context, state, child) {
+        if (MediaQuery.of(context).size.width > 800) {
+          return DesktopLayout(child: child);
+        }
+        return child;
+      },
+      routes: [
+        GoRoute(
+          path: '/home',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const HomeScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/calendar',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const CalendarScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/missions',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const MissionsScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, 1.0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
+                child: child,
+              );
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/chat',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const ChatScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
+                child: child,
+              );
+            },
+          ),
+        ),
+      ],
     ),
   ],
 );
