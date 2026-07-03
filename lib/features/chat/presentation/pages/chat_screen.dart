@@ -135,7 +135,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Transform(
                     transform: Matrix4.skewX(-0.14),
                     child: ClipPath(
-                      clipper: isUser ? P5SlantedClipper(slant: 8.0) : P5JaggedBubbleClipper(jagDepth: 6.0),
+                      clipper: isUser ? P5SlantedClipper(slant: 8.0) : P5JaggedBubbleClipper(),
                       child: Container(
                         color: isUser ? AppColors.primaryWhite : AppColors.primaryRed,
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

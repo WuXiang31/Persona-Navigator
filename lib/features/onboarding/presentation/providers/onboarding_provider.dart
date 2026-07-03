@@ -48,7 +48,7 @@ class OnboardingNotifier extends Notifier<UserProfile> {
     final repo = ref.read(userRepositoryProvider);
     
     UserStats stats = UserStats(lastActiveDate: DateTime.now());
-    if (state.role == UserRole.student) {
+    if (state.role == UserRole.scholar) {
       stats = stats.copyWith(knowledgeXp: 50);
     } else if (state.role == UserRole.professional) {
       stats = stats.copyWith(proficiencyXp: 50);
