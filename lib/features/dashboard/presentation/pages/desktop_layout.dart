@@ -116,51 +116,55 @@ class _DesktopLayoutState extends State<DesktopLayout> {
           ),
 
           // Right Chat Dock
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            width: _isChatOpen ? 340 : 46,
-            decoration: const BoxDecoration(
-              color: Color(0xFF0A0A0A),
-              border: Border(left: BorderSide(color: Color(0xFF1E1E1E))),
-            ),
-            child: _isChatOpen 
-                ? Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            const Text(
-                              'VESPER',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
+          ClipRect(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: _isChatOpen ? 340 : 46,
+              decoration: const BoxDecoration(
+                color: Color(0xFF0A0A0A),
+                border: Border(left: BorderSide(color: Color(0xFF1E1E1E))),
+              ),
+              child: _isChatOpen 
+                  ? Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'MORGANA',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 18,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(Icons.arrow_forward_ios, color: AppColors.primaryRed),
-                              onPressed: _toggleChat,
-                            ),
-                          ],
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward_ios, color: AppColors.primaryRed),
+                                onPressed: _toggleChat,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      // Chat Integration
-                      const Expanded(
-                        child: ChatScreen(),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: AppColors.primaryRed),
-                        onPressed: _toggleChat,
-                      ),
-                    ],
-                  ),
+                        // Chat Integration
+                        const Expanded(
+                          child: ChatScreen(),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios, color: AppColors.primaryRed),
+                          onPressed: _toggleChat,
+                        ),
+                      ],
+                    ),
+            ),
           ),
         ],
       ),
