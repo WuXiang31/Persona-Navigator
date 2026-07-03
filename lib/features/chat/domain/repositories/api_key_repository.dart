@@ -12,6 +12,11 @@ class SharedPrefsApiKeyRepository implements IApiKeyRepository {
 
   @override
   Future<String?> getApiKey() async {
+    const envKey = String.fromEnvironment('GEMINI_API_KEY');
+    if (envKey.isNotEmpty) {
+      return envKey;
+    }
+    
     final prefs = await SharedPreferences.getInstance();
     final key = prefs.getString(_keyPref);
     return key?.trim(); // Trim whitespace to prevent auth errors
