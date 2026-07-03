@@ -6,7 +6,6 @@ import '../../../dashboard/domain/models/user_stats.dart';
 import '../../../dashboard/domain/logic/xp_engine.dart';
 import '../../../quests/domain/models/weather_condition.dart';
 import '../../../quests/domain/models/quest_model.dart';
-import '../repositories/api_key_repository.dart';
 
 /// Interface for the Chat Service (Dependency Inversion Principle).
 /// Decouples the state management from the concrete AI implementation.
@@ -23,26 +22,17 @@ abstract class IChatService {
   Future<void> saveApiKey(String key);
 }
 
-/// Concrete implementation using Google's Gemini REST API directly.
-/// 
-/// Design Decision: We use raw HTTP calls instead of the `google_generative_ai`
-/// SDK because the SDK does not support newer API key formats (e.g., `AQ.Ab8...`).
-/// By calling the REST API directly with the `X-goog-api-key` header, we support
-/// all key formats and have full control over the request/response cycle.
-class GeminiChatService implements IChatService {
-  final IApiKeyRepository _apiKeyRepo;
-
-  GeminiChatService(this._apiKeyRepo);
-
+/// Concrete implementation that communicates with our Backend Proxy.
+class ProxyChatService implements IChatService {
   @override
   Future<bool> hasApiKey() async {
-    final key = await _apiKeyRepo.getApiKey();
-    return key != null && key.isNotEmpty;
+    // The backend proxy handles the API key, so the client is always ready.
+    return true;
   }
 
   @override
   Future<void> saveApiKey(String key) async {
-    await _apiKeyRepo.saveApiKey(key);
+    // No-op. API keys are not stored on the client anymore.
   }
 
   @override
@@ -54,22 +44,10 @@ class GeminiChatService implements IChatService {
     WeatherCondition weather,
     List<Quest> activeQuests,
   ) async {
-    final apiKey = await _apiKeyRepo.getApiKey();
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('API Key not found');
-    }
-
-    // Debug: Log key info (redacted) to verify it was saved correctly
-    debugPrint('[Morgana] API Key length: ${apiKey.length}, preview: ${apiKey.length > 10 ? "${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 5)}" : "TOO SHORT!"}');
-    
-    if (apiKey.length < 10) {
-      throw Exception('API key is too short (${apiKey.length} chars). Please re-enter your full key.');
-    }
-
     // Build the dynamic system prompt with the user's current context
     final systemPrompt = _buildSystemPrompt(stats, xpCalculator, weather, activeQuests);
 
-    // Build the request body for the Gemini REST API
+    // Build the request body for the Proxy Server
     final requestBody = {
       'system_instruction': {
         'parts': [{'text': systemPrompt}],
@@ -85,27 +63,25 @@ class GeminiChatService implements IChatService {
       ],
     };
 
-    // Use the same model name that works with the user's curl command
-    final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
-    );
+    // Use PROXY_URL from --dart-define, fallback to localhost for development
+    const proxyUrl = String.fromEnvironment('PROXY_URL', defaultValue: 'http://localhost:8080/chat');
+    final url = Uri.parse(proxyUrl);
 
-    debugPrint('[Morgana] Calling Gemini REST API...');
+    debugPrint('[Morgana] Calling Backend Proxy at $proxyUrl...');
 
     final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
-        'X-goog-api-key': apiKey,
       },
       body: json.encode(requestBody),
     );
 
-    debugPrint('[Morgana] Response status: ${response.statusCode}');
+    debugPrint('[Morgana] Proxy Response status: ${response.statusCode}');
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      // Extract text from the response
+      // Extract text from the response (standard Gemini format)
       final candidates = data['candidates'] as List?;
       if (candidates != null && candidates.isNotEmpty) {
         final parts = candidates[0]['content']?['parts'] as List?;
@@ -116,8 +92,8 @@ class GeminiChatService implements IChatService {
       return '...Morgana is thinking...';
     } else {
       final errorBody = json.decode(response.body);
-      final errorMsg = errorBody['error']?['message'] ?? 'Unknown error';
-      debugPrint('[Morgana] API Error: $errorMsg');
+      final errorMsg = errorBody['error'] ?? 'Unknown error connecting to Proxy';
+      debugPrint('[Morgana] Proxy Error: $errorMsg');
       throw Exception(errorMsg);
     }
   }
@@ -159,6 +135,5 @@ Remember: "Looking cool, Joker!" is a classic, but use your full personality (sm
 
 /// Provider for the chat service (Dependency Injection).
 final chatServiceProvider = Provider<IChatService>((ref) {
-  final repo = ref.read(apiKeyRepositoryProvider);
-  return GeminiChatService(repo);
+  return ProxyChatService();
 });

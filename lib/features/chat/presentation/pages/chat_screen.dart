@@ -71,13 +71,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
       ),
-      floatingActionButton: chatState.hasApiKey 
-          ? null 
-          : FloatingActionButton(
-              backgroundColor: AppColors.primaryWhite,
-              child: const Icon(Icons.arrow_back, color: AppColors.backgroundDark),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
     );
   }
 
@@ -196,68 +189,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildApiKeyPrompt() {
-    final TextEditingController keyController = TextEditingController();
-    
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.smart_toy, size: 64, color: AppColors.primaryRed),
-          const SizedBox(height: 16),
-          Text(
-            'AWAKEN YOUR COMPANION',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: AppColors.primaryWhite,
-              fontWeight: FontWeight.w900,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'To chat with Morgana, you need a free Gemini API Key from Google AI Studio.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.primaryWhite,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          TextField(
-            controller: keyController,
-            style: const TextStyle(color: AppColors.backgroundDark, fontWeight: FontWeight.bold),
-            decoration: InputDecoration(
-              hintText: 'Paste Gemini API Key here',
-              filled: true,
-              fillColor: AppColors.primaryWhite,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(0)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryRed,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-              ),
-              onPressed: () {
-                final key = keyController.text.trim();
-                if (key.isNotEmpty) {
-                  ref.read(chatProvider.notifier).saveApiKey(key);
-                }
-              },
-              child: Text(
-                'CONNECT',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.primaryWhite,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return const SizedBox.shrink(); // API Key prompt removed; proxy is always ready.
   }
 }

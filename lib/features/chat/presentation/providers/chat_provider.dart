@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/chat_message.dart';
 import '../../domain/services/chat_service.dart';
-import '../../domain/repositories/api_key_repository.dart';
 import '../../../dashboard/domain/logic/xp_engine.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../quests/presentation/providers/quests_provider.dart';
@@ -43,39 +42,18 @@ class ChatNotifier extends Notifier<ChatState> {
   }
 
   Future<void> _checkApiKey() async {
-    final service = ref.read(chatServiceProvider);
-    final hasKey = await service.hasApiKey();
-    
-    // Validate key length - if it's corrupted/truncated, clear it
-    if (hasKey) {
-      final repo = ref.read(apiKeyRepositoryProvider);
-      final key = await repo.getApiKey();
-      if (key != null && key.length < 10) {
-        debugPrint('[Morgana] Stored key is corrupted (${key.length} chars). Clearing.');
-        await repo.clearApiKey();
-        state = state.copyWith(hasApiKey: false, messages: []);
-        return;
-      }
-    }
-
-    // If they have a valid key, add Morgana's greeting
-    List<ChatMessage> initialMessages = [];
-    if (hasKey) {
-      initialMessages.add(
-        ChatMessage(
-          text: "Looking cool! I'm Morgana. What should we do today?",
-          role: MessageRole.morgana,
-        ),
-      );
-    }
-
-    state = state.copyWith(hasApiKey: hasKey, messages: initialMessages);
+    // The backend proxy handles the API key, so the client is always ready.
+    List<ChatMessage> initialMessages = [
+      ChatMessage(
+        text: "Looking cool! I'm Morgana. What should we do today?",
+        role: MessageRole.morgana,
+      ),
+    ];
+    state = state.copyWith(hasApiKey: true, messages: initialMessages);
   }
 
   Future<void> saveApiKey(String key) async {
-    final service = ref.read(chatServiceProvider);
-    await service.saveApiKey(key);
-    await _checkApiKey();
+    // No-op. API keys are handled by the proxy.
   }
 
   Future<void> sendMessage(String text) async {
