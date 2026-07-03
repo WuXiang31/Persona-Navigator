@@ -113,7 +113,7 @@ class QuestsNotifier extends Notifier<QuestsState> {
     }
   }
 
-  Future<void> addCustomQuest(String title, StatType targetStat, TimeSlot timeSlot) async {
+  Future<void> addCustomQuest(String title, StatType targetStat, TimeSlot timeSlot, {int xpReward = 50}) async {
     final repo = ref.read(questRepositoryProvider);
     final quests = state.activeQuests.toList();
     
@@ -122,7 +122,7 @@ class QuestsNotifier extends Notifier<QuestsState> {
       title: title,
       targetStat: targetStat,
       timeSlot: timeSlot,
-      xpReward: 50,
+      xpReward: xpReward,
       isCompleted: false,
     );
     

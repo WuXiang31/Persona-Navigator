@@ -9,6 +9,7 @@ import '../widgets/quest_card.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../dashboard/domain/logic/xp_engine.dart';
 import '../providers/quests_provider.dart';
+import '../../../chat/domain/services/chat_service.dart';
 
 class MissionsScreen extends ConsumerWidget {
   const MissionsScreen({super.key});
@@ -155,6 +156,9 @@ class MissionsScreen extends ConsumerWidget {
     String title = '';
     StatType selectedStat = StatType.knowledge;
     TimeSlot selectedTimeSlot = TimeSlot.morning;
+    bool isAutoMode = true; // Auto mode by default
+    double xpValue = 50; // default for manual mode
+    bool isLoadingAuto = false;
 
     showDialog(
       context: context,
@@ -180,6 +184,19 @@ class MissionsScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment(value: true, label: Text('Auto-Decide')),
+                          ButtonSegment(value: false, label: Text('Manual')),
+                        ],
+                        selected: {isAutoMode},
+                        onSelectionChanged: (Set<bool> newSelection) {
+                          setState(() {
+                            isAutoMode = newSelection.first;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
                       TextField(
                         style: const TextStyle(color: AppColors.primaryWhite),
                         decoration: const InputDecoration(
@@ -189,26 +206,6 @@ class MissionsScreen extends ConsumerWidget {
                           focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed, width: 2)),
                         ),
                         onChanged: (value) => title = value,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<StatType>(
-                        value: selectedStat,
-                        dropdownColor: AppColors.backgroundDark,
-                        style: const TextStyle(color: AppColors.primaryWhite),
-                        decoration: const InputDecoration(
-                          labelText: 'Target Stat',
-                          labelStyle: TextStyle(color: Colors.grey),
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
-                        ),
-                        items: StatType.values.map((stat) {
-                          return DropdownMenuItem(
-                            value: stat,
-                            child: Text(stat.name.toUpperCase()),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) setState(() => selectedStat = value);
-                        },
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<TimeSlot>(
@@ -230,6 +227,51 @@ class MissionsScreen extends ConsumerWidget {
                           if (value != null) setState(() => selectedTimeSlot = value);
                         },
                       ),
+                      if (!isAutoMode) ...[
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<StatType>(
+                          value: selectedStat,
+                          dropdownColor: AppColors.backgroundDark,
+                          style: const TextStyle(color: AppColors.primaryWhite),
+                          decoration: const InputDecoration(
+                            labelText: 'Target Stat',
+                            labelStyle: TextStyle(color: Colors.grey),
+                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                          ),
+                          items: StatType.values.map((stat) {
+                            return DropdownMenuItem(
+                              value: stat,
+                              child: Text(stat.name.toUpperCase()),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) setState(() => selectedStat = value);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const Text('XP Reward:', style: TextStyle(color: Colors.grey)),
+                            Expanded(
+                              child: Slider(
+                                value: xpValue,
+                                min: 10,
+                                max: 100,
+                                divisions: 90,
+                                activeColor: AppColors.primaryRed,
+                                inactiveColor: Colors.grey,
+                                label: xpValue.round().toString(),
+                                onChanged: (val) {
+                                  setState(() {
+                                    xpValue = val;
+                                  });
+                                },
+                              ),
+                            ),
+                            Text('${xpValue.round()}', style: const TextStyle(color: AppColors.primaryWhite)),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -239,20 +281,47 @@ class MissionsScreen extends ConsumerWidget {
                             child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
                           ),
                           const SizedBox(width: 8),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryRed,
-                              foregroundColor: AppColors.primaryWhite,
-                              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                          if (isLoadingAuto)
+                            const CircularProgressIndicator(color: AppColors.primaryRed)
+                          else
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryRed,
+                                foregroundColor: AppColors.primaryWhite,
+                                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                              ),
+                              onPressed: () async {
+                                if (title.isEmpty) return;
+                                
+                                if (isAutoMode) {
+                                  setState(() => isLoadingAuto = true);
+                                  try {
+                                    final chatService = ref.read(chatServiceProvider);
+                                    final (stat, xp) = await chatService.autoDecideQuest(title);
+                                    
+                                    if (context.mounted) {
+                                      ref.read(questsProvider.notifier).addCustomQuest(
+                                        title, stat, selectedTimeSlot, xpReward: xp,
+                                      );
+                                      Navigator.of(context).pop();
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error: $e')),
+                                      );
+                                      setState(() => isLoadingAuto = false);
+                                    }
+                                  }
+                                } else {
+                                  ref.read(questsProvider.notifier).addCustomQuest(
+                                    title, selectedStat, selectedTimeSlot, xpReward: xpValue.round(),
+                                  );
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                              child: Text(isAutoMode ? 'AUTO-DECIDE & SAVE' : 'SAVE MISSION', style: const TextStyle(fontWeight: FontWeight.bold)),
                             ),
-                            onPressed: () {
-                              if (title.isNotEmpty) {
-                                ref.read(questsProvider.notifier).addCustomQuest(title, selectedStat, selectedTimeSlot);
-                                Navigator.of(context).pop();
-                              }
-                            },
-                            child: const Text('SAVE MISSION', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
                         ],
                       ),
                     ],
