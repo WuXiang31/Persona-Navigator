@@ -37,19 +37,15 @@ class ChatState {
 class ChatNotifier extends Notifier<ChatState> {
   @override
   ChatState build() {
-    _checkApiKey();
-    return const ChatState();
-  }
-
-  Future<void> _checkApiKey() async {
-    // The backend proxy handles the API key, so the client is always ready.
-    List<ChatMessage> initialMessages = [
-      ChatMessage(
-        text: "Looking cool! I'm Morgana. What should we do today?",
-        role: MessageRole.morgana,
-      ),
-    ];
-    state = state.copyWith(hasApiKey: true, messages: initialMessages);
+    return ChatState(
+      hasApiKey: true,
+      messages: [
+        ChatMessage(
+          text: "Looking cool! I'm Morgana. What should we do today?",
+          role: MessageRole.morgana,
+        ),
+      ],
+    );
   }
 
   Future<void> saveApiKey(String key) async {
