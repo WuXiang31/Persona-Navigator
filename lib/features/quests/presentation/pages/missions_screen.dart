@@ -11,11 +11,93 @@ import '../../../dashboard/domain/logic/xp_engine.dart';
 import '../providers/quests_provider.dart';
 import '../../../chat/domain/services/chat_service.dart';
 
-class MissionsScreen extends ConsumerWidget {
+class MissionsScreen extends ConsumerStatefulWidget {
   const MissionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MissionsScreen> createState() => _MissionsScreenState();
+}
+
+class _MissionsScreenState extends ConsumerState<MissionsScreen> {
+  bool _isSelectMode = false;
+  final Set<String> _selectedIds = {};
+
+  void _toggleSelectMode() {
+    setState(() {
+      _isSelectMode = !_isSelectMode;
+      if (!_isSelectMode) _selectedIds.clear();
+    });
+  }
+
+  void _deleteSelected() {
+    if (_selectedIds.isEmpty) return;
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipPath(
+            clipper: P5SlantedClipper(),
+            child: Container(
+              color: AppColors.backgroundDark,
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'DELETE ${_selectedIds.length} MISSION${_selectedIds.length > 1 ? 'S' : ''}?',
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Selected missions will be permanently removed.',
+                    style: TextStyle(color: AppColors.primaryWhite),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: AppColors.primaryWhite,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        ),
+                        onPressed: () {
+                          for (final id in _selectedIds) {
+                            ref.read(questsProvider.notifier).deleteQuest(id);
+                          }
+                          Navigator.of(ctx).pop();
+                          setState(() {
+                            _selectedIds.clear();
+                            _isSelectMode = false;
+                          });
+                        },
+                        child: const Text('DELETE ALL', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final dashboardState = ref.watch(dashboardProvider);
     final questsState = ref.watch(questsProvider);
 
@@ -27,18 +109,39 @@ class MissionsScreen extends ConsumerWidget {
             // Top Bar / Weather Banner
             _buildWeatherBanner(context, questsState),
             
-            // Title
+            // Title row with select mode toggle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'MISSIONS',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: AppColors.primaryWhite,
-                    fontWeight: FontWeight.w900,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isSelectMode ? '${_selectedIds.length} SELECTED' : 'MISSIONS',
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      color: _isSelectMode ? AppColors.primaryRed : AppColors.primaryWhite,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
+                  Row(
+                    children: [
+                      if (_isSelectMode && _selectedIds.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.delete_sweep, color: Colors.red, size: 28),
+                          onPressed: _deleteSelected,
+                          tooltip: 'Delete selected',
+                        ),
+                      IconButton(
+                        icon: Icon(
+                          _isSelectMode ? Icons.close : Icons.checklist,
+                          color: _isSelectMode ? AppColors.primaryRed : AppColors.primaryWhite,
+                          size: 28,
+                        ),
+                        onPressed: _toggleSelectMode,
+                        tooltip: _isSelectMode ? 'Cancel' : 'Select missions',
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             
@@ -78,8 +181,18 @@ class MissionsScreen extends ConsumerWidget {
                         onComplete: () {
                           ref.read(questsProvider.notifier).completeQuest(quest.id);
                         },
-                        onEdit: () => _showEditQuestDialog(context, ref, quest),
-                        onDelete: () => _showDeleteConfirmation(context, ref, quest),
+                        onTap: () => _showEditQuestDialog(context, quest),
+                        isSelectMode: _isSelectMode,
+                        isSelected: _selectedIds.contains(quest.id),
+                        onSelectedChanged: (selected) {
+                          setState(() {
+                            if (selected == true) {
+                              _selectedIds.add(quest.id);
+                            } else {
+                              _selectedIds.remove(quest.id);
+                            }
+                          });
+                        },
                       );
                     },
                   ),
@@ -87,29 +200,30 @@ class MissionsScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'back_btn',
-            backgroundColor: AppColors.primaryWhite,
-            child: const Icon(Icons.arrow_back, color: AppColors.backgroundDark),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton(
-            heroTag: 'add_quest_btn',
-            backgroundColor: AppColors.primaryRed,
-            child: const Icon(Icons.add, color: AppColors.primaryWhite),
-            onPressed: () => _showAddQuestDialog(context, ref),
-          ),
-        ],
-      ),
+      floatingActionButton: _isSelectMode
+          ? null  // Hide FABs in select mode
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'back_btn',
+                  backgroundColor: AppColors.primaryWhite,
+                  child: const Icon(Icons.arrow_back, color: AppColors.backgroundDark),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  heroTag: 'add_quest_btn',
+                  backgroundColor: AppColors.primaryRed,
+                  child: const Icon(Icons.add, color: AppColors.primaryWhite),
+                  onPressed: () => _showAddQuestDialog(context, ref),
+                ),
+              ],
+            ),
     );
   }
 
   Widget _buildWeatherBanner(BuildContext context, QuestsState state) {
-    // Determine banner color based on weather
     Color bannerColor;
     if (state.weather == WeatherCondition.clear) bannerColor = AppColors.primaryRed;
     else if (state.weather == WeatherCondition.thunderstorm) bannerColor = Colors.deepPurple;
@@ -154,12 +268,232 @@ class MissionsScreen extends ConsumerWidget {
     );
   }
 
+  void _showEditQuestDialog(BuildContext context, Quest quest) {
+    String title = quest.title;
+    StatType selectedStat = quest.targetStat;
+    TimeSlot selectedTimeSlot = quest.timeSlot;
+    double xpValue = quest.xpReward.toDouble();
+    final titleController = TextEditingController(text: quest.title);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: ClipPath(
+                clipper: P5SlantedClipper(),
+                child: Container(
+                  color: AppColors.backgroundDark,
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'EDIT MISSION',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.primaryRed,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: titleController,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Mission Title',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed, width: 2)),
+                        ),
+                        onChanged: (value) => title = value,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<TimeSlot>(
+                        value: selectedTimeSlot,
+                        dropdownColor: AppColors.backgroundDark,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Time of Day',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                        ),
+                        items: TimeSlot.values.map((slot) {
+                          return DropdownMenuItem(
+                            value: slot,
+                            child: Text(slot.name.toUpperCase()),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) setState(() => selectedTimeSlot = value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<StatType>(
+                        value: selectedStat,
+                        dropdownColor: AppColors.backgroundDark,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Target Stat',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                        ),
+                        items: StatType.values.map((stat) {
+                          return DropdownMenuItem(
+                            value: stat,
+                            child: Text(stat.name.toUpperCase()),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) setState(() => selectedStat = value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Text('XP Reward:', style: TextStyle(color: Colors.grey)),
+                          Expanded(
+                            child: Slider(
+                              value: xpValue,
+                              min: 10,
+                              max: 100,
+                              divisions: 90,
+                              activeColor: AppColors.primaryRed,
+                              inactiveColor: Colors.grey,
+                              label: xpValue.round().toString(),
+                              onChanged: (val) {
+                                setState(() {
+                                  xpValue = val;
+                                });
+                              },
+                            ),
+                          ),
+                          Text('${xpValue.round()}', style: const TextStyle(color: AppColors.primaryWhite)),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Delete button on the left
+                          TextButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              _showDeleteConfirmation(quest);
+                            },
+                            icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                            label: const Text('DELETE', style: TextStyle(color: Colors.red)),
+                          ),
+                          Row(
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryRed,
+                                  foregroundColor: AppColors.primaryWhite,
+                                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                                ),
+                                onPressed: () {
+                                  if (title.isNotEmpty) {
+                                    ref.read(questsProvider.notifier).updateQuest(
+                                      quest.id,
+                                      title: title,
+                                      targetStat: selectedStat,
+                                      timeSlot: selectedTimeSlot,
+                                      xpReward: xpValue.round(),
+                                    );
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                                child: const Text('UPDATE', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(Quest quest) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipPath(
+            clipper: P5SlantedClipper(),
+            child: Container(
+              color: AppColors.backgroundDark,
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'DELETE MISSION?',
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '"${quest.title}" will be permanently removed.',
+                    style: const TextStyle(color: AppColors.primaryWhite),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: AppColors.primaryWhite,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        ),
+                        onPressed: () {
+                          ref.read(questsProvider.notifier).deleteQuest(quest.id);
+                          Navigator.of(ctx).pop();
+                        },
+                        child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showAddQuestDialog(BuildContext context, WidgetRef ref) {
     String title = '';
     StatType selectedStat = StatType.knowledge;
     TimeSlot selectedTimeSlot = TimeSlot.morning;
-    bool isAutoMode = true; // Auto mode by default
-    double xpValue = 50; // default for manual mode
+    bool isAutoMode = true;
+    double xpValue = 50;
     bool isLoadingAuto = false;
 
     showDialog(
@@ -324,213 +658,6 @@ class MissionsScreen extends ConsumerWidget {
                               },
                               child: Text(isAutoMode ? 'AUTO-DECIDE & SAVE' : 'SAVE MISSION', style: const TextStyle(fontWeight: FontWeight.bold)),
                             ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, Quest quest) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: ClipPath(
-            clipper: P5SlantedClipper(),
-            child: Container(
-              color: AppColors.backgroundDark,
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'DELETE MISSION?',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.0,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '"${quest.title}" will be permanently removed.',
-                    style: const TextStyle(color: AppColors.primaryWhite),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: AppColors.primaryWhite,
-                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                        ),
-                        onPressed: () {
-                          ref.read(questsProvider.notifier).deleteQuest(quest.id);
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showEditQuestDialog(BuildContext context, WidgetRef ref, Quest quest) {
-    String title = quest.title;
-    StatType selectedStat = quest.targetStat;
-    TimeSlot selectedTimeSlot = quest.timeSlot;
-    double xpValue = quest.xpReward.toDouble();
-    final titleController = TextEditingController(text: quest.title);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              backgroundColor: Colors.transparent,
-              child: ClipPath(
-                clipper: P5SlantedClipper(),
-                child: Container(
-                  color: AppColors.backgroundDark,
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'EDIT MISSION',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.primaryRed,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2.0,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: titleController,
-                        style: const TextStyle(color: AppColors.primaryWhite),
-                        decoration: const InputDecoration(
-                          labelText: 'Mission Title',
-                          labelStyle: TextStyle(color: Colors.grey),
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
-                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed, width: 2)),
-                        ),
-                        onChanged: (value) => title = value,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<TimeSlot>(
-                        value: selectedTimeSlot,
-                        dropdownColor: AppColors.backgroundDark,
-                        style: const TextStyle(color: AppColors.primaryWhite),
-                        decoration: const InputDecoration(
-                          labelText: 'Time of Day',
-                          labelStyle: TextStyle(color: Colors.grey),
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
-                        ),
-                        items: TimeSlot.values.map((slot) {
-                          return DropdownMenuItem(
-                            value: slot,
-                            child: Text(slot.name.toUpperCase()),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) setState(() => selectedTimeSlot = value);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<StatType>(
-                        value: selectedStat,
-                        dropdownColor: AppColors.backgroundDark,
-                        style: const TextStyle(color: AppColors.primaryWhite),
-                        decoration: const InputDecoration(
-                          labelText: 'Target Stat',
-                          labelStyle: TextStyle(color: Colors.grey),
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
-                        ),
-                        items: StatType.values.map((stat) {
-                          return DropdownMenuItem(
-                            value: stat,
-                            child: Text(stat.name.toUpperCase()),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) setState(() => selectedStat = value);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const Text('XP Reward:', style: TextStyle(color: Colors.grey)),
-                          Expanded(
-                            child: Slider(
-                              value: xpValue,
-                              min: 10,
-                              max: 100,
-                              divisions: 90,
-                              activeColor: AppColors.primaryRed,
-                              inactiveColor: Colors.grey,
-                              label: xpValue.round().toString(),
-                              onChanged: (val) {
-                                setState(() {
-                                  xpValue = val;
-                                });
-                              },
-                            ),
-                          ),
-                          Text('${xpValue.round()}', style: const TextStyle(color: AppColors.primaryWhite)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryRed,
-                              foregroundColor: AppColors.primaryWhite,
-                              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                            ),
-                            onPressed: () {
-                              if (title.isNotEmpty) {
-                                ref.read(questsProvider.notifier).updateQuest(
-                                  quest.id,
-                                  title: title,
-                                  targetStat: selectedStat,
-                                  timeSlot: selectedTimeSlot,
-                                  xpReward: xpValue.round(),
-                                );
-                                Navigator.of(context).pop();
-                              }
-                            },
-                            child: const Text('UPDATE MISSION', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
                         ],
                       ),
                     ],
