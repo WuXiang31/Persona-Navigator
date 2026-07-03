@@ -19,3 +19,8 @@ All feature development must follow this strict 6-part pipeline. When possible, 
 4. **Implement (Developing):** Writing the actual Dart/Flutter code and assembling the UI components.
 5. **Testing:** Writing and running automated unit and UI integration tests to verify functionality.
 6. **Documentation:** Updating `technical_overview.md` and `walkthrough.md` with the new changes.
+
+## Git Branching Strategy
+Whenever implementing a new feature, you MUST create a new Git branch (e.g., `feature/<feature-name>`). 
+All development, testing, and debugging must occur on this branch. 
+Only after the feature is 100% complete and successfully tested by all agents should it be merged back into the `main` branch.
