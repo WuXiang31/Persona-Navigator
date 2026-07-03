@@ -112,6 +112,25 @@ class QuestsNotifier extends Notifier<QuestsState> {
       await dashboard.addXp(completedQuest.targetStat.name, finalXp);
     }
   }
+
+  Future<void> addCustomQuest(String title, StatType targetStat, TimeSlot timeSlot) async {
+    final repo = ref.read(questRepositoryProvider);
+    final quests = state.activeQuests.toList();
+    
+    final newQuest = Quest(
+      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      targetStat: targetStat,
+      timeSlot: timeSlot,
+      xpReward: 50,
+      isCompleted: false,
+    );
+    
+    quests.add(newQuest);
+    
+    state = state.copyWith(activeQuests: quests);
+    await repo.saveQuests(quests);
+  }
 }
 
 final questsProvider = NotifierProvider<QuestsNotifier, QuestsState>(() {

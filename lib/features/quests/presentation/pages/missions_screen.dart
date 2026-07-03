@@ -84,10 +84,23 @@ class MissionsScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primaryWhite,
-        child: const Icon(Icons.arrow_back, color: AppColors.backgroundDark),
-        onPressed: () => Navigator.of(context).pop(),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'back_btn',
+            backgroundColor: AppColors.primaryWhite,
+            child: const Icon(Icons.arrow_back, color: AppColors.backgroundDark),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 16),
+          FloatingActionButton(
+            heroTag: 'add_quest_btn',
+            backgroundColor: AppColors.primaryRed,
+            child: const Icon(Icons.add, color: AppColors.primaryWhite),
+            onPressed: () => _showAddQuestDialog(context, ref),
+          ),
+        ],
       ),
     );
   }
@@ -135,6 +148,121 @@ class MissionsScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showAddQuestDialog(BuildContext context, WidgetRef ref) {
+    String title = '';
+    StatType selectedStat = StatType.knowledge;
+    TimeSlot selectedTimeSlot = TimeSlot.morning;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: ClipPath(
+                clipper: P5SlantedClipper(),
+                child: Container(
+                  color: AppColors.backgroundDark,
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'NEW MISSION',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.primaryRed,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.0,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Mission Title',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed, width: 2)),
+                        ),
+                        onChanged: (value) => title = value,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<StatType>(
+                        value: selectedStat,
+                        dropdownColor: AppColors.backgroundDark,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Target Stat',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                        ),
+                        items: StatType.values.map((stat) {
+                          return DropdownMenuItem(
+                            value: stat,
+                            child: Text(stat.name.toUpperCase()),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) setState(() => selectedStat = value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<TimeSlot>(
+                        value: selectedTimeSlot,
+                        dropdownColor: AppColors.backgroundDark,
+                        style: const TextStyle(color: AppColors.primaryWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'Time of Day',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primaryRed)),
+                        ),
+                        items: TimeSlot.values.map((slot) {
+                          return DropdownMenuItem(
+                            value: slot,
+                            child: Text(slot.name.toUpperCase()),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) setState(() => selectedTimeSlot = value);
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('CANCEL', style: TextStyle(color: Colors.grey)),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: AppColors.primaryWhite,
+                              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                            ),
+                            onPressed: () {
+                              if (title.isNotEmpty) {
+                                ref.read(questsProvider.notifier).addCustomQuest(title, selectedStat, selectedTimeSlot);
+                                Navigator.of(context).pop();
+                              }
+                            },
+                            child: const Text('SAVE MISSION', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
