@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <pattern id="halD3" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="3.2" fill="rgba(242,242,242,0.05)"></circle>
+    </pattern>
+    <clipPath id="sqD3"><rect width="1024" height="1024"></rect></clipPath>
+  </defs>
+  <g clip-path="url(#sqD3)">
+    <rect width="1024" height="1024" fill="#0A0A0A"></rect>
+    <rect width="1024" height="1024" fill="url(#halD3)"></rect>
+    
+    <rect x="252" y="236" width="520" height="560" fill="#000000" transform="translate(30,34) skewX(-8)"></rect>
+    <rect x="252" y="236" width="520" height="560" fill="#E50000" transform="skewX(-8)"></rect>
+    
+    <path d="M320,286 L648,286 L710,338 L710,486 L648,538 L484,538 L484,772 L320,772 Z M484,358 L604,358 L634,386 L634,438 L604,466 L484,466 Z" fill-rule="evenodd" fill="#F2F2F2" transform="skewX(-8)"></path>
+    
+    <path d="M792,150 l24,58 l62,5 l-47,41 l15,61 l-54,-33 l-54,33 l15,-61 l-47,-41 l62,-5 Z" fill="#FFD700"></path>
+  </g>
+</svg>

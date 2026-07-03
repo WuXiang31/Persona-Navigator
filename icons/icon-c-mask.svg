@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <pattern id="halC" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="3.2" fill="rgba(242,242,242,0.06)"></circle>
+    </pattern>
+    <clipPath id="sqC"><rect width="1024" height="1024"></rect></clipPath>
+  </defs>
+  <g clip-path="url(#sqC)">
+    <rect width="1024" height="1024" fill="#111111"></rect>
+    <rect width="1024" height="1024" fill="url(#halC)"></rect>
+    
+    <g transform="translate(22,26)">
+      <path d="M512,250 L742,300 L800,470 L742,720 L560,830 L512,842 L464,830 L282,720 L224,470 L282,300 Z" fill="#B00000"></path>
+    </g>
+    
+    <path d="M512,250 L742,300 L800,470 L742,720 L560,830 L512,842 L464,830 L282,720 L224,470 L282,300 Z" fill="#E50000"></path>
+    
+    <polygon points="282,300 300,150 430,286" fill="#E50000"></polygon>
+    <polygon points="742,300 724,150 594,286" fill="#E50000"></polygon>
+    <polygon points="300,150 336,232 400,266" fill="#111111"></polygon>
+    <polygon points="724,150 688,232 624,266" fill="#111111"></polygon>
+    
+    <polygon points="330,430 468,404 452,506 342,512" fill="#111111"></polygon>
+    <polygon points="694,430 556,404 572,506 682,512" fill="#111111"></polygon>
+    
+    <polygon points="512,540 566,640 512,812 458,640" fill="#F2F2F2"></polygon>
+    
+    <polygon points="512,596 542,644 512,700 482,644" fill="#FFD700"></polygon>
+  </g>
+</svg>

@@ -10,6 +10,7 @@ import '../../features/chat/presentation/pages/chat_screen.dart';
 
 import '../../features/dashboard/presentation/pages/home_screen.dart';
 import '../../features/calendar/presentation/pages/calendar_screen.dart';
+import '../../features/squad/presentation/pages/squad_screen.dart';
 
 import '../../features/dashboard/presentation/pages/desktop_layout.dart';
 import '../../core/widgets/toast_manager.dart';
@@ -100,6 +101,19 @@ GoRouter createRouter(String initialLocation) => GoRouter(
                   begin: const Offset(1.0, 0.0),
                   end: Offset.zero,
                 ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
+                child: child,
+              );
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/squad',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const SquadScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
                 child: child,
               );
             },

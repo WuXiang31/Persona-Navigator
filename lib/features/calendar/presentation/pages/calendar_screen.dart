@@ -125,16 +125,7 @@ class CalendarScreen extends ConsumerWidget {
             
             // Bottom Navigation
             P5BottomNav(
-              currentIndex: 1, // 1 is Calendar
-              onTap: (index) {
-                if (index == 0) {
-                  context.go('/home');
-                } else if (index == 1) {
-                  context.go('/calendar');
-                } else if (index == 2) {
-                  // stats route if any
-                }
-              },
+              currentIndex: 1, // Kept 1 because Calendar is under Missions for now
             ),
           ],
         ),
