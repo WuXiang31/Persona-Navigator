@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <pattern id="halB" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="5" cy="5" r="4" fill="rgba(0,0,0,0.28)"></circle>
+    </pattern>
+    <clipPath id="sqB"><rect width="1024" height="1024"></rect></clipPath>
+  </defs>
+  <g clip-path="url(#sqB)">
+    <rect width="1024" height="1024" fill="#E50000"></rect>
+    <rect width="1024" height="1024" fill="url(#halB)"></rect>
+    
+    <polygon points="-60,690 1140,560 1140,1140 -60,1140" fill="#0A0A0A"></polygon>
+    <polygon points="-60,690 1140,560 1140,632 -60,762" fill="#000000" opacity="0.6"></polygon>
+    
+    <path d="M250,300 L392,300 L536,604 L680,300 L822,300 L536,792 Z" fill="#F2F2F2" transform="translate(24,28) skewX(-8)"></path>
+    
+    <path d="M250,300 L392,300 L536,604 L680,300 L822,300 L536,792 Z" fill="#111111" transform="skewX(-8)"></path>
+    
+    <path d="M792,196 l26,64 l68,5 l-52,45 l17,67 l-59,-36 l-59,36 l17,-67 l-52,-45 l68,-5 Z" fill="#FFD700"></path>
+  </g>
+</svg>
