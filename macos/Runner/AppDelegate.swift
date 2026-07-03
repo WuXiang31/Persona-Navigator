@@ -57,8 +57,10 @@ class AppDelegate: FlutterAppDelegate {
       }
       result(eventsArray)
     } else {
+      let errorMsg = error?.localizedDescription ?? "Unknown error"
+      print("Calendar Request Error: \(errorMsg)")
       result(FlutterError(code: "UNAVAILABLE",
-                          message: "Calendar access denied",
+                          message: "Calendar access denied: \(errorMsg)",
                           details: nil))
     }
   }
