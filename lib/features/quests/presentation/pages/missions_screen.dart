@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/p5_clipper.dart';
@@ -238,6 +239,8 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
                   onPressed: () {
                     if (Navigator.of(context).canPop()) {
                       Navigator.of(context).pop();
+                    } else {
+                      context.go('/home');
                     }
                   },
                 ),
@@ -254,15 +257,33 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
   }
 
   Widget _buildWeatherBanner(BuildContext context, QuestsState state) {
-    Color bannerColor;
-    if (state.weather == WeatherCondition.clear) bannerColor = AppColors.primaryRed;
-    else if (state.weather == WeatherCondition.thunderstorm) bannerColor = Colors.deepPurple;
-    else if (state.weather == WeatherCondition.snowy) bannerColor = Colors.lightBlue;
-    else bannerColor = AppColors.primaryWhite.withOpacity(0.9);
+    BoxDecoration decoration;
+    Color textColor;
 
-    final textColor = (bannerColor == AppColors.primaryRed || bannerColor == Colors.deepPurple) 
-        ? AppColors.primaryWhite 
-        : AppColors.backgroundDark;
+    switch (state.weather) {
+      case WeatherCondition.clear:
+        decoration = const BoxDecoration(color: AppColors.primaryRed);
+        textColor = AppColors.primaryWhite;
+        break;
+      case WeatherCondition.snowy:
+        decoration = const BoxDecoration(color: Color(0xFFA9D6FF));
+        textColor = Colors.black;
+        break;
+      case WeatherCondition.thunderstorm:
+        decoration = BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple, Colors.deepPurple.shade900],
+          ),
+        );
+        textColor = AppColors.primaryWhite;
+        break;
+      case WeatherCondition.cloudy:
+      case WeatherCondition.rainy:
+      default:
+        decoration = const BoxDecoration(color: Color(0xFFF2F2F2));
+        textColor = Colors.black;
+        break;
+    }
 
     return Padding(
       padding: const EdgeInsets.only(top: 60.0, left: 16, right: 16),
@@ -270,28 +291,51 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
         transform: Matrix4.skewX(-0.14),
         child: Container(
           width: double.infinity,
-          color: bannerColor,
+          decoration: decoration,
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
           child: Transform(
             transform: Matrix4.skewX(0.14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  state.isLoading ? 'FETCHING WEATHER...' : 'CONDITION: ${state.weather.displayName}',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w900,
-                    fontStyle: FontStyle.italic,
-                    letterSpacing: 2.0,
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (!state.isLoading) ...[
+                        Icon(
+                          _getWeatherIcon(state.weather),
+                          color: textColor,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: Text(
+                          state.isLoading ? 'FETCHING WEATHER...' : 'CONDITION: ${state.weather.displayName}',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: textColor,
+                            fontWeight: FontWeight.w900,
+                            fontStyle: FontStyle.italic,
+                            letterSpacing: 2.0,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 if (!state.isLoading)
-                  Text(
-                    state.weather.statBonusDisplay,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: textColor,
-                      fontWeight: FontWeight.w900,
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        state.weather.statBonusDisplay,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: textColor,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -300,6 +344,21 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
         ),
       ),
     );
+  }
+
+  IconData _getWeatherIcon(WeatherCondition condition) {
+    switch (condition) {
+      case WeatherCondition.clear:
+        return Icons.wb_sunny;
+      case WeatherCondition.cloudy:
+        return Icons.cloud;
+      case WeatherCondition.rainy:
+        return Icons.umbrella;
+      case WeatherCondition.snowy:
+        return Icons.ac_unit;
+      case WeatherCondition.thunderstorm:
+        return Icons.flash_on;
+    }
   }
 
   void _showEditQuestDialog(BuildContext context, Quest quest) {

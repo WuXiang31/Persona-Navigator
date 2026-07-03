@@ -22,6 +22,10 @@ class NativeCalendarRepository implements ICalendarRepository {
     } on PlatformException catch (e) {
       print('Failed to get calendar events: ${e.message}');
       return [];
+    } catch (e) {
+      // MissingPluginException on iOS where the channel isn't implemented
+      print('Calendar not available on this platform: $e');
+      return [];
     }
   }
 }

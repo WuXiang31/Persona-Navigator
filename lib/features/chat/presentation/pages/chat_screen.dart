@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/p5_background.dart';
@@ -115,11 +116,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             itemCount: chatState.messages.length + (chatState.isLoading ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == chatState.messages.length && chatState.isLoading) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: CircularProgressIndicator(color: AppColors.primaryRed),
+                    child: Transform(
+                      transform: Matrix4.skewX(-0.14),
+                      child: ClipPath(
+                        clipper: P5JaggedBubbleClipper(),
+                        child: Container(
+                          color: AppColors.primaryRed,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          child: Transform(
+                            transform: Matrix4.skewX(0.14),
+                            child: const _TypingDots(),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 );
               }
@@ -176,7 +190,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.primaryWhite),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.go('/home');
+              }
+            },
           ),
           Expanded(
             child: TextField(
@@ -215,5 +235,80 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildApiKeyPrompt() {
     return const SizedBox.shrink(); // API Key prompt removed; proxy is always ready.
+  }
+}
+
+/// Pulsing "..." typing indicator for Morgana's chat responses.
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin {
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _animations;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = List.generate(3, (i) {
+      return AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 600),
+      );
+    });
+
+    _animations = _controllers.map((c) {
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: c, curve: Curves.easeInOut),
+      );
+    }).toList();
+
+    // Stagger the animations
+    for (int i = 0; i < 3; i++) {
+      Future.delayed(Duration(milliseconds: i * 200), () {
+        if (mounted) _controllers[i].repeat(reverse: true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (i) {
+        return AnimatedBuilder(
+          animation: _animations[i],
+          builder: (context, child) {
+            return Opacity(
+              opacity: 0.3 + 0.7 * _animations[i].value,
+              child: Transform.translate(
+                offset: Offset(0, -4 * _animations[i].value),
+                child: child,
+              ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            width: 10,
+            height: 10,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      }),
+    );
   }
 }
