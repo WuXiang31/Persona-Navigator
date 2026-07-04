@@ -34,31 +34,33 @@ class StatRadarChart extends StatelessWidget {
               
               // We could add the labels as positioned widgets here
               // For a true responsive layout, we place them around the center.
-              _buildLabel(
-                context, 
-                label: 'KNOWLEDGE\n${stats.getRankLabel('knowledge', xpCalculator.calculateRank(stats.knowledgeXp))}', 
-                alignment: const Alignment(0, -1.0),
-              ),
-              _buildLabel(
-                context, 
-                label: 'GUTS\n${stats.getRankLabel('guts', xpCalculator.calculateRank(stats.gutsXp))}', 
-                alignment: const Alignment(1.0, -0.2),
-              ),
-              _buildLabel(
-                context, 
-                label: 'PROFICIENCY\n${stats.getRankLabel('proficiency', xpCalculator.calculateRank(stats.proficiencyXp))}', 
-                alignment: const Alignment(0.8, 0.8),
-              ),
-              _buildLabel(
-                context, 
-                label: 'KINDNESS\n${stats.getRankLabel('kindness', xpCalculator.calculateRank(stats.kindnessXp))}', 
-                alignment: const Alignment(-0.8, 0.8),
-              ),
-              _buildLabel(
-                context, 
-                label: 'CHARM\n${stats.getRankLabel('charm', xpCalculator.calculateRank(stats.charmXp))}', 
-                alignment: const Alignment(-1.0, -0.2),
-              ),
+              if (size > 150) ...[
+                _buildLabel(
+                  context, 
+                  label: 'KNOWLEDGE\n${stats.getRankLabel('knowledge', xpCalculator.calculateRank(stats.knowledgeXp))}', 
+                  alignment: const Alignment(0, -1.0),
+                ),
+                _buildLabel(
+                  context, 
+                  label: 'GUTS\n${stats.getRankLabel('guts', xpCalculator.calculateRank(stats.gutsXp))}', 
+                  alignment: const Alignment(1.0, -0.2),
+                ),
+                _buildLabel(
+                  context, 
+                  label: 'PROFICIENCY\n${stats.getRankLabel('proficiency', xpCalculator.calculateRank(stats.proficiencyXp))}', 
+                  alignment: const Alignment(0.8, 0.8),
+                ),
+                _buildLabel(
+                  context, 
+                  label: 'KINDNESS\n${stats.getRankLabel('kindness', xpCalculator.calculateRank(stats.kindnessXp))}', 
+                  alignment: const Alignment(-0.8, 0.8),
+                ),
+                _buildLabel(
+                  context, 
+                  label: 'CHARM\n${stats.getRankLabel('charm', xpCalculator.calculateRank(stats.charmXp))}', 
+                  alignment: const Alignment(-1.0, -0.2),
+                ),
+              ],
             ],
           ),
         );

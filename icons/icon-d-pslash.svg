@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <pattern id="halD" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="3.4" fill="rgba(229,0,0,0.5)"></circle>
+    </pattern>
+    <clipPath id="sqD"><rect width="1024" height="1024"></rect></clipPath>
+  </defs>
+  <g clip-path="url(#sqD)">
+    <rect width="1024" height="1024" fill="#0A0A0A"></rect>
+    <rect x="620" y="-40" width="520" height="1120" fill="url(#halD)" transform="skewX(-12)"></rect>
+    
+    <polygon points="-60,250 1140,130 1140,440 -60,570" fill="#E50000"></polygon>
+    <polygon points="-60,570 1140,440 1140,515 -60,645" fill="#B00000"></polygon>
+    
+    <path d="M300,250 L650,250 L716,306 L716,462 L650,518 L468,518 L468,810 L300,810 Z M468,326 L596,326 L628,356 L628,412 L596,442 L468,442 Z" fill-rule="evenodd" fill="#000000" transform="translate(24,28) skewX(-8)"></path>
+    
+    <path d="M300,250 L650,250 L716,306 L716,462 L650,518 L468,518 L468,810 L300,810 Z M468,326 L596,326 L628,356 L628,412 L596,442 L468,442 Z" fill-rule="evenodd" fill="#F2F2F2" transform="skewX(-8)"></path>
+    
+    <path d="M812,742 l24,58 l62,5 l-47,41 l15,61 l-54,-33 l-54,33 l15,-61 l-47,-41 l62,-5 Z" fill="#FFD700"></path>
+  </g>
+</svg>

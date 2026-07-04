@@ -81,6 +81,10 @@ class _DesktopLayoutState extends State<DesktopLayout> {
                   title: 'MISSIONS',
                   onTap: () => context.go('/missions'),
                 ),
+                _SidebarItem(
+                  title: 'SQUAD',
+                  onTap: () => context.go('/squad'),
+                ),
                 const Spacer(),
                 Padding(
                   padding: const EdgeInsets.all(14.0),

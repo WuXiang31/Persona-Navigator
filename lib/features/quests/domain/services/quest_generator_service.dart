@@ -44,6 +44,29 @@ class PersonaQuestGenerator implements IQuestGeneratorService {
       generatedQuests.add(_createQuestForStat(targetStat));
     }
 
+    // 3. Transform Calendar Events into Quests
+    for (var event in events) {
+      TimeSlot slot;
+      final hour = event.startTime.hour;
+      if (hour < 12) {
+        slot = TimeSlot.morning;
+      } else if (hour < 17) {
+        slot = TimeSlot.afternoon;
+      } else if (hour < 20) {
+        slot = TimeSlot.evening;
+      } else {
+        slot = TimeSlot.night;
+      }
+      
+      generatedQuests.add(Quest(
+        id: _uuid.v4(),
+        title: '[Event] ${event.title}',
+        targetStat: StatType.charm, // Default for scheduled events
+        xpReward: 30, 
+        timeSlot: slot,
+      ));
+    }
+
     return generatedQuests;
   }
 
