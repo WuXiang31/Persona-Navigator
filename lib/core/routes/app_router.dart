@@ -1,7 +1,10 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
 // Import screens (We will create these next)
+import '../../features/auth/presentation/pages/login_screen.dart';
 import '../../features/onboarding/presentation/pages/welcome_screen.dart';
 import '../../features/onboarding/presentation/pages/role_selection_screen.dart';
 
@@ -10,9 +13,25 @@ import '../../features/chat/presentation/pages/chat_screen.dart';
 
 import '../../features/dashboard/presentation/pages/home_screen.dart';
 import '../../features/calendar/presentation/pages/calendar_screen.dart';
+import '../../features/squad/presentation/pages/squad_screen.dart';
 
 import '../../features/dashboard/presentation/pages/desktop_layout.dart';
 import '../../core/widgets/toast_manager.dart';
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+  late final StreamSubscription<dynamic> _subscription;
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 /// Central routing configuration for the application using GoRouter.
 /// 
@@ -20,7 +39,25 @@ import '../../core/widgets/toast_manager.dart';
 /// The initial route is set to the Velvet Room welcome screen.
 GoRouter createRouter(String initialLocation) => GoRouter(
   initialLocation: initialLocation,
+  refreshListenable: GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
+  redirect: (context, state) {
+    final user = FirebaseAuth.instance.currentUser;
+    final isLoggingIn = state.matchedLocation == '/login';
+    
+    if (user == null && !isLoggingIn) {
+      return '/login';
+    }
+    if (user != null && isLoggingIn) {
+      return initialLocation == '/welcome' ? '/welcome' : '/home';
+    }
+    return null;
+  },
   routes: [
+    // --- Auth Flow ---
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
     // --- Onboarding Flow ---
     GoRoute(
       path: '/welcome',
@@ -100,6 +137,19 @@ GoRouter createRouter(String initialLocation) => GoRouter(
                   begin: const Offset(1.0, 0.0),
                   end: Offset.zero,
                 ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutExpo)),
+                child: child,
+              );
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/squad',
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const SquadScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
                 child: child,
               );
             },

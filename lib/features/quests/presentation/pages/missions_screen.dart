@@ -262,17 +262,27 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
 
     switch (state.weather) {
       case WeatherCondition.clear:
-        decoration = const BoxDecoration(color: AppColors.primaryRed);
-        textColor = AppColors.primaryWhite;
+        decoration = const BoxDecoration(color: Color(0xFFE50000));
+        textColor = const Color(0xFFFFFFFF);
         break;
       case WeatherCondition.snowy:
-        decoration = const BoxDecoration(color: Color(0xFFA9D6FF));
-        textColor = Colors.black;
+        decoration = const BoxDecoration(color: Color(0xFFA8D8FF));
+        textColor = const Color(0xFF111111);
         break;
       case WeatherCondition.thunderstorm:
-        decoration = BoxDecoration(
+        decoration = const BoxDecoration(
+          color: AppColors.primaryBlack,
           gradient: LinearGradient(
-            colors: [Colors.deepPurple, Colors.deepPurple.shade900],
+            begin: Alignment.topLeft,
+            end: Alignment(0.05, 0.5),
+            stops: [0.0, 0.5, 0.5, 1.0],
+            colors: [
+              AppColors.primaryRed,
+              AppColors.primaryRed,
+              AppColors.primaryBlack,
+              AppColors.primaryBlack,
+            ],
+            tileMode: TileMode.repeated,
           ),
         );
         textColor = AppColors.primaryWhite;
@@ -281,64 +291,69 @@ class _MissionsScreenState extends ConsumerState<MissionsScreen> {
       case WeatherCondition.rainy:
       default:
         decoration = const BoxDecoration(color: Color(0xFFF2F2F2));
-        textColor = Colors.black;
+        textColor = const Color(0xFF111111);
         break;
     }
 
     return Padding(
       padding: const EdgeInsets.only(top: 60.0, left: 16, right: 16),
-      child: Transform(
-        transform: Matrix4.skewX(-0.14),
-        child: Container(
-          width: double.infinity,
-          decoration: decoration,
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
           child: Transform(
-            transform: Matrix4.skewX(0.14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      if (!state.isLoading) ...[
-                        Icon(
-                          _getWeatherIcon(state.weather),
-                          color: textColor,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      Expanded(
-                        child: Text(
-                          state.isLoading ? 'FETCHING WEATHER...' : 'CONDITION: ${state.weather.displayName}',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: textColor,
-                            fontWeight: FontWeight.w900,
-                            fontStyle: FontStyle.italic,
-                            letterSpacing: 2.0,
+            transform: Matrix4.skewX(-0.14),
+            child: Container(
+              width: double.infinity,
+              decoration: decoration,
+              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+              child: Transform(
+                transform: Matrix4.skewX(0.14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          if (!state.isLoading) ...[
+                            Icon(
+                              _getWeatherIcon(state.weather),
+                              color: textColor,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(
+                              state.isLoading ? 'FETCHING WEATHER...' : state.weather.displayName.replaceAll(RegExp(r'[☀☂☁❄⚡] '), ''),
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: textColor,
+                                fontWeight: FontWeight.w900,
+                                fontStyle: FontStyle.italic,
+                                letterSpacing: 2.0,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (!state.isLoading)
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        state.weather.statBonusDisplay,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: textColor,
-                          fontWeight: FontWeight.w900,
-                        ),
+                        ],
                       ),
                     ),
-                  ),
-              ],
+                    const SizedBox(width: 8),
+                    if (!state.isLoading)
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            state.weather.statBonusDisplay,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: textColor,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

@@ -10,15 +10,15 @@ extension WeatherConditionExtension on WeatherCondition {
   String get displayName {
     switch (this) {
       case WeatherCondition.clear:
-        return 'CLEAR';
+        return '☀ CLEAR';
       case WeatherCondition.cloudy:
-        return 'CLOUDY';
+        return '☁ CLOUDY';
       case WeatherCondition.rainy:
-        return 'RAINY';
+        return '☂ RAINY';
       case WeatherCondition.snowy:
-        return 'SNOWY';
+        return '❄ SNOWY';
       case WeatherCondition.thunderstorm:
-        return 'STORM';
+        return '⚡ STORM';
     }
   }
 

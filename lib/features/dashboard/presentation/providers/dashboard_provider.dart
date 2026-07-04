@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/user_stats.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../domain/logic/stat_decay_engine.dart';
@@ -108,6 +110,19 @@ class DashboardNotifier extends Notifier<DashboardState> {
 
     state = state.copyWith(stats: newStats);
     await repo.saveUserStats(newStats);
+    
+    // Sync to Firestore
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'stats': newStats.toJson(),
+          'lastActive': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      // Ignore for now
+    }
   }
 }
 

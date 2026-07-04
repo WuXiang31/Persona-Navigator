@@ -39,15 +39,6 @@ class HomeScreen extends ConsumerWidget {
             // Bottom Navigation
             P5BottomNav(
               currentIndex: 0,
-              onTap: (index) {
-                if (index == 0) {
-                  context.go('/home');
-                } else if (index == 1) {
-                  context.go('/missions');
-                } else if (index == 2) {
-                  context.go('/chat');
-                }
-              },
             ),
           ],
         ),

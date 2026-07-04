@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "482521515396",
+    "project_id": "persona-navi",
+    "storage_bucket": "persona-navi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482521515396:android:2acd7d9dd5385af24f09d1",
+        "android_client_info": {
+          "package_name": "com.personanavigator.persona_navigator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "482521515396-1iit7a0qg08nbqq411n4epb58qael2r2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCV43Z4V5t2ApE8eyoBsDATqxM9K_ZtSWI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "482521515396-1iit7a0qg08nbqq411n4epb58qael2r2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "482521515396-i1kpdqc3e1chu5slkikphiurpj3u1hna.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.personanavigator.personaNavigator"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
