@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -57,7 +58,25 @@ class FirebaseAuthRepository implements AuthRepository {
       email: email,
       password: password,
     );
-    return _mapFirebaseUser(userCredential.user);
+    
+    // Create default user profile in Firestore
+    final user = userCredential.user;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'name': email.split('@').first,
+        'role': 'athlete',
+        'lastActive': FieldValue.serverTimestamp(),
+        'stats': {
+          'knowledge': 1,
+          'guts': 1,
+          'proficiency': 1,
+          'kindness': 1,
+          'charm': 1,
+        }
+      });
+    }
+    
+    return _mapFirebaseUser(user);
   }
 
   @override

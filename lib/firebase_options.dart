@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -72,5 +69,15 @@ class DefaultFirebaseOptions {
     storageBucket: 'persona-navi.firebasestorage.app',
     iosClientId: '482521515396-i1kpdqc3e1chu5slkikphiurpj3u1hna.apps.googleusercontent.com',
     iosBundleId: 'com.personanavigator.personaNavigator',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBo_ZL6iAd7kAydyC1ya939g1mikcLLj8E',
+    appId: '1:482521515396:web:4f24770712112fc94f09d1',
+    messagingSenderId: '482521515396',
+    projectId: 'persona-navi',
+    authDomain: 'persona-navi.firebaseapp.com',
+    storageBucket: 'persona-navi.firebasestorage.app',
+    measurementId: 'G-Z5ETEB5S1Z',
   );
 }
