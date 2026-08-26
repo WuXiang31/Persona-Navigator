@@ -1,0 +1,51 @@
+.radarContainer {
+  position: relative;
+  width: 100%;
+  max-width: 350px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.radarSvg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gridLine {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.1);
+  stroke-width: 1.5;
+}
+
+.axisLine {
+  stroke: rgba(0, 0, 0, 0.15);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.dataPolygon {
+  fill: rgba(229, 0, 0, 0.5);
+  stroke: var(--color-primary-red);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.labelGroup {
+  font-family: var(--font-outfit);
+}
+
+.statName {
+  font-weight: 800;
+  font-size: 12px;
+  fill: var(--color-black);
+  text-anchor: middle;
+  text-transform: uppercase;
+}
+
+.statRank {
+  font-weight: 500;
+  font-size: 10px;
+  fill: var(--color-text-muted);
+  text-anchor: middle;
+}
