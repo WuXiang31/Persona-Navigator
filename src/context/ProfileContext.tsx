@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type RoleType = "scholar" | "professional" | "creative" | "athlete" | "explorer" | null;
 
-interface Stats {
+export interface Stats {
   knowledge: number;
   vitality: number;
   charm: number;
