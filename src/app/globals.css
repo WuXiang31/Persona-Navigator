@@ -1,0 +1,93 @@
+:root {
+  /* Colors */
+  --color-primary-red: #E50000;
+  --color-red-hover: #FF1A1A;
+  --color-red-dark: #B00000;
+  
+  --color-background: #111111;
+  --color-surface: #1E1E1E;
+  --color-surface-alt: #262626;
+  
+  --color-black: #000000;
+  --color-deep-black: #0A0A0A;
+  
+  --color-text-main: #F2F2F2;
+  --color-text-muted: #888888;
+  --color-text-faint: #555555;
+  
+  --color-accent-yellow: #FFD700;
+  
+  --color-velvet: #0A0F2E;
+  --color-velvet-stripe-1: #2B3A8F;
+  --color-velvet-stripe-2: #55AAFF;
+
+  /* Rank Colors */
+  --color-rank-1: #888888;
+  --color-rank-2: #55AAFF;
+  --color-rank-3: #55FF55;
+  --color-rank-4: #FF8800;
+  --color-rank-5: #FFD700;
+}
+
+/* Reset */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* Base Utility Classes for Persona Style */
+.halftone-bg {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.28) 1.6px, transparent 1.6px);
+  background-size: 11px 11px;
+}
+
+.diagonal-stripe-velvet {
+  background-image: repeating-linear-gradient(
+    -55deg,
+    var(--color-velvet-stripe-1) 0 3px,
+    transparent 3px 26px
+  );
+}
+
+.skew-container {
+  transform: skewX(-7deg);
+}
+
+.unskew-content {
+  transform: skewX(7deg);
+}
+
+.hard-shadow {
+  box-shadow: 4px 4px 0 var(--color-black);
+}
+
+.hard-shadow-red {
+  box-shadow: 12px 12px 0 rgba(229, 0, 0, 0.85);
+}
+
+/* Utility to ensure text remains sharp on transformed elements */
+.antialias {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
