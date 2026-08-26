@@ -8,9 +8,7 @@ export default function WelcomeScreen() {
   const router = useRouter();
 
   const handleBegin = () => {
-    // Navigate to role select or home
-    // For now, just logging
-    console.log("Begin tapped");
+    router.push("/role-select");
   };
 
   return (
