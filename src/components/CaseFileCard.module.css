@@ -1,0 +1,32 @@
+.cardWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  z-index: 10;
+}
+
+.shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-primary-red);
+  /* The shadow uses the exact same clip path as the card itself, but is offset and rotated */
+  clip-path: polygon(0% 2%, 4% 0%, 96% 1%, 100% 5%, 99% 95%, 95% 100%, 5% 99%, 0% 96%);
+  transform: translate(8px, 8px) rotate(-2deg);
+  z-index: 1;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  background-color: var(--color-surface);
+  /* Signature jagged/torn paper edge */
+  clip-path: polygon(0% 2%, 4% 0%, 96% 1%, 100% 5%, 99% 95%, 95% 100%, 5% 99%, 0% 96%);
+  transform: rotate(-2deg);
+  z-index: 2;
+  padding: 30px 15px 40px 15px; /* Extra padding on bottom for radar labels */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}

@@ -1,0 +1,53 @@
+.messageWrapper {
+  display: flex;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.userWrapper {
+  justify-content: flex-end;
+}
+
+.monaWrapper {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: 75%;
+  padding: 12px 16px;
+  font-family: var(--font-outfit);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.userBubble {
+  background-color: #e50000;
+  color: #fff;
+  border: 3px solid #000;
+  border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  transform: skew(-5deg);
+  box-shadow: 4px 4px 0px #000;
+}
+
+.monaBubble {
+  background-color: #000;
+  color: #fff;
+  border: 3px solid #e50000;
+  border-radius: 0;
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+  transform: skew(5deg);
+  box-shadow: 4px 4px 0px #e50000;
+}
+
+.text {
+  margin: 0;
+  transform: skew(5deg); /* Counter-skew for user */
+}
+
+.monaBubble .text {
+  transform: skew(-5deg); /* Counter-skew for mona */
+}

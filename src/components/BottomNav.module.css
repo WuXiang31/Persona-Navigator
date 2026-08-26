@@ -1,0 +1,51 @@
+.navContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 80px;
+  background-color: var(--color-black);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+}
+
+.navItem {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.navButton {
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--color-text-main);
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.activeIndicator {
+  position: absolute;
+  width: 80%;
+  height: 60%;
+  background-color: var(--color-primary-red);
+  z-index: 1;
+  box-shadow: 4px 4px 0 var(--color-black);
+}
+
+.activeText {
+  color: var(--color-text-main);
+}
+
+.inactiveText {
+  color: var(--color-text-muted);
+}
