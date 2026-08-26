@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Anybody, Outfit } from "next/font/google";
 import "./globals.css";
+import { ProfileProvider } from "@/context/ProfileContext";
 
 const anybody = Anybody({
   variable: "--font-anybody",
@@ -27,7 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${anybody.variable} ${outfit.variable}`}>
-      <body className="antialias">{children}</body>
+      <body className="antialias">
+        <ProfileProvider>{children}</ProfileProvider>
+      </body>
     </html>
   );
 }
