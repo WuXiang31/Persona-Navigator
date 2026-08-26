@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <pattern id="halD2" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="3.4" fill="rgba(0,0,0,0.32)"></circle>
+    </pattern>
+    <clipPath id="sqD2"><rect width="1024" height="1024"></rect></clipPath>
+    <clipPath id="triD2"><polygon points="1024,0 1024,470 500,0"></polygon></clipPath>
+  </defs>
+  <g clip-path="url(#sqD2)">
+    <rect width="1024" height="1024" fill="#0A0A0A"></rect>
+    
+    <polygon points="1024,0 1024,470 500,0" fill="#E50000"></polygon>
+    <g clip-path="url(#triD2)"><rect width="1024" height="1024" fill="url(#halD2)"></rect></g>
+    <polygon points="500,0 560,0 1024,415 1024,470" fill="#B00000"></polygon>
+    
+    <path d="M300,250 L650,250 L716,306 L716,462 L650,518 L468,518 L468,810 L300,810 Z M468,326 L596,326 L628,356 L628,412 L596,442 L468,442 Z" fill-rule="evenodd" fill="#000000" transform="translate(24,28) skewX(-8)"></path>
+    
+    <path d="M300,250 L650,250 L716,306 L716,462 L650,518 L468,518 L468,810 L300,810 Z M468,326 L596,326 L628,356 L628,412 L596,442 L468,442 Z" fill-rule="evenodd" fill="#F2F2F2" transform="skewX(-8)"></path>
+    
+    <path d="M812,806 l22,54 l58,4 l-44,38 l14,57 l-50,-31 l-50,31 l14,-57 l-44,-38 l58,-4 Z" fill="#FFD700"></path>
+  </g>
+</svg>
