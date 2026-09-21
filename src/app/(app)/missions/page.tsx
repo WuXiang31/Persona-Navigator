@@ -37,25 +37,7 @@ export default function MissionsPage() {
       </div>
 
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>ACTIVE TARGETS</h2>
-        {activeMissions.length === 0 ? (
-          <div className={styles.emptyState}>No active targets. Time to rest?</div>
-        ) : (
-          <AnimatePresence>
-            {activeMissions.map((mission) => (
-              <MissionCard
-                key={mission.id}
-                mission={mission}
-                onComplete={handleComplete}
-                onDelete={deleteMission}
-              />
-            ))}
-          </AnimatePresence>
-        )}
-      </div>
-
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>COMPLETED</h2>
+        <h2 className={styles.sectionTitle}>MISSION ARCHIVE</h2>
         {completedMissions.length === 0 ? (
           <div className={styles.emptyState}>No targets neutralized yet.</div>
         ) : (
