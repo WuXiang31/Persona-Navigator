@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import styles from "./RadarChart.module.css";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, Stats } from "@/context/ProfileContext";
 
 // Constants for the radar math
 const MAX_STAT = 500;
@@ -20,8 +20,23 @@ const getRank = (value: number) => {
   return "Rank 5 (Max)";
 };
 
-export function RadarChart() {
+interface FloatingXP {
+  id: string;
+  stat: keyof Stats;
+  xp: number;
+  x: number;
+  y: number;
+}
+
+interface RadarChartProps {
+  selectedStat?: keyof Stats | null;
+  onStatClick?: (stat: keyof Stats) => void;
+}
+
+export function RadarChart({ selectedStat, onStatClick }: RadarChartProps = {}) {
   const { stats } = useProfile();
+  const [floatingXps, setFloatingXps] = useState<FloatingXP[]>([]);
+  const prevStatsRef = useRef(stats);
 
   // Helper to get coordinates on the radar
   const getCoordinates = (value: number, index: number, maxRadius: number) => {
@@ -51,6 +66,31 @@ export function RadarChart() {
     const { x, y } = getCoordinates(value, i, RADIUS);
     return `${x},${y}`;
   }).join(" ");
+
+  useEffect(() => {
+    const newFloating: FloatingXP[] = [];
+    STATS_ORDER.forEach((stat, i) => {
+      const diff = stats[stat] - prevStatsRef.current[stat];
+      if (diff > 0) {
+        const { x, y } = getCoordinates(MAX_STAT, i, RADIUS + 40);
+        newFloating.push({
+          id: Math.random().toString(36).substring(2, 9),
+          stat,
+          xp: diff,
+          x,
+          y
+        });
+      }
+    });
+
+    if (newFloating.length > 0) {
+      setFloatingXps(prev => [...prev, ...newFloating]);
+      setTimeout(() => {
+        setFloatingXps(prev => prev.filter(f => !newFloating.find(n => n.id === f.id)));
+      }, 2000);
+    }
+    prevStatsRef.current = stats;
+  }, [stats]);
 
   return (
     <div className={styles.radarContainer}>
@@ -89,6 +129,23 @@ export function RadarChart() {
           style={{ originX: "150px", originY: "150px" }}
         />
 
+        <AnimatePresence>
+          {floatingXps.map((fxp) => (
+            <motion.text
+              key={fxp.id}
+              x={fxp.x}
+              y={fxp.y}
+              className={styles.floatingXp}
+              initial={{ opacity: 0, y: fxp.y }}
+              animate={{ opacity: 1, y: fxp.y - 30 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+            >
+              +{fxp.xp}
+            </motion.text>
+          ))}
+        </AnimatePresence>
+
         {/* Render Labels */}
         {STATS_ORDER.map((statKey, i) => {
           const value = stats[statKey] || 0;
@@ -96,7 +153,12 @@ export function RadarChart() {
           const { x, y } = getCoordinates(MAX_STAT, i, RADIUS + 25);
           
           return (
-            <g key={`label-${statKey}`} className={styles.labelGroup} transform={`translate(${x}, ${y})`}>
+            <g 
+              key={`label-${statKey}`} 
+              className={`${styles.labelGroup} ${onStatClick ? styles.clickableLabel : ""} ${selectedStat === statKey ? styles.statSelected : ""}`} 
+              transform={`translate(${x}, ${y})`}
+              onClick={() => onStatClick && onStatClick(statKey)}
+            >
               <text y="0" className={styles.statName}>
                 {statKey}
               </text>

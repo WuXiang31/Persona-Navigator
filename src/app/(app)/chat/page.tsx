@@ -60,7 +60,15 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch from Mona');
+        console.warn('Failed to fetch from Mona API, status:', response.status);
+        const errorMsg: MessageData = {
+          id: Math.random().toString(36).substring(2, 9),
+          sender: "mona",
+          text: "Ugh, this cognitive static is awful! The Metaverse signal just dropped... what were you saying?",
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+        return;
       }
 
       const data = await response.json();
@@ -74,11 +82,11 @@ export default function ChatPage() {
       
       setMessages((prev) => [...prev, monaMsg]);
     } catch (error) {
-      console.error(error);
+      console.warn('Chat request failed:', error);
       const errorMsg: MessageData = {
         id: Math.random().toString(36).substring(2, 9),
         sender: "mona",
-        text: "Signal lost... I can't reach you right now.",
+        text: "Whoa! Looks like a Palace collapsed on our connection. Let's try that again later.",
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, errorMsg]);
