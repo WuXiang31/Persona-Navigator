@@ -1,9 +1,10 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { useToast } from "./ToastContext";
 import { clampStat, getRankIndex, getRankName } from "@/lib/progression";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
+import { DecayState, applyDecay, initialDecayState, todayKey } from "@/lib/decay";
 
 export type RoleType = "scholar" | "professional" | "creative" | "athlete" | "explorer" | null;
 
@@ -38,6 +39,7 @@ const roleStore = createLocalStore<RoleType>("persona_role", null, {
   stringify: (role) => role ?? "",
 });
 const statsStore = createLocalStore<Stats>("persona_stats", defaultStats);
+const decayStore = createLocalStore<DecayState | null>("persona_decay", null);
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
@@ -47,6 +49,23 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const isLoaded = useIsClient();
   const { showToast } = useToast();
 
+  // Stats left untrained past the grace period lose XP; charged once per day on load
+  useEffect(() => {
+    const today = todayKey();
+    const { stats: decayed, state, losses } = applyDecay(
+      statsStore.get(),
+      decayStore.get() ?? initialDecayState(today),
+      today
+    );
+    decayStore.set(state);
+
+    const lost = Object.entries(losses);
+    if (lost.length > 0) {
+      statsStore.set(decayed);
+      showToast(`Getting rusty: ${lost.map(([stat, xp]) => `${stat} -${xp}`).join(", ")}`, "info", 1200);
+    }
+  }, [showToast]);
+
   const addXp = (stat: keyof Stats, xp: number) => {
     const prev = statsStore.get();
     const nextValue = clampStat(prev[stat] + xp);
@@ -54,6 +73,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     if (applied === 0) return 0;
 
     statsStore.set({ ...prev, [stat]: nextValue });
+    if (applied > 0) {
+      const today = todayKey();
+      decayStore.set((state) => {
+        const current = state ?? initialDecayState(today);
+        return { ...current, lastTrained: { ...current.lastTrained, [stat]: today } };
+      });
+    }
 
     showToast(`${applied > 0 ? "+" : ""}${applied} ${stat}`, "xp");
     if (getRankIndex(nextValue) > getRankIndex(prev[stat])) {

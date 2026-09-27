@@ -2,6 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import styles from "./MissionCard.module.css";
 import { Mission } from "@/context/MissionContext";
+import { useWeather } from "@/lib/useWeather";
+import { boostedXp, isBoosted } from "@/lib/weather";
 
 interface MissionCardProps {
   mission: Mission;
@@ -12,6 +14,11 @@ interface MissionCardProps {
 
 export function MissionCard({ mission, onComplete, onUndo, onDelete }: MissionCardProps) {
   const isCompleted = mission.status === "completed";
+  const { condition } = useWeather();
+  const boosted = !isCompleted && isBoosted(condition, mission.rewardStat);
+  const xp = isCompleted
+    ? mission.awardedXp ?? mission.rewardXp
+    : boostedXp(mission.rewardXp, condition, mission.rewardStat);
 
   return (
     <motion.div
@@ -29,7 +36,9 @@ export function MissionCard({ mission, onComplete, onUndo, onDelete }: MissionCa
           <h3 className={styles.title}>{mission.title}</h3>
           <div className={styles.rewardBadge}>
             <span className={styles.rewardStat}>{mission.rewardStat}</span>
-            <span className={styles.rewardXp}>+{mission.rewardXp} XP</span>
+            <span className={`${styles.rewardXp} ${boosted ? styles.boosted : ""}`}>
+              {boosted && "⚡"}+{xp} XP
+            </span>
           </div>
         </div>
         

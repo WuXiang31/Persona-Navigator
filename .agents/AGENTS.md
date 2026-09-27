@@ -1,26 +1,27 @@
 # Persona Navigator - Agent Rules
 
+The app is a Next.js 16 (App Router) + React 19 + TypeScript project. The Flutter version in `archive/flutter_legacy/` is for reference only; don't add Dart code.
+
 ## Documentation Maintenance
-Whenever developing a new feature or making architectural changes, you MUST update the `technical_overview.md` artifact to reflect those changes. 
-Always document new data structures, algorithms, dependencies, or architectural patterns in that file to ensure the technical overview remains an accurate source of truth for the project.
-Artifact path: `/Users/wx/.gemini/antigravity/brain/a489d495-75b8-415b-aa49-bd6db5230073/technical_overview.md`
+Whenever developing a new feature or making architectural changes, you MUST update [`docs/TECHNICAL_OVERVIEW.md`](../docs/TECHNICAL_OVERVIEW.md) to reflect those changes, and the README when setup, features or environment variables change.
+Always document new data structures, localStorage keys, algorithms/formulas, dependencies, or architectural patterns there so the technical overview remains an accurate source of truth for the project.
 
 ## Feature Testing Requirement
 Whenever implementing a new feature in this app, you MUST test it to ensure it works before moving on.
-1. **Automated Testing:** Check if there are existing test files. If they exist, run them. If they do not exist, write them.
-2. **Manual/UI Testing:** You must also test the UI visually using integration testing (`integration_test` package) to simulate moving the cursor, tapping buttons, and showing the flow to the user on their screen.
+1. **Static checks:** `npx tsc --noEmit` and `npm run lint` must pass; run `npm run build` for changes that affect routing or server code.
+2. **Automated/UI testing:** If test files exist, run them; otherwise verify the flow in a real browser (e.g. headless Chrome via puppeteer-core): seed `localStorage`, click through the UI, and assert on the resulting state. Mock external services (Gemini, Open-Meteo) when you need deterministic results.
 3. **Iteration:** If a test fails, you must debug it, fix the code, and test it again until it is fully working and good to go. Do not start implementing a new feature until the current one passes these tests.
 
 ## The 6-Part Development Lifecycle
 All feature development must follow this strict 6-part pipeline. When possible, these phases should be delegated to specialized subagents:
-1. **Planning:** Researching requirements, exploring the codebase, and creating the `implementation_plan.md` artifact.
-2. **Design:** Defining the UI/UX aesthetics, layout, and visual assets (must match the Persona 5 style).
-3. **Engineering:** Architecting the data models, state management (Riverpod), and logic.
-4. **Implement (Developing):** Writing the actual Dart/Flutter code and assembling the UI components.
-5. **Testing:** Writing and running automated unit and UI integration tests to verify functionality.
-6. **Documentation:** Updating `technical_overview.md` and `walkthrough.md` with the new changes.
+1. **Planning:** Researching requirements, exploring the codebase (including `design_handoff_persona_navigator/`), and writing an implementation plan.
+2. **Design:** Defining the UI/UX aesthetics, layout, and visual assets. Match the design handoff's angular red/black/white style, and keep all names, characters and copy original (see its IP constraint).
+3. **Engineering:** Architecting the data models, state (React context + `createLocalStore` in `src/lib/localStore.ts`), and game logic in `src/lib/`.
+4. **Implement (Developing):** Writing the TypeScript/React code and assembling the UI components (CSS Modules, framer-motion).
+5. **Testing:** Running the checks and browser tests described above.
+6. **Documentation:** Updating `docs/TECHNICAL_OVERVIEW.md` and the README with the new changes.
 
 ## Git Branching Strategy
-Whenever implementing a new feature, you MUST create a new Git branch (e.g., `feature/<feature-name>`). 
-All development, testing, and debugging must occur on this branch. 
+Whenever implementing a new feature, you MUST create a new Git branch (e.g., `feature/<feature-name>`).
+All development, testing, and debugging must occur on this branch.
 Only after the feature is 100% complete and successfully tested by all agents should it be merged back into the `main` branch.

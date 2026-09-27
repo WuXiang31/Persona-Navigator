@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { MAX_STAT, getRankName } from '@/lib/progression';
+import { WEATHER_BOOST, WEATHER_INFO, WeatherCondition } from '@/lib/weather';
 
 const STATS = ['knowledge', 'vitality', 'charm', 'craft', 'nerve'] as const;
 const MAX_HISTORY = 12;
@@ -18,6 +19,7 @@ When the user is just chatting, venting, or asking questions, return an empty "m
 Do not propose missions that duplicate the user's current active missions.
 When the user asks what to do, has nothing planned, or seems stuck, you may suggest 1-2 missions that train their weakest stats, and say which stat you are targeting.
 You can comment on the user's stats and ranks when it fits, but don't recite them unprompted.
+When suggesting missions, favor the stat boosted by today's weather if it makes sense.
 
 Mission rules:
 - title: short and actionable, max ~40 characters, in the user's language.
@@ -87,6 +89,8 @@ export async function POST(request: Request) {
     const activeMissions: string[] = Array.isArray(body.activeMissions) ? body.activeMissions : [];
     const role: string | null = typeof body.role === 'string' ? body.role : null;
     const stats: Partial<Record<Stat, number>> = body.stats && typeof body.stats === 'object' ? body.stats : {};
+    const weather: WeatherCondition | null =
+      typeof body.weather === 'string' && Object.hasOwn(WEATHER_INFO, body.weather) ? body.weather : null;
 
     // Gemini expects the conversation to open with a user turn
     const recent = history.filter((m) => m && typeof m.text === 'string' && m.text.trim()).slice(-MAX_HISTORY);
@@ -111,6 +115,9 @@ export async function POST(request: Request) {
         const xp = Number(stats[stat]) || 0;
         return `- ${stat}: ${xp} XP (${getRankName(xp)})`;
       }).join('\n')}`,
+      weather
+        ? `Today's weather: ${weather}. Missions for ${WEATHER_INFO[weather].bonus === 'all' ? 'every stat' : WEATHER_INFO[weather].bonus} give x${WEATHER_BOOST} XP today.`
+        : "Today's weather is unknown (no weather bonus).",
       activeMissions.length
         ? `The user's current active missions:\n${activeMissions.map((t) => `- ${t}`).join('\n')}`
         : 'The user has no active missions.',
