@@ -2,7 +2,7 @@
 
 A gamified self-improvement app that turns real-life habits into an RPG. You level up five stats by completing missions, get bonus XP from today's weather, and chat with an AI navigator that turns your plans into missions.
 
-The visual style is angular red/black/white with halftone textures. All characters, names and assets are original. See the IP notes in [`design_handoff_persona_navigator/README.md`](design_handoff_persona_navigator/README.md).
+The visual style is angular red/black/white with halftone textures. All characters, names and assets are original. See the IP notes in [`design/handoff/README.md`](design/handoff/README.md).
 
 ## Features
 
@@ -67,15 +67,16 @@ src/
   components/             UI components (MissionCard, RadarChart, WeatherBanner, ...)
   context/                Profile (stats, XP, decay), Missions, Toasts
   lib/                    Game rules and helpers (progression, weather, decay, localStore)
-design_handoff_persona_navigator/   High-fidelity design reference (HTML prototypes)
-archive/flutter_legacy/             Previous Flutter implementation, kept for reference
-docs/TECHNICAL_OVERVIEW.md          Architecture, data model and game formulas
+docs/TECHNICAL_OVERVIEW.md  Architecture, data model and game formulas
+design/handoff/             High-fidelity design reference (HTML prototypes, screenshots, videos)
+design/brand/               App icon source (SVG/PNG) and exported iOS/macOS icon sets
+archive/flutter_legacy/     Previous Flutter implementation, kept for reference only
 ```
 
 ## Documentation
 
 - [Technical overview](docs/TECHNICAL_OVERVIEW.md): architecture, storage keys, game formulas and the chat API contract.
-- [Design handoff](design_handoff_persona_navigator/README.md): design tokens, screens, interactions and IP constraints.
+- [Design handoff](design/handoff/README.md): design tokens, screens, interactions and IP constraints.
 
 ## Tech stack
 

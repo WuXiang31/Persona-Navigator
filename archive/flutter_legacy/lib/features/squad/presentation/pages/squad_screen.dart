@@ -21,7 +21,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final squadAsync = ref.watch(squadProvider);
+    final squad = ref.watch(squadProvider);
     final xpCalculator = ref.watch(xpCalculatorProvider);
 
     return Scaffold(
@@ -33,20 +33,16 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
             _buildHeader(context),
             const SizedBox(height: 16),
             Expanded(
-              child: squadAsync.when(
-                data: (squad) => ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  itemCount: squad.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final member = squad[index];
-                    final isExpanded = _expandedMemberId == member.id;
-                    
-                    return _buildSquadCard(context, member, isExpanded, xpCalculator);
-                  },
-                ),
-                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryRed)),
-                error: (err, st) => Center(child: Text('Error loading squad', style: TextStyle(color: Colors.white))),
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                itemCount: squad.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                itemBuilder: (context, index) {
+                  final member = squad[index];
+                  final isExpanded = _expandedMemberId == member.id;
+                  
+                  return _buildSquadCard(context, member, isExpanded, xpCalculator);
+                },
               ),
             ),
             
