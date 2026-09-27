@@ -89,6 +89,10 @@
   font-weight: 800;
 }
 
+.boosted {
+  color: var(--color-accent-yellow);
+}
+
 .description {
   margin: 0 0 16px 12px;
   font-size: 0.9rem;

@@ -10,6 +10,7 @@ import { useMissions } from "@/context/MissionContext";
 import { MissionCard } from "@/components/MissionCard";
 import { NewMissionModal } from "@/components/NewMissionModal";
 import { QuickLogModal } from "@/components/QuickLogModal";
+import { WeatherBanner } from "@/components/WeatherBanner";
 import { STATS_ORDER, getRankColor, getRankIndex } from "@/lib/progression";
 
 export default function Home() {
@@ -87,6 +88,7 @@ export default function Home() {
 
       {/* Active Missions Section */}
       <div className={styles.missionsSection}>
+        <WeatherBanner />
         <div className={styles.missionsHeader}>
           <h2 className={styles.sectionTitle}>
             ACTIVE TARGETS {selectedStat ? `(${selectedStat.toUpperCase()})` : ""}

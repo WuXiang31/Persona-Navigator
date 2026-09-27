@@ -3,6 +3,8 @@
 import React, { createContext, useContext } from "react";
 import { Stats, useProfile } from "./ProfileContext";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
+import { boostedXp } from "@/lib/weather";
+import { getWeatherCondition } from "@/lib/useWeather";
 
 export type MissionStatus = "active" | "completed";
 
@@ -14,14 +16,14 @@ export interface Mission {
   rewardXp: number;
   status: MissionStatus;
   createdAt: number;
-  // XP actually granted on completion (less than rewardXp if the stat hit the cap)
+  // XP actually granted on completion (includes the weather bonus, capped at the stat maximum)
   awardedXp?: number;
 }
 
 interface MissionContextType {
   missions: Mission[];
   addMission: (mission: Omit<Mission, "id" | "status" | "createdAt">) => void;
-  // Marks a mission done and grants its XP
+  // Marks a mission done and grants its XP, boosted by today's weather
   completeMission: (id: string) => void;
   // Reopens a completed mission and takes back the XP it granted
   uncompleteMission: (id: string) => void;
@@ -52,7 +54,8 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     const mission = missionsStore.get().find((m) => m.id === id);
     if (!mission || mission.status === "completed") return;
 
-    const awardedXp = addXp(mission.rewardStat, mission.rewardXp);
+    const xp = boostedXp(mission.rewardXp, getWeatherCondition(), mission.rewardStat);
+    const awardedXp = addXp(mission.rewardStat, xp);
     missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "completed", awardedXp } : m)));
   };
 
