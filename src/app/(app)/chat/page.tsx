@@ -18,7 +18,7 @@ function setMessages(update: (prev: MessageData[]) => MessageData[]) {
 }
 
 export default function ChatPage() {
-  const { role } = useProfile();
+  const { role, stats } = useProfile();
   const { missions, addMission } = useMissions();
   
   const messages = useLocalStore(chatStore);
@@ -63,6 +63,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           messages: history.map(({ sender, text }) => ({ sender, text })),
           role,
+          stats,
           activeMissions: missions.filter((m) => m.status === "active").map((m) => m.title),
         }),
       });

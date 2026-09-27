@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { MAX_STAT, getRankName } from '@/lib/progression';
 
 const STATS = ['knowledge', 'vitality', 'charm', 'craft', 'nerve'] as const;
 const MAX_HISTORY = 12;
@@ -15,6 +16,8 @@ Besides chatting, you turn the user's plans into Missions.
 When the user describes things they intend or need to do (today, tomorrow, this week...), propose one mission per concrete task in "missions".
 When the user is just chatting, venting, or asking questions, return an empty "missions" array.
 Do not propose missions that duplicate the user's current active missions.
+When the user asks what to do, has nothing planned, or seems stuck, you may suggest 1-2 missions that train their weakest stats, and say which stat you are targeting.
+You can comment on the user's stats and ranks when it fits, but don't recite them unprompted.
 
 Mission rules:
 - title: short and actionable, max ~40 characters, in the user's language.
@@ -83,6 +86,7 @@ export async function POST(request: Request) {
     const history: HistoryMessage[] = Array.isArray(body.messages) ? body.messages : [];
     const activeMissions: string[] = Array.isArray(body.activeMissions) ? body.activeMissions : [];
     const role: string | null = typeof body.role === 'string' ? body.role : null;
+    const stats: Partial<Record<Stat, number>> = body.stats && typeof body.stats === 'object' ? body.stats : {};
 
     // Gemini expects the conversation to open with a user turn
     const recent = history.filter((m) => m && typeof m.text === 'string' && m.text.trim()).slice(-MAX_HISTORY);
@@ -103,6 +107,10 @@ export async function POST(request: Request) {
 
     const context = [
       `The user's role: ${role ?? 'not chosen yet'}.`,
+      `The user's stats (XP out of ${MAX_STAT}, one rank per 100 XP):\n${STATS.map((stat) => {
+        const xp = Number(stats[stat]) || 0;
+        return `- ${stat}: ${xp} XP (${getRankName(xp)})`;
+      }).join('\n')}`,
       activeMissions.length
         ? `The user's current active missions:\n${activeMissions.map((t) => `- ${t}`).join('\n')}`
         : 'The user has no active missions.',
