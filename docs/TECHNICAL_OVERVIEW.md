@@ -63,7 +63,7 @@ Mission cards follow the design handoff:
 - **Left edge color**: red = normal, gold = weather-boosted, gray = done, gold with a tinted background = selected.
 - **Select mode** (Missions page): tapping selects active missions. The bar shows the count and the combined weather-boosted XP, and COMPLETE clears them all.
 - **New missions**: name, target stat, and XP from a 10-60 slider in steps of 5. AI-proposed missions can still carry 10-100 XP and a description.
-- **Home screen**: the companion's line comes from `statusLine()` in `src/lib/companion.ts`. It needles the weakest stat, or praises a full clear.
+- **Home screen** keeps its original layout (speech bubble, case file radar, stat chips, weather banner, active targets with + ADD, Quick Log). Only its mission cards use the redesigned `MissionCard`.
 - **Shared constants**: stat glyphs (◆ ▲ ★ ⬢ ⚡) and 3-letter codes live in `STAT_GLYPHS` / `STAT_SHORT` in `progression.ts`.
 - **Overlays**: Quick Log and New Mission share the `OverlayPanel` component.
 
@@ -118,8 +118,8 @@ Mission cards follow the design handoff:
   - XP is clamped to 10-100 and rounded to a multiple of 10.
   - At most 5 missions are returned.
 - **Client**: missions come back as proposals. Only the ones the user accepts are added through `addMission`.
-- **Companion name**: shown in the UI from `NEXT_PUBLIC_COMPANION_NAME` (`src/lib/companion.ts`), default "Vesper". Its first letter is the avatar tile (`COMPANION_INITIAL`).
-- **Chat UI**: messages render as jagged bubbles with avatar tiles. A pulsing "..." bubble shows while a reply is pending, and sending is disabled until the reply arrives.
+- **Companion name**: shown in the UI from `NEXT_PUBLIC_COMPANION_NAME` (`src/lib/companion.ts`), default "Vesper".
+- **Chat UI**: the original skewed bubbles. "{name} is typing..." shows while a reply is pending, and sending is disabled until the reply arrives.
 
 If every attempt fails, the API returns the last error status and the chat shows an in-character error line.
 
