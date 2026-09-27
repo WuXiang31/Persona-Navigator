@@ -9,23 +9,18 @@ import styles from "./page.module.css";
 import { useMissions } from "@/context/MissionContext";
 import { MissionCard } from "@/components/MissionCard";
 import { NewMissionModal } from "@/components/NewMissionModal";
-
-const STATS_ORDER = ["knowledge", "charm", "nerve", "craft", "vitality"] as const;
+import { QuickLogModal } from "@/components/QuickLogModal";
+import { STATS_ORDER, getRankColor, getRankIndex } from "@/lib/progression";
 
 export default function Home() {
-  const { role, stats, addXp, isLoaded } = useProfile();
+  const { role, stats, isLoaded } = useProfile();
   const { missions, addMission, completeMission, deleteMission, isLoaded: missionsLoaded } = useMissions();
 
   const [selectedStat, setSelectedStat] = useState<keyof Stats | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
 
   if (!isLoaded || !missionsLoaded) return null;
-
-  const handleQuickLog = () => {
-    // Add 15 XP to a random stat for demonstration
-    const randomStat = STATS_ORDER[Math.floor(Math.random() * STATS_ORDER.length)];
-    addXp(randomStat, 15);
-  };
 
   const handleStatClick = (stat: keyof Stats) => {
     setSelectedStat(prev => prev === stat ? null : stat);
@@ -35,14 +30,6 @@ export default function Home() {
   const filteredMissions = selectedStat 
     ? activeMissions.filter(m => m.rewardStat === selectedStat)
     : activeMissions;
-
-  const handleComplete = (id: string) => {
-    const mission = missions.find((m) => m.id === id);
-    if (mission) {
-      completeMission(id);
-      addXp(mission.rewardStat, mission.rewardXp);
-    }
-  };
 
   return (
     <main className={styles.container}>
@@ -85,11 +72,14 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 + index * 0.1 }}
-            style={selectedStat === statKey ? { borderColor: '#fff', boxShadow: '0 0 10px #fff' } : {}}
+            style={{
+              borderLeftColor: getRankColor(stats[statKey]),
+              ...(selectedStat === statKey ? { borderColor: '#fff', boxShadow: '0 0 10px #fff' } : {}),
+            }}
             onClick={() => handleStatClick(statKey)}
           >
             <span className="unskew-content">
-              {statKey.substring(0, 3)}: {stats[statKey]}
+              {statKey.substring(0, 3)} · R{getRankIndex(stats[statKey]) + 1}
             </span>
           </motion.div>
         ))}
@@ -114,7 +104,7 @@ export default function Home() {
               <MissionCard
                 key={mission.id}
                 mission={mission}
-                onComplete={handleComplete}
+                onComplete={completeMission}
                 onDelete={deleteMission}
               />
             ))}
@@ -126,7 +116,7 @@ export default function Home() {
       <div className={styles.actionSection}>
         <motion.button
           className={styles.quickLogButton}
-          onClick={handleQuickLog}
+          onClick={() => setIsQuickLogOpen(true)}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", delay: 0.8 }}
@@ -134,6 +124,8 @@ export default function Home() {
           <span className="unskew-content">QUICK LOG</span>
         </motion.button>
       </div>
+
+      <QuickLogModal isOpen={isQuickLogOpen} onClose={() => setIsQuickLogOpen(false)} />
 
       <NewMissionModal
         isOpen={isModalOpen}

@@ -3,6 +3,7 @@ import { Anybody, Outfit } from "next/font/google";
 import "./globals.css";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { MissionProvider } from "@/context/MissionContext";
+import { ToastProvider } from "@/context/ToastContext";
 
 const anybody = Anybody({
   variable: "--font-anybody",
@@ -30,9 +31,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${anybody.variable} ${outfit.variable}`}>
       <body className="antialias">
-        <ProfileProvider>
-          <MissionProvider>{children}</MissionProvider>
-        </ProfileProvider>
+        <ToastProvider>
+          <ProfileProvider>
+            <MissionProvider>{children}</MissionProvider>
+          </ProfileProvider>
+        </ToastProvider>
       </body>
     </html>
   );
