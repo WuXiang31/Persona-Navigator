@@ -20,6 +20,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment
+
+Create `.env.local` in the project root:
+
+```bash
+GEMINI_API_KEY=your-key-here
+
+# Optional: swap the AI companion (defaults to Vesper, an original character)
+NEXT_PUBLIC_COMPANION_NAME=Vesper
+COMPANION_PERSONA="You are ... (tone, style, how to address the user)"
+```
+
+`COMPANION_PERSONA` only sets the companion's personality. The mission-generation rules are always appended by `src/app/api/chat/route.ts`. Restart `npm run dev` after changing `NEXT_PUBLIC_*` values.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

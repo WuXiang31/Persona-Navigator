@@ -1,12 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 import styles from "./ChatMessage.module.css";
+import { MissionProposal } from "./MissionProposals";
 
 export interface MessageData {
   id: string;
-  sender: "user" | "mona";
+  sender: "user" | "companion";
   text: string;
   timestamp: number;
+  proposals?: MissionProposal[];
 }
 
 export function ChatMessage({ message }: { message: MessageData }) {
@@ -14,12 +16,12 @@ export function ChatMessage({ message }: { message: MessageData }) {
 
   return (
     <motion.div
-      className={`${styles.messageWrapper} ${isUser ? styles.userWrapper : styles.monaWrapper}`}
+      className={`${styles.messageWrapper} ${isUser ? styles.userWrapper : styles.companionWrapper}`}
       initial={{ opacity: 0, x: isUser ? 20 : -20, scale: 0.9 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
     >
-      <div className={`${styles.bubble} ${isUser ? styles.userBubble : styles.monaBubble}`}>
+      <div className={`${styles.bubble} ${isUser ? styles.userBubble : styles.companionBubble}`}>
         <p className={styles.text}>{message.text}</p>
       </div>
     </motion.div>
