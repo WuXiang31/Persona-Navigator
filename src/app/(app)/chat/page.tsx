@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
-import { ChatMessage, MessageData, TypingIndicator } from "@/components/ChatMessage";
+import { ChatMessage, MessageData } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { MissionProposals, MissionProposal, ProposalStatus } from "@/components/MissionProposals";
 import { useProfile } from "@/context/ProfileContext";
@@ -136,8 +136,7 @@ export default function ChatPage() {
   return (
     <main className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.pageTitle}>{COMPANION_NAME}</h1>
-        <span className={styles.status}>NAVIGATOR ONLINE</span>
+        <h1 className={styles.pageTitle}>{COMPANION_NAME} / NAVIGATOR ONLINE</h1>
       </header>
 
       <div className={styles.messageList}>
@@ -154,7 +153,11 @@ export default function ChatPage() {
             )}
           </React.Fragment>
         ))}
-        {isTyping && <TypingIndicator name={COMPANION_NAME} />}
+        {isTyping && (
+          <div style={{ padding: "10px", fontFamily: "var(--font-outfit)", fontStyle: "italic", color: "#888" }}>
+            {COMPANION_NAME} is typing...
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 

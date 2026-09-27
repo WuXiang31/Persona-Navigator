@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 80px); /* Adjust based on bottom nav height */
+  height: calc(100vh - 68px); /* Bottom nav height */
   max-width: 600px;
   margin: 0 auto;
   position: relative;

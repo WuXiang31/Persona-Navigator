@@ -23,7 +23,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
       <input
         type="text"
         className={styles.input}
-        placeholder="SAY SOMETHING..."
+        placeholder="Type a message..."
         aria-label="Message"
         value={text}
         onChange={(e) => setText(e.target.value)}
