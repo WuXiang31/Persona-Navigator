@@ -1,28 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Persona Navigator
 
-## Getting Started
+A gamified self-improvement app that turns real-life habits into an RPG. You level up five stats by completing missions, get bonus XP from today's weather, and chat with an AI navigator that turns your plans into missions.
 
-First, run the development server:
+The visual style is angular red/black/white with halftone textures. All characters, names and assets are original. See the IP notes in [`design_handoff_persona_navigator/README.md`](design_handoff_persona_navigator/README.md).
+
+## Features
+
+- **Five stats with ranks**: Knowledge, Vitality, Charm, Craft and Nerve. Each has 0-500 XP and one rank per 100 XP (Novice -> Apprentice -> Adept -> Expert -> Master). Stats are shown on a radar chart, with toasts for XP changes and rank-ups.
+- **Missions**: create missions that reward a stat, then complete or undo them. Undo takes back exactly the XP that was granted.
+- **Quick Log**: give +15 XP to a stat you just worked on.
+- **Weather bonus**: missions for today's weather stat give ×1.5 XP. Weather comes from your location via [Open-Meteo](https://open-meteo.com/), which needs no API key.
+- **Stat decay**: a stat that hasn't gained XP for 3 days loses 5 XP per extra day.
+- **AI navigator chat** (Gemini):
+  - Tell it your plans, and it proposes missions you can accept or pass.
+  - It sees your stats, ranks, active missions and the weather, so it can suggest missions for weak stats.
+  - Chat history persists across reloads.
+
+All data lives in the browser's `localStorage`. There are no accounts or backend yet.
+
+## Getting started
+
+Requirements: Node.js 20+ and a [Gemini API key](https://aistudio.google.com/apikey).
 
 ```bash
+npm install
+touch .env.local   # then fill it in, see below
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Allow location access if you want the weather bonus.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Environment
-
-Create `.env.local` in the project root:
+### Environment variables (`.env.local`)
 
 ```bash
 GEMINI_API_KEY=your-key-here
@@ -32,19 +40,43 @@ NEXT_PUBLIC_COMPANION_NAME=Vesper
 COMPANION_PERSONA="You are ... (tone, style, how to address the user)"
 ```
 
-`COMPANION_PERSONA` only sets the companion's personality. The mission-generation rules are always appended by `src/app/api/chat/route.ts`. Restart `npm run dev` after changing `NEXT_PUBLIC_*` values.
+- `COMPANION_PERSONA` only sets the companion's personality. The mission-generation rules are always appended by [`src/app/api/chat/route.ts`](src/app/api/chat/route.ts).
+- Restart `npm run dev` after changing `NEXT_PUBLIC_*` values.
+- `.env.local` is gitignored, so never commit keys.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build (also type-checks) |
+| `npm start` | Serve the production build |
+| `npm run lint` | ESLint |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+  app/
+    page.tsx              Welcome screen
+    role-select/          Choose a role
+    (app)/home/           Status: radar chart, stat chips, active missions, Quick Log
+    (app)/missions/       Weather banner, active missions, archive
+    (app)/chat/           AI navigator chat
+    api/chat/route.ts     Gemini call: reply + proposed missions
+  components/             UI components (MissionCard, RadarChart, WeatherBanner, ...)
+  context/                Profile (stats, XP, decay), Missions, Toasts
+  lib/                    Game rules and helpers (progression, weather, decay, localStore)
+design_handoff_persona_navigator/   High-fidelity design reference (HTML prototypes)
+archive/flutter_legacy/             Previous Flutter implementation, kept for reference
+docs/TECHNICAL_OVERVIEW.md          Architecture, data model and game formulas
+```
 
-## Deploy on Vercel
+## Documentation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [Technical overview](docs/TECHNICAL_OVERVIEW.md): architecture, storage keys, game formulas and the chat API contract.
+- [Design handoff](design_handoff_persona_navigator/README.md): design tokens, screens, interactions and IP constraints.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Gemini API · Open-Meteo
