@@ -8,20 +8,28 @@ import { MissionProposals, MissionProposal, ProposalStatus } from "@/components/
 import { useProfile } from "@/context/ProfileContext";
 import { useMissions } from "@/context/MissionContext";
 import { COMPANION_NAME } from "@/lib/companion";
+import { createLocalStore, useLocalStore } from "@/lib/localStore";
+
+const MAX_SAVED_MESSAGES = 100;
+const chatStore = createLocalStore<MessageData[]>("persona_chat", []);
+
+function setMessages(update: (prev: MessageData[]) => MessageData[]) {
+  chatStore.set((prev) => update(prev).slice(-MAX_SAVED_MESSAGES));
+}
 
 export default function ChatPage() {
-  const { role } = useProfile();
+  const { role, stats } = useProfile();
   const { missions, addMission } = useMissions();
   
-  const [messages, setMessages] = useState<MessageData[]>([
-    {
-      id: "welcome-1",
-      sender: "companion",
-      text: `${COMPANION_NAME} here${role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
-      timestamp: 0,
-    }
-  ]);
-  
+  const messages = useLocalStore(chatStore);
+
+  const welcome: MessageData = {
+    id: "welcome-1",
+    sender: "companion",
+    text: `${COMPANION_NAME} here${role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
+    timestamp: 0,
+  };
+
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +50,7 @@ export default function ChatPage() {
       timestamp: Date.now(),
     };
     const history = [...messages, userMsg];
-    setMessages(history);
+    setMessages((prev) => [...prev, userMsg]);
     
     setIsTyping(true);
     
@@ -55,6 +63,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           messages: history.map(({ sender, text }) => ({ sender, text })),
           role,
+          stats,
           activeMissions: missions.filter((m) => m.status === "active").map((m) => m.title),
         }),
       });
@@ -128,7 +137,7 @@ export default function ChatPage() {
       </header>
 
       <div className={styles.messageList}>
-        {messages.map((msg) => (
+        {[welcome, ...messages].map((msg) => (
           <React.Fragment key={msg.id}>
             <ChatMessage message={msg} />
             {msg.proposals && (
