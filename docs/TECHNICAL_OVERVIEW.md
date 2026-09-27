@@ -93,29 +93,41 @@ All tunable constants live in `src/lib/`.
 **Response**: `{ reply: string, missions: { title, description, rewardStat, rewardXp }[] }`, or `{ error }` with a non-200 status.
 
 **How it works**
-- **Model**: `gemini-flash-latest` with structured output (`responseSchema`), so the reply and mission list always come back as JSON.
+- **Model**: `GEMINI_MODEL` (default `gemini-flash-latest`) with structured output (`responseSchema`), so the reply and mission list always come back as JSON.
+- **Retries and fallback** (`src/lib/retry.ts`):
+  - `fetchWithRetry` retries network errors and 429/500/502/503/504 with exponential backoff (800 ms, then 1.6 s), honoring `Retry-After` up to 4 s.
+  - The main model gets 1 retry. If it is still unavailable, the request moves to `GEMINI_FALLBACK_MODEL` (default `gemini-flash-lite-latest`, 2 retries). Set it to `none` to disable the fallback.
+  - The route sets `maxDuration = 60` so retries fit within the serverless time limit.
 - **System prompt**: persona + mission rules + context.
   - The persona is `COMPANION_PERSONA` from the environment, or the built-in Vesper persona.
   - The context block includes the role, each stat's XP and rank, today's weather bonus, and the active missions.
-- **Output sanitizing**:
+- **Output sanitizing** (`sanitizeMissions` in `src/lib/missionProposals.ts`):
   - Unknown stats are dropped.
   - XP is clamped to 10-100 and rounded to a multiple of 10.
   - At most 5 missions are returned.
 - **Client**: missions come back as proposals. Only the ones the user accepts are added through `addMission`.
 - **Companion name**: shown in the UI from `NEXT_PUBLIC_COMPANION_NAME` (`src/lib/companion.ts`), default "Vesper".
 
-**Known limitation**: Gemini sometimes returns 503 under load. The chat then shows an in-character error line. There is no retry yet.
+If every attempt fails, the API returns the last error status and the chat shows an in-character error line.
+
+Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite` return 404. Check a model with the ListModels API and a test call before configuring it.
 
 ## Testing
 
-There is no test runner in the repo yet. Current practice:
-- `npx tsc --noEmit`, `npm run lint` and `npm run build` must pass.
-- UI flows are checked in a real browser (headless Chrome driven by puppeteer-core) by seeding `localStorage`, clicking through, and asserting on stored state.
-- For weather, the Open-Meteo request is intercepted to force a condition.
+- **Unit tests**: Vitest (`npm test`). Test files sit next to the code as `src/lib/*.test.ts` and cover:
+  - ranks and stat clamping
+  - WMO code mapping and the weather bonus
+  - decay (grace period, per-stat tracking, idempotence, month boundaries)
+  - mission sanitizing
+  - retry/backoff
+  - the localStorage store
+- **Environments**: tests run in Node by default. A file that needs the DOM opts in with a `/** @vitest-environment jsdom */` docblock. The `@/` alias comes from `resolve.tsconfigPaths` in `vitest.config.mts`.
+- **CI**: `.github/workflows/ci.yml` runs lint, `tsc --noEmit`, tests and build on pushes to `main` and on pull requests.
+- **UI flows**: checked in a real browser (headless Chrome driven by puppeteer-core) by seeding `localStorage`, clicking through, and asserting on stored state. For weather, the Open-Meteo request is intercepted to force a condition.
+- **ESLint**: ignores `archive/` and `design/`, which are reference material, not app code.
 
 ## Roadmap
 
-- Gemini retry and a fallback provider.
 - Accounts and cloud sync (Firebase was used in the Flutter version).
 - Squad (friends) features.
 - The desktop three-pane layout from the design handoff.
