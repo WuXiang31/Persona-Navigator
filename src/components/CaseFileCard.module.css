@@ -22,7 +22,7 @@
 .card {
   position: relative;
   width: 100%;
-  background-color: var(--color-surface);
+  background-color: var(--color-text-main);
   /* Signature jagged/torn paper edge */
   clip-path: polygon(0% 2%, 4% 0%, 96% 1%, 100% 5%, 99% 95%, 95% 100%, 5% 99%, 0% 96%);
   transform: rotate(-2deg);
