@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext } from "react";
 import { Stats, useProfile } from "./ProfileContext";
+import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 
 export type MissionStatus = "active" | "completed";
 
@@ -28,30 +29,14 @@ interface MissionContextType {
   isLoaded: boolean;
 }
 
+const missionsStore = createLocalStore<Mission[]>("persona_missions", []);
+
 const MissionContext = createContext<MissionContextType | undefined>(undefined);
 
 export function MissionProvider({ children }: { children: React.ReactNode }) {
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-  // Latest missions, readable synchronously so a double click can't grant XP twice
-  const missionsRef = useRef<Mission[]>([]);
+  const missions = useLocalStore(missionsStore);
+  const isLoaded = useIsClient();
   const { addXp } = useProfile();
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedMissions = localStorage.getItem("persona_missions");
-    if (savedMissions) {
-      missionsRef.current = JSON.parse(savedMissions);
-      setMissions(missionsRef.current);
-    }
-    setIsLoaded(true);
-  }, []);
-
-  const save = (updated: Mission[]) => {
-    missionsRef.current = updated;
-    setMissions(updated);
-    localStorage.setItem("persona_missions", JSON.stringify(updated));
-  };
 
   const addMission = (missionData: Omit<Mission, "id" | "status" | "createdAt">) => {
     const newMission: Mission = {
@@ -60,27 +45,27 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
       status: "active",
       createdAt: Date.now(),
     };
-    save([newMission, ...missionsRef.current]);
+    missionsStore.set((prev) => [newMission, ...prev]);
   };
 
   const completeMission = (id: string) => {
-    const mission = missionsRef.current.find((m) => m.id === id);
+    const mission = missionsStore.get().find((m) => m.id === id);
     if (!mission || mission.status === "completed") return;
 
     const awardedXp = addXp(mission.rewardStat, mission.rewardXp);
-    save(missionsRef.current.map((m) => (m.id === id ? { ...m, status: "completed", awardedXp } : m)));
+    missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "completed", awardedXp } : m)));
   };
 
   const uncompleteMission = (id: string) => {
-    const mission = missionsRef.current.find((m) => m.id === id);
+    const mission = missionsStore.get().find((m) => m.id === id);
     if (!mission || mission.status === "active") return;
 
     addXp(mission.rewardStat, -(mission.awardedXp ?? mission.rewardXp));
-    save(missionsRef.current.map((m) => (m.id === id ? { ...m, status: "active", awardedXp: undefined } : m)));
+    missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "active", awardedXp: undefined } : m)));
   };
 
   const deleteMission = (id: string) => {
-    save(missionsRef.current.filter((m) => m.id !== id));
+    missionsStore.set((prev) => prev.filter((m) => m.id !== id));
   };
 
   return (

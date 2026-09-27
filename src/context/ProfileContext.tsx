@@ -1,8 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext } from "react";
 import { useToast } from "./ToastContext";
 import { clampStat, getRankIndex, getRankName } from "@/lib/progression";
+import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 
 export type RoleType = "scholar" | "professional" | "creative" | "athlete" | "explorer" | null;
 
@@ -31,49 +32,28 @@ const defaultStats: Stats = {
   nerve: 0,
 };
 
+// The role is saved as a bare string rather than JSON
+const roleStore = createLocalStore<RoleType>("persona_role", null, {
+  parse: (raw) => raw as RoleType,
+  stringify: (role) => role ?? "",
+});
+const statsStore = createLocalStore<Stats>("persona_stats", defaultStats);
+
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<RoleType>(null);
-  const [stats, setStats] = useState<Stats>(defaultStats);
-  const [isLoaded, setIsLoaded] = useState(false);
-  // Latest stats, readable synchronously so addXp can report the applied delta
-  const statsRef = useRef<Stats>(defaultStats);
+  const role = useLocalStore(roleStore);
+  const stats = useLocalStore(statsStore);
+  const isLoaded = useIsClient();
   const { showToast } = useToast();
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedRole = localStorage.getItem("persona_role") as RoleType;
-    const savedStats = localStorage.getItem("persona_stats");
-    
-    if (savedRole) setRoleState(savedRole);
-    if (savedStats) {
-      statsRef.current = JSON.parse(savedStats);
-      setStats(statsRef.current);
-    }
-    
-    setIsLoaded(true);
-  }, []);
-
-  const setRole = (newRole: RoleType) => {
-    setRoleState(newRole);
-    if (newRole) {
-      localStorage.setItem("persona_role", newRole);
-    } else {
-      localStorage.removeItem("persona_role");
-    }
-  };
-
   const addXp = (stat: keyof Stats, xp: number) => {
-    const prev = statsRef.current;
+    const prev = statsStore.get();
     const nextValue = clampStat(prev[stat] + xp);
     const applied = nextValue - prev[stat];
     if (applied === 0) return 0;
 
-    const updated = { ...prev, [stat]: nextValue };
-    statsRef.current = updated;
-    setStats(updated);
-    localStorage.setItem("persona_stats", JSON.stringify(updated));
+    statsStore.set({ ...prev, [stat]: nextValue });
 
     showToast(`${applied > 0 ? "+" : ""}${applied} ${stat}`, "xp");
     if (getRankIndex(nextValue) > getRankIndex(prev[stat])) {
@@ -83,7 +63,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ProfileContext.Provider value={{ role, stats, setRole, addXp, isLoaded }}>
+    <ProfileContext.Provider value={{ role, stats, setRole: roleStore.set, addXp, isLoaded }}>
       {children}
     </ProfileContext.Provider>
   );
