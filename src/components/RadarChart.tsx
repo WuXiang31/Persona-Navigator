@@ -5,20 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import styles from "./RadarChart.module.css";
 import { useProfile, Stats } from "@/context/ProfileContext";
 
+import { MAX_STAT, STATS_ORDER, getRankName } from "@/lib/progression";
+
 // Constants for the radar math
-const MAX_STAT = 500;
 const RADIUS = 120;
 const CENTER = { x: 150, y: 150 }; // SVG 300x300 viewBox
-const STATS_ORDER = ["knowledge", "charm", "nerve", "craft", "vitality"] as const;
-
-// Helper to calculate Rank (1-5)
-const getRank = (value: number) => {
-  if (value < 100) return "Rank 1";
-  if (value < 200) return "Rank 2";
-  if (value < 300) return "Rank 3";
-  if (value < 400) return "Rank 4";
-  return "Rank 5 (Max)";
-};
 
 interface FloatingXP {
   id: string;
@@ -119,7 +110,7 @@ export function RadarChart({ selectedStat, onStatClick }: RadarChartProps = {}) 
         <motion.polygon
           points={dataPoints}
           className={styles.dataPolygon}
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.8, points: dataPoints }}
           animate={{ opacity: 1, scale: 1, points: dataPoints }}
           transition={{
             opacity: { duration: 0.4 },
@@ -163,7 +154,7 @@ export function RadarChart({ selectedStat, onStatClick }: RadarChartProps = {}) 
                 {statKey}
               </text>
               <text y="14" className={styles.statRank}>
-                {getRank(value)}
+                {getRankName(value)}
               </text>
             </g>
           );
