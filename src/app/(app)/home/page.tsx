@@ -1,110 +1,142 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { useProfile, Stats } from "@/context/ProfileContext";
-import { Mission, useMissions } from "@/context/MissionContext";
 import { CaseFileCard } from "@/components/CaseFileCard";
 import { RadarChart } from "@/components/RadarChart";
-import { MissionCard } from "@/components/MissionCard";
-import { QuickLogModal } from "@/components/QuickLogModal";
-import { COMPANION_INITIAL, statusLine } from "@/lib/companion";
-import { STATS_ORDER, STAT_SHORT, getRankColor, getRankIndex } from "@/lib/progression";
+import { motion, AnimatePresence } from "framer-motion";
 import styles from "./page.module.css";
+import { Mission, useMissions } from "@/context/MissionContext";
+import { MissionCard } from "@/components/MissionCard";
+import { NewMissionModal } from "@/components/NewMissionModal";
+import { QuickLogModal } from "@/components/QuickLogModal";
+import { WeatherBanner } from "@/components/WeatherBanner";
+import { STATS_ORDER, getRankColor, getRankIndex } from "@/lib/progression";
 
 export default function Home() {
-  const { stats, isLoaded } = useProfile();
-  const { missions, completeMission, uncompleteMission, deleteMission } = useMissions();
+  const { role, stats, isLoaded } = useProfile();
+  const { missions, addMission, completeMission, uncompleteMission, deleteMission, isLoaded: missionsLoaded } = useMissions();
 
   const [selectedStat, setSelectedStat] = useState<keyof Stats | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
 
-  if (!isLoaded) return null;
+  if (!isLoaded || !missionsLoaded) return null;
 
   const handleStatClick = (stat: keyof Stats) => {
-    setSelectedStat((prev) => (prev === stat ? null : stat));
+    setSelectedStat(prev => prev === stat ? null : stat);
   };
 
   const handleToggle = (mission: Mission) =>
     mission.status === "active" ? completeMission(mission.id) : uncompleteMission(mission.id);
 
-  const activeMissions = missions.filter((m) => m.status === "active");
-  const shownMissions = selectedStat ? activeMissions.filter((m) => m.rewardStat === selectedStat) : activeMissions;
+  const activeMissions = missions.filter(m => m.status === "active");
+  const filteredMissions = selectedStat 
+    ? activeMissions.filter(m => m.rewardStat === selectedStat)
+    : activeMissions;
 
   return (
     <main className={styles.container}>
-      {/* Red halftone header: companion avatar, their one-liner, STATUS */}
-      <header className={`${styles.header} halftone-bg`}>
-        <div className={styles.companionRow}>
-          <div className={styles.avatar} aria-hidden>
-            {COMPANION_INITIAL}
-          </div>
-          <Link href="/chat" className={styles.bubble}>
-            {statusLine(stats, missions)}
-          </Link>
-        </div>
+      {/* Red Header Panel */}
+      <div className={`${styles.header} halftone-bg`}>
         <motion.h1
           className={styles.title}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.5 }}
         >
-          Status
+          STATUS
         </motion.h1>
-      </header>
 
+        <motion.div
+          className={styles.speechBubbleWrapper}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", delay: 0.2 }}
+        >
+          <div className={styles.speechBubble}>
+            Looking sharp! Your {role ? role.toUpperCase() : "PERSONA"} mask is resonating with your actions. Keep pushing those limits!
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Case File & Radar Chart */}
       <div className={styles.mainContent}>
         <CaseFileCard>
-          <div className={styles.caseHeader}>
-            <span className={styles.caseTitle}>Case file</span>
-            <span className={styles.caseStamp}>CONFIDENTIAL</span>
-          </div>
           <RadarChart selectedStat={selectedStat} onStatClick={handleStatClick} />
         </CaseFileCard>
       </div>
 
+      {/* Stat Chips Overview */}
       <div className={styles.statChips}>
-        {STATS_ORDER.map((stat) => (
-          <button
-            key={stat}
-            className={`${styles.chip} ${selectedStat === stat ? styles.chipSelected : ""}`}
-            onClick={() => handleStatClick(stat)}
-            aria-pressed={selectedStat === stat}
+        {STATS_ORDER.map((statKey, index) => (
+          <motion.div
+            key={statKey}
+            className={`${styles.chip} skew-container`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 + index * 0.1 }}
+            style={{
+              borderLeftColor: getRankColor(stats[statKey]),
+              ...(selectedStat === statKey ? { borderColor: '#fff', boxShadow: '0 0 10px #fff' } : {}),
+            }}
+            onClick={() => handleStatClick(statKey)}
           >
-            <span className={styles.chipShort}>{STAT_SHORT[stat]}</span>
-            <span style={{ color: getRankColor(stats[stat]) }}>RANK {getRankIndex(stats[stat]) + 1}</span>
-          </button>
+            <span className="unskew-content">
+              {statKey.substring(0, 3)} · R{getRankIndex(stats[statKey]) + 1}
+            </span>
+          </motion.div>
         ))}
       </div>
 
-      <div className={styles.actions}>
-        <button className={styles.quickLogButton} onClick={() => setIsQuickLogOpen(true)}>
-          QUICK LOG
-        </button>
-        <Link href="/missions" className={styles.missionsButton}>
-          MISSIONS
-        </Link>
+      {/* Active Missions Section */}
+      <div className={styles.missionsSection}>
+        <WeatherBanner />
+        <div className={styles.missionsHeader}>
+          <h2 className={styles.sectionTitle}>
+            ACTIVE TARGETS {selectedStat ? `(${selectedStat.toUpperCase()})` : ""}
+          </h2>
+          <button className={styles.addBtn} onClick={() => setIsModalOpen(true)}>
+            + ADD
+          </button>
+        </div>
+        
+        {filteredMissions.length === 0 ? (
+          <div className={styles.emptyState}>No targets found.</div>
+        ) : (
+          <AnimatePresence>
+            {filteredMissions.map((mission) => (
+              <MissionCard
+                key={mission.id}
+                mission={mission}
+                onToggle={handleToggle}
+                onDelete={deleteMission}
+              />
+            ))}
+          </AnimatePresence>
+        )}
       </div>
 
-      {activeMissions.length > 0 && (
-        <section className={styles.missionsSection}>
-          <h2 className={styles.sectionTitle}>
-            Active targets {selectedStat && <span className={styles.filterTag}>{selectedStat}</span>}
-          </h2>
-          {shownMissions.length === 0 ? (
-            <p className={styles.emptyState}>No active {selectedStat} missions.</p>
-          ) : (
-            <AnimatePresence initial={false}>
-              {shownMissions.map((mission) => (
-                <MissionCard key={mission.id} mission={mission} onToggle={handleToggle} onDelete={deleteMission} />
-              ))}
-            </AnimatePresence>
-          )}
-        </section>
-      )}
+      {/* Action Section */}
+      <div className={styles.actionSection}>
+        <motion.button
+          className={styles.quickLogButton}
+          onClick={() => setIsQuickLogOpen(true)}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", delay: 0.8 }}
+        >
+          <span className="unskew-content">QUICK LOG</span>
+        </motion.button>
+      </div>
 
       <QuickLogModal isOpen={isQuickLogOpen} onClose={() => setIsQuickLogOpen(false)} />
+
+      <NewMissionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={addMission}
+      />
     </main>
   );
 }

@@ -27,6 +27,6 @@
   clip-path: polygon(0% 2%, 4% 0%, 96% 1%, 100% 5%, 99% 95%, 95% 100%, 5% 99%, 0% 96%);
   transform: rotate(-2deg);
   z-index: 2;
-  padding: 14px 16px 28px; /* Extra padding on bottom for radar labels */
+  padding: 30px 15px 40px 15px; /* Extra padding on bottom for radar labels */
   border: 1px solid rgba(0, 0, 0, 0.1);
 }

@@ -1,7 +1,6 @@
-/* Proposed missions under a companion reply, styled like the dark quest cards */
 .container {
-  margin: -2px 0 16px 43px; /* line up with the bubble, past the avatar */
-  max-width: 80%;
+  width: 85%;
+  margin: -4px 0 20px 8px;
   font-family: var(--font-outfit);
 }
 
@@ -16,42 +15,51 @@
   font-family: var(--font-anybody);
   font-weight: 900;
   font-style: italic;
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: var(--color-primary-red);
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  color: #e50000;
 }
 
 .acceptAllBtn {
-  padding: 5px 10px;
-  transform: skewX(-6deg);
-  background: var(--color-primary-red);
+  background: #e50000;
   color: #fff;
-  box-shadow: 3px 3px 0 #000;
+  border: 2px solid #000;
   font-family: var(--font-anybody);
   font-weight: 900;
   font-style: italic;
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transform: skew(-8deg);
+  box-shadow: 3px 3px 0 #000;
 }
 
 .card {
   position: relative;
-  margin-bottom: 9px;
-  padding: 10px 14px;
-  transform: skewX(-8deg);
-  background: var(--color-surface);
-  border-left: 5px solid var(--color-primary-red);
-  color: var(--color-text-main);
+  background: #fff;
+  border: 3px solid #000;
+  padding: 10px 12px 10px 18px;
+  margin-bottom: 10px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
   transition: opacity 0.2s ease;
 }
 
-.accepted {
-  border-left-color: var(--color-accent-yellow);
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: #e50000;
+}
+
+.accepted::before {
+  background: #000;
 }
 
 .dismissed {
   opacity: 0.45;
-  border-left-color: #333;
 }
 
 .dismissed .title {
@@ -67,9 +75,8 @@
 
 .title {
   margin: 0;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 800;
-  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
@@ -78,26 +85,29 @@
   flex-direction: column;
   align-items: flex-end;
   flex-shrink: 0;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
+  transform: skew(-10deg);
 }
 
 .rewardStat {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
+  font-size: 0.6rem;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  letter-spacing: 1px;
+  color: #888;
 }
 
 .rewardXp {
-  font-size: 13px;
+  font-size: 0.8rem;
   font-weight: 800;
+  color: #ffd700;
 }
 
 .description {
-  margin: 4px 0 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: #444;
 }
 
 .actions {
@@ -108,43 +118,37 @@
 
 .acceptBtn,
 .dismissBtn {
-  padding: 5px 12px;
-  transform: skewX(-4deg);
   font-family: var(--font-anybody);
   font-weight: 900;
   font-style: italic;
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border: 2px solid #000;
+  cursor: pointer;
+  transform: skew(-8deg);
 }
 
 .acceptBtn {
-  background: var(--color-primary-red);
+  background: #000;
   color: #fff;
-}
-
-.acceptBtn:hover {
-  background: var(--color-red-hover);
+  box-shadow: 3px 3px 0 #e50000;
 }
 
 .dismissBtn {
-  background: var(--color-surface-alt);
-  color: var(--color-text-muted);
-}
-
-.dismissBtn:hover {
-  color: #fff;
+  background: #fff;
+  color: #000;
 }
 
 .stamp {
   font-family: var(--font-anybody);
   font-weight: 900;
   font-style: italic;
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: var(--color-accent-yellow);
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  color: #e50000;
   transform: rotate(-3deg);
 }
 
 .dismissed .stamp {
-  color: var(--color-text-muted);
+  color: #888;
 }
