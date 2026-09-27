@@ -1,6 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import { useToast } from "./ToastContext";
+import { clampStat, getRankIndex, getRankName } from "@/lib/progression";
 
 export type RoleType = "scholar" | "professional" | "creative" | "athlete" | "explorer" | null;
 
@@ -16,7 +18,8 @@ interface ProfileContextType {
   role: RoleType;
   stats: Stats;
   setRole: (role: RoleType) => void;
-  addXp: (stat: keyof Stats, xp: number) => void;
+  // Applies an XP change (negative to undo), clamped to 0-500; returns the change actually applied
+  addXp: (stat: keyof Stats, xp: number) => number;
   isLoaded: boolean;
 }
 
@@ -34,6 +37,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [role, setRoleState] = useState<RoleType>(null);
   const [stats, setStats] = useState<Stats>(defaultStats);
   const [isLoaded, setIsLoaded] = useState(false);
+  // Latest stats, readable synchronously so addXp can report the applied delta
+  const statsRef = useRef<Stats>(defaultStats);
+  const { showToast } = useToast();
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -41,7 +47,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     const savedStats = localStorage.getItem("persona_stats");
     
     if (savedRole) setRoleState(savedRole);
-    if (savedStats) setStats(JSON.parse(savedStats));
+    if (savedStats) {
+      statsRef.current = JSON.parse(savedStats);
+      setStats(statsRef.current);
+    }
     
     setIsLoaded(true);
   }, []);
@@ -56,14 +65,21 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addXp = (stat: keyof Stats, xp: number) => {
-    setStats((prev) => {
-      const updated = {
-        ...prev,
-        [stat]: Math.min(500, prev[stat] + xp),
-      };
-      localStorage.setItem("persona_stats", JSON.stringify(updated));
-      return updated;
-    });
+    const prev = statsRef.current;
+    const nextValue = clampStat(prev[stat] + xp);
+    const applied = nextValue - prev[stat];
+    if (applied === 0) return 0;
+
+    const updated = { ...prev, [stat]: nextValue };
+    statsRef.current = updated;
+    setStats(updated);
+    localStorage.setItem("persona_stats", JSON.stringify(updated));
+
+    showToast(`${applied > 0 ? "+" : ""}${applied} ${stat}`, "xp");
+    if (getRankIndex(nextValue) > getRankIndex(prev[stat])) {
+      showToast(`Rank up! ${stat} → ${getRankName(nextValue)}`, "rank", 900);
+    }
+    return applied;
   };
 
   return (
