@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
-import { MAX_STAT, getRankName } from '@/lib/progression';
+import { MAX_STAT, STATS_ORDER, getRankName } from '@/lib/progression';
 import { WEATHER_BOOST, WEATHER_INFO, WeatherCondition } from '@/lib/weather';
+import { sanitizeMissions } from '@/lib/missionProposals';
+import { RETRYABLE_STATUS, fetchWithRetry } from '@/lib/retry';
 
-const STATS = ['knowledge', 'vitality', 'charm', 'craft', 'nerve'] as const;
+// Leaves room for a few Gemini retries (the platform may cap this lower)
+export const maxDuration = 60;
+
 const MAX_HISTORY = 12;
-const MAX_MISSIONS = 5;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+// Lighter model tried when the main one is still overloaded; set GEMINI_FALLBACK_MODEL=none to disable
+const GEMINI_FALLBACK_MODEL =
+  process.env.GEMINI_FALLBACK_MODEL === 'none' ? null : process.env.GEMINI_FALLBACK_MODEL || 'gemini-flash-lite-latest';
 
 // Original default persona; set COMPANION_PERSONA in .env.local to swap in your own
 const DEFAULT_PERSONA = `You are Vesper, an original masked fox spirit and the user's navigator in this self-improvement app.
@@ -44,7 +51,7 @@ const RESPONSE_SCHEMA = {
         properties: {
           title: { type: 'STRING' },
           description: { type: 'STRING' },
-          rewardStat: { type: 'STRING', enum: [...STATS] },
+          rewardStat: { type: 'STRING', enum: [...STATS_ORDER] },
           rewardXp: { type: 'INTEGER' },
         },
         required: ['title', 'description', 'rewardStat', 'rewardXp'],
@@ -54,32 +61,11 @@ const RESPONSE_SCHEMA = {
   required: ['reply', 'missions'],
 };
 
-type Stat = (typeof STATS)[number];
+type Stat = (typeof STATS_ORDER)[number];
 
 interface HistoryMessage {
   sender: 'user' | 'companion';
   text: string;
-}
-
-interface ProposedMission {
-  title: string;
-  description: string;
-  rewardStat: Stat;
-  rewardXp: number;
-}
-
-function sanitizeMissions(raw: unknown): ProposedMission[] {
-  if (!Array.isArray(raw)) return [];
-
-  return raw
-    .filter((m) => m && typeof m.title === 'string' && m.title.trim() && STATS.includes(m.rewardStat))
-    .slice(0, MAX_MISSIONS)
-    .map((m) => ({
-      title: m.title.trim(),
-      description: typeof m.description === 'string' ? m.description.trim() : '',
-      rewardStat: m.rewardStat,
-      rewardXp: Math.min(100, Math.max(10, Math.round(Number(m.rewardXp) / 10) * 10 || 50)),
-    }));
 }
 
 export async function POST(request: Request) {
@@ -111,7 +97,7 @@ export async function POST(request: Request) {
 
     const context = [
       `The user's role: ${role ?? 'not chosen yet'}.`,
-      `The user's stats (XP out of ${MAX_STAT}, one rank per 100 XP):\n${STATS.map((stat) => {
+      `The user's stats (XP out of ${MAX_STAT}, one rank per 100 XP):\n${STATS_ORDER.map((stat) => {
         const xp = Number(stats[stat]) || 0;
         return `- ${stat}: ${xp} XP (${getRankName(xp)})`;
       }).join('\n')}`,
@@ -123,26 +109,34 @@ export async function POST(request: Request) {
         : 'The user has no active missions.',
     ].join('\n');
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const requestBody = JSON.stringify({
+      system_instruction: {
+        parts: { text: `${process.env.COMPANION_PERSONA || DEFAULT_PERSONA}\n\n${MISSION_PROMPT}\n\n${context}` }
       },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: { text: `${process.env.COMPANION_PERSONA || DEFAULT_PERSONA}\n\n${MISSION_PROMPT}\n\n${context}` }
-        },
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-        }
-      })
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+        responseMimeType: 'application/json',
+        responseSchema: RESPONSE_SCHEMA,
+      }
     });
+
+    // Retry overloads (503) and rate limits with backoff; with a fallback model, the main one
+    // gets a single retry so a busy model hands over quickly
+    const attempts = GEMINI_FALLBACK_MODEL
+      ? [{ model: GEMINI_MODEL, retries: 1 }, { model: GEMINI_FALLBACK_MODEL, retries: 2 }]
+      : [{ model: GEMINI_MODEL, retries: 2 }];
+    let response!: Response;
+    for (const { model, retries } of attempts) {
+      response = await fetchWithRetry(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody },
+        { retries }
+      );
+      if (response.ok || !RETRYABLE_STATUS.has(response.status)) break;
+      console.warn(`Gemini model ${model} still unavailable (${response.status}) after retries`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();

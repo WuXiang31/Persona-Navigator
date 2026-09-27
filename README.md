@@ -15,6 +15,7 @@ The visual style is angular red/black/white with halftone textures. All characte
   - Tell it your plans, and it proposes missions you can accept or pass.
   - It sees your stats, ranks, active missions and the weather, so it can suggest missions for weak stats.
   - Chat history persists across reloads.
+  - When Gemini is overloaded, the request is retried automatically and then falls back to a lighter model.
 
 All data lives in the browser's `localStorage`. There are no accounts or backend yet.
 
@@ -35,6 +36,10 @@ Open [http://localhost:3000](http://localhost:3000). Allow location access if yo
 ```bash
 GEMINI_API_KEY=your-key-here
 
+# Optional: Gemini models (these are the defaults; set the fallback to "none" to disable it)
+GEMINI_MODEL=gemini-flash-latest
+GEMINI_FALLBACK_MODEL=gemini-flash-lite-latest
+
 # Optional: swap the AI companion (defaults to Vesper, an original character)
 NEXT_PUBLIC_COMPANION_NAME=Vesper
 COMPANION_PERSONA="You are ... (tone, style, how to address the user)"
@@ -52,6 +57,19 @@ COMPANION_PERSONA="You are ... (tone, style, how to address the user)"
 | `npm run build` | Production build (also type-checks) |
 | `npm start` | Serve the production build |
 | `npm run lint` | ESLint |
+| `npm test` | Unit tests (Vitest), run once |
+| `npm run test:watch` | Unit tests in watch mode |
+
+GitHub Actions runs lint, type-check, tests and build on every push to `main` and on every pull request (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+## Deploying to Vercel
+
+1. Sign in at [vercel.com](https://vercel.com) with GitHub and choose **Add New... > Project**.
+2. Import the `Persona-Navigator` repository. Vercel detects Next.js automatically, so keep the default build settings.
+3. Under **Environment Variables**, add `GEMINI_API_KEY`. Add the optional variables above only if you need them.
+4. Click **Deploy**. Every push to `main` redeploys automatically, and pull requests get preview URLs.
+
+The site is served over HTTPS, which browsers require for location access (and therefore the weather bonus). A public deployment should keep the default Vesper companion; only set `NEXT_PUBLIC_COMPANION_NAME` / `COMPANION_PERSONA` for private use.
 
 ## Project structure
 
@@ -66,7 +84,8 @@ src/
     api/chat/route.ts     Gemini call: reply + proposed missions
   components/             UI components (MissionCard, RadarChart, WeatherBanner, ...)
   context/                Profile (stats, XP, decay), Missions, Toasts
-  lib/                    Game rules and helpers (progression, weather, decay, localStore)
+  lib/                    Game rules and helpers (progression, weather, decay, retry, localStore)
+                          with unit tests next to them (*.test.ts)
 docs/TECHNICAL_OVERVIEW.md  Architecture, data model and game formulas
 design/handoff/             High-fidelity design reference (HTML prototypes, screenshots, videos)
 design/brand/               App icon source (SVG/PNG) and exported iOS/macOS icon sets
@@ -80,4 +99,4 @@ archive/flutter_legacy/     Previous Flutter implementation, kept for reference 
 
 ## Tech stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Gemini API · Open-Meteo
+Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Vitest · Gemini API · Open-Meteo

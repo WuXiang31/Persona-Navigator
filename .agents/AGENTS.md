@@ -8,8 +8,8 @@ Always document new data structures, localStorage keys, algorithms/formulas, dep
 
 ## Feature Testing Requirement
 Whenever implementing a new feature in this app, you MUST test it to ensure it works before moving on.
-1. **Static checks:** `npx tsc --noEmit` and `npm run lint` must pass; run `npm run build` for changes that affect routing or server code.
-2. **Automated/UI testing:** If test files exist, run them; otherwise verify the flow in a real browser (e.g. headless Chrome via puppeteer-core): seed `localStorage`, click through the UI, and assert on the resulting state. Mock external services (Gemini, Open-Meteo) when you need deterministic results.
+1. **Static checks:** `npx tsc --noEmit` and `npm run lint` must pass; run `npm run build` for changes that affect routing or server code. CI runs all of these plus the tests on every pull request.
+2. **Automated/UI testing:** Run `npm test` (Vitest). Add or update unit tests (`src/lib/*.test.ts`) for any game rule or helper you change. For UI changes, also verify the flow in a real browser (e.g. headless Chrome via puppeteer-core): seed `localStorage`, click through the UI, and assert on the resulting state. Mock external services (Gemini, Open-Meteo) when you need deterministic results.
 3. **Iteration:** If a test fails, you must debug it, fix the code, and test it again until it is fully working and good to go. Do not start implementing a new feature until the current one passes these tests.
 
 ## The 6-Part Development Lifecycle
