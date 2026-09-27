@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import styles from "./page.module.css";
 import { ChatMessage, MessageData } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
@@ -9,19 +9,42 @@ import { useProfile } from "@/context/ProfileContext";
 import { useMissions } from "@/context/MissionContext";
 import { COMPANION_NAME } from "@/lib/companion";
 
+// Chat history lives in localStorage; useSyncExternalStore keeps the page in sync with it
+const CHAT_KEY = "persona_chat";
+const MAX_SAVED_MESSAGES = 100;
+const chatListeners = new Set<() => void>();
+
+function subscribeChat(listener: () => void) {
+  chatListeners.add(listener);
+  return () => {
+    chatListeners.delete(listener);
+  };
+}
+
+function readChat() {
+  return localStorage.getItem(CHAT_KEY) ?? "[]";
+}
+
+function setMessages(update: MessageData[] | ((prev: MessageData[]) => MessageData[])) {
+  const next = typeof update === "function" ? update(JSON.parse(readChat())) : update;
+  localStorage.setItem(CHAT_KEY, JSON.stringify(next.slice(-MAX_SAVED_MESSAGES)));
+  chatListeners.forEach((l) => l());
+}
+
 export default function ChatPage() {
   const { role } = useProfile();
   const { missions, addMission } = useMissions();
   
-  const [messages, setMessages] = useState<MessageData[]>([
-    {
-      id: "welcome-1",
-      sender: "companion",
-      text: `${COMPANION_NAME} here${role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
-      timestamp: 0,
-    }
-  ]);
-  
+  const rawChat = useSyncExternalStore(subscribeChat, readChat, () => "[]");
+  const messages: MessageData[] = useMemo(() => JSON.parse(rawChat), [rawChat]);
+
+  const welcome: MessageData = {
+    id: "welcome-1",
+    sender: "companion",
+    text: `${COMPANION_NAME} here${role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
+    timestamp: 0,
+  };
+
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -128,7 +151,7 @@ export default function ChatPage() {
       </header>
 
       <div className={styles.messageList}>
-        {messages.map((msg) => (
+        {[welcome, ...messages].map((msg) => (
           <React.Fragment key={msg.id}>
             <ChatMessage message={msg} />
             {msg.proposals && (
