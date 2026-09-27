@@ -1,107 +1,113 @@
-.welcomeContainer {
+.welcome {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  background-color: var(--color-velvet);
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  padding: 32px 28px;
   overflow: hidden;
-  z-index: 1;
+  background: var(--color-velvet);
 }
 
-.halftoneOverlay {
+.stripes {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 0.6;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -55deg,
+    rgba(43, 58, 143, 0.35) 0 3px,
+    transparent 3px 26px
+  );
+}
+
+.dots {
+  position: absolute;
+  top: 90px;
+  right: -30px;
+  width: 220px;
+  height: 220px;
+  transform: skewX(-12deg);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1.5px, transparent 1.5px);
+  background-size: 12px 12px;
 }
 
 .content {
-  z-index: 3;
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-top: -10vh;
+  align-items: flex-start;
+  max-width: 520px;
 }
 
 .kicker {
-  color: var(--color-velvet-stripe-2);
-  font-family: var(--font-outfit);
-  font-weight: 800;
-  letter-spacing: 2px;
-  font-size: 1rem;
-  margin-bottom: 1rem;
-}
-
-.mainTitle {
   font-family: var(--font-anybody);
   font-weight: 900;
   font-style: italic;
-  font-size: 4.5rem;
-  line-height: 0.9;
-  color: var(--color-text-main);
-  text-shadow: 6px 6px 0 var(--color-black);
-  margin-bottom: 2.5rem;
-  letter-spacing: 2px;
+  font-size: 15px;
+  letter-spacing: 6px;
+  color: var(--color-velvet-stripe-2);
 }
 
-.tagsContainer {
-  display: flex;
-  gap: 15px;
+.title {
+  margin-top: 14px;
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(48px, 15vw, 88px);
+  line-height: 0.92;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+  hyphens: manual;
+}
+
+.tagWhite,
+.tagRed {
+  padding: 8px 16px;
+  transform: skewX(-8deg);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 1px;
 }
 
 .tagWhite {
-  background-color: var(--color-text-main);
-  color: var(--color-black);
-  padding: 8px 16px;
-  font-family: var(--font-outfit);
-  font-weight: 800;
-  font-size: 0.9rem;
-  box-shadow: 3px 3px 0 var(--color-black);
+  margin-top: 22px;
+  background: var(--color-text-main);
+  color: var(--color-velvet);
 }
 
 .tagRed {
-  background-color: var(--color-primary-red);
+  margin-top: 8px;
+  background: var(--color-primary-red);
   color: var(--color-text-main);
-  padding: 8px 16px;
-  font-family: var(--font-outfit);
-  font-weight: 800;
-  font-size: 0.9rem;
-  box-shadow: 3px 3px 0 var(--color-black);
 }
 
-.buttonWrapper {
-  position: absolute;
-  bottom: 15vh;
-  z-index: 3;
-}
-
-.beginButton {
-  background-color: var(--color-primary-red);
-  color: var(--color-text-main);
+.begin {
+  position: relative;
+  align-self: flex-start;
+  margin-top: 56px;
+  padding: 18px 54px;
+  transform: skewX(-8deg) rotate(-2deg);
+  background: var(--color-primary-red);
+  color: #fff;
+  box-shadow: 8px 8px 0 #000;
   font-family: var(--font-anybody);
   font-weight: 900;
   font-style: italic;
-  font-size: 2.5rem;
-  padding: 15px 60px;
-  box-shadow: 8px 8px 0 var(--color-black);
-  transform: skewX(-7deg) rotate(-2deg); /* Added slight rotation from design specs */
-  transition: all 0.2s ease;
+  font-size: 28px;
+  letter-spacing: 3px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.beginButton:hover {
-  background-color: var(--color-red-hover);
-  transform: skewX(-7deg) rotate(-2deg) scale(1.05);
+.begin:hover {
+  background: var(--color-red-hover);
+  box-shadow: 4px 4px 0 #000;
 }
 
-.beginButton:active {
-  transform: skewX(-7deg) rotate(-2deg) scale(0.95);
-  box-shadow: 4px 4px 0 var(--color-black);
+.footer {
+  position: absolute;
+  bottom: 46px;
+  left: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: rgba(242, 242, 242, 0.35);
 }

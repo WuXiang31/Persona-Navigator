@@ -1,51 +1,48 @@
 .container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 80px); /* Adjust based on bottom nav height */
+  height: calc(100dvh - 68px); /* Leave room for the bottom nav */
   max-width: 600px;
   margin: 0 auto;
-  position: relative;
-  background-color: #f5f5f5;
+  background: var(--color-background);
 }
 
 .header {
-  padding: 16px 24px;
-  background-color: #000;
-  color: #fff;
-  border-bottom: 4px solid #e50000;
-  z-index: 10;
-  position: sticky;
-  top: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 28px 22px 0;
 }
 
 .pageTitle {
   font-family: var(--font-anybody);
-  font-size: 1.8rem;
   font-weight: 900;
   font-style: italic;
-  margin: 0;
+  font-size: 40px;
+  line-height: 1;
   text-transform: uppercase;
-  color: #fff;
-  transform: skew(-10deg);
-  letter-spacing: 1px;
+  color: var(--color-text-main);
+}
+
+.status {
+  font-family: var(--font-outfit);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--color-primary-red);
 }
 
 .messageList {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  /* Scrollbar hiding for webkit */
+  padding: 16px 20px 8px;
   scrollbar-width: none;
 }
+
 .messageList::-webkit-scrollbar {
   display: none;
 }
 
 .inputArea {
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  padding-bottom: 20px; /* Extra padding to avoid hitting bottom nav perfectly */
+  flex-shrink: 0;
 }

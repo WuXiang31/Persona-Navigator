@@ -54,6 +54,18 @@ All tunable constants live in `src/lib/`.
 - `completeMission` grants `boostedXp(rewardXp, weather, stat)` and stores the applied amount as `awardedXp`.
 - `uncompleteMission` subtracts `awardedXp`, so undo is exact even when the stat was capped or boosted.
 - Quick Log grants `QUICK_LOG_XP` (15) to a chosen stat.
+- `addXp(stat, xp, { quiet })` and `completeMission(id, { quiet })`: `quiet` skips the per-change XP toast. Rank-up toasts still show. Multi-select uses it to show a single "N missions cleared +X XP" toast.
+
+### Missions UI
+Mission cards follow the design handoff:
+- **Toggle**: tapping a card completes it, and tapping again reopens it (`uncompleteMission`). A completed card is struck through and stamped COMPLETE.
+- **Delete**: the × in the corner deletes the mission. It is hidden in select mode.
+- **Left edge color**: red = normal, gold = weather-boosted, gray = done, gold with a tinted background = selected.
+- **Select mode** (Missions page): tapping selects active missions. The bar shows the count and the combined weather-boosted XP, and COMPLETE clears them all.
+- **New missions**: name, target stat, and XP from a 10-60 slider in steps of 5. AI-proposed missions can still carry 10-100 XP and a description.
+- **Home screen**: the companion's line comes from `statusLine()` in `src/lib/companion.ts`. It needles the weakest stat, or praises a full clear.
+- **Shared constants**: stat glyphs (◆ ▲ ★ ⬢ ⚡) and 3-letter codes live in `STAT_GLYPHS` / `STAT_SHORT` in `progression.ts`.
+- **Overlays**: Quick Log and New Mission share the `OverlayPanel` component.
 
 ### Weather bonus (`weather.ts`, `useWeather.ts`)
 
@@ -106,7 +118,8 @@ All tunable constants live in `src/lib/`.
   - XP is clamped to 10-100 and rounded to a multiple of 10.
   - At most 5 missions are returned.
 - **Client**: missions come back as proposals. Only the ones the user accepts are added through `addMission`.
-- **Companion name**: shown in the UI from `NEXT_PUBLIC_COMPANION_NAME` (`src/lib/companion.ts`), default "Vesper".
+- **Companion name**: shown in the UI from `NEXT_PUBLIC_COMPANION_NAME` (`src/lib/companion.ts`), default "Vesper". Its first letter is the avatar tile (`COMPANION_INITIAL`).
+- **Chat UI**: messages render as jagged bubbles with avatar tiles. A pulsing "..." bubble shows while a reply is pending, and sending is disabled until the reply arrives.
 
 If every attempt fails, the API returns the last error status and the chat shows an in-character error line.
 

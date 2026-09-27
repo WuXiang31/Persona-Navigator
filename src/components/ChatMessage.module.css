@@ -1,53 +1,76 @@
-.messageWrapper {
+.row {
   display: flex;
-  margin-bottom: 16px;
-  width: 100%;
+  align-items: flex-end;
+  gap: 9px;
+  margin-bottom: 12px;
 }
 
-.userWrapper {
-  justify-content: flex-end;
+.userRow {
+  flex-direction: row-reverse;
 }
 
-.companionWrapper {
-  justify-content: flex-start;
+.avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: skewX(-8deg) rotate(-3deg);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
 }
 
+.companionAvatar {
+  background: var(--color-primary-red);
+  color: #fff;
+  font-size: 17px;
+}
+
+.userAvatar {
+  background: var(--color-text-main);
+  color: #111;
+  font-size: 12px;
+}
+
+/* Jagged speech bubble from the design handoff */
 .bubble {
-  max-width: 75%;
-  padding: 12px 16px;
+  max-width: 72%;
+  padding: 11px 15px;
   font-family: var(--font-outfit);
-  font-size: 1rem;
+  font-size: 13.5px;
   font-weight: 600;
   line-height: 1.4;
-  position: relative;
   word-wrap: break-word;
-}
-
-.userBubble {
-  background-color: #e50000;
-  color: #fff;
-  border: 3px solid #000;
-  border-radius: 0;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
-  transform: skew(-5deg);
-  box-shadow: 4px 4px 0px #000;
+  white-space: pre-wrap;
+  clip-path: polygon(2% 4%, 98% 0%, 100% 50%, 97% 97%, 4% 100%, 0% 92%);
 }
 
 .companionBubble {
-  background-color: #000;
+  background: var(--color-primary-red);
   color: #fff;
-  border: 3px solid #e50000;
-  border-radius: 0;
-  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
-  transform: skew(5deg);
-  box-shadow: 4px 4px 0px #e50000;
 }
 
-.text {
-  margin: 0;
-  transform: skew(5deg); /* Counter-skew for user */
+.userBubble {
+  background: var(--color-text-main);
+  color: #111;
 }
 
-.companionBubble .text {
-  transform: skew(-5deg); /* Counter-skew for companion */
+.typing {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }

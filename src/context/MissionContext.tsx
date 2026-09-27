@@ -24,7 +24,7 @@ interface MissionContextType {
   missions: Mission[];
   addMission: (mission: Omit<Mission, "id" | "status" | "createdAt">) => void;
   // Marks a mission done and grants its XP, boosted by today's weather
-  completeMission: (id: string) => void;
+  completeMission: (id: string, options?: { quiet?: boolean }) => void;
   // Reopens a completed mission and takes back the XP it granted
   uncompleteMission: (id: string) => void;
   deleteMission: (id: string) => void;
@@ -50,12 +50,12 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     missionsStore.set((prev) => [newMission, ...prev]);
   };
 
-  const completeMission = (id: string) => {
+  const completeMission = (id: string, options?: { quiet?: boolean }) => {
     const mission = missionsStore.get().find((m) => m.id === id);
     if (!mission || mission.status === "completed") return;
 
     const xp = boostedXp(mission.rewardXp, getWeatherCondition(), mission.rewardStat);
-    const awardedXp = addXp(mission.rewardStat, xp);
+    const awardedXp = addXp(mission.rewardStat, xp, options);
     missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "completed", awardedXp } : m)));
   };
 

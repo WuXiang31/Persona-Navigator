@@ -41,6 +41,7 @@ html, body {
   overflow-x: hidden;
   background-color: var(--color-background);
   color: var(--color-text-main);
+  font-family: var(--font-outfit), sans-serif;
 }
 
 a {

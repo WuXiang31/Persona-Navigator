@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import styles from "./NewMissionModal.module.css";
+import { OverlayPanel } from "./OverlayPanel";
 import { Mission } from "@/context/MissionContext";
 import { Stats } from "@/context/ProfileContext";
+import { STATS_ORDER, STAT_GLYPHS } from "@/lib/progression";
 
 interface NewMissionModalProps {
   isOpen: boolean;
@@ -10,108 +11,80 @@ interface NewMissionModalProps {
   onSave: (mission: Omit<Mission, "id" | "status" | "createdAt">) => void;
 }
 
+const DEFAULT_STAT: keyof Stats = "knowledge";
+const DEFAULT_XP = 25;
+
 export function NewMissionModal({ isOpen, onClose, onSave }: NewMissionModalProps) {
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [rewardStat, setRewardStat] = useState<keyof Stats>("knowledge");
-  const [rewardXp, setRewardXp] = useState(50);
+  const [rewardStat, setRewardStat] = useState<keyof Stats>(DEFAULT_STAT);
+  const [rewardXp, setRewardXp] = useState(DEFAULT_XP);
+
+  const close = () => {
+    setTitle("");
+    setRewardStat(DEFAULT_STAT);
+    setRewardXp(DEFAULT_XP);
+    onClose();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    
-    onSave({
-      title,
-      description,
-      rewardStat,
-      rewardXp,
-    });
-    
-    // Reset and close
-    setTitle("");
-    setDescription("");
-    setRewardStat("knowledge");
-    setRewardXp(50);
-    onClose();
+    onSave({ title: title.trim(), description: "", rewardStat, rewardXp });
+    close();
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className={styles.overlay}>
-          <motion.div
-            className={styles.modalContent}
-            initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
-            animate={{ opacity: 1, scale: 1, rotate: -2 }}
-            exit={{ opacity: 0, scale: 0.8, rotate: -5 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <div className={styles.modalBg} />
-            <form className={styles.formContainer} onSubmit={handleSubmit}>
-              <h2 className={styles.header}>CALL TO ACTION</h2>
-              
-              <div className={styles.inputGroup}>
-                <label>TARGET (Title)</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Study for finals"
-                  autoFocus
-                  required
-                />
-              </div>
-              
-              <div className={styles.inputGroup}>
-                <label>INTEL (Description)</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Details..."
-                  rows={3}
-                />
-              </div>
-              
-              <div className={styles.row}>
-                <div className={styles.inputGroup}>
-                  <label>STAT REWARD</label>
-                  <select
-                    value={rewardStat}
-                    onChange={(e) => setRewardStat(e.target.value as keyof Stats)}
-                  >
-                    <option value="knowledge">Knowledge</option>
-                    <option value="vitality">Vitality</option>
-                    <option value="charm">Charm</option>
-                    <option value="craft">Craft</option>
-                    <option value="nerve">Nerve</option>
-                  </select>
-                </div>
-                
-                <div className={styles.inputGroup}>
-                  <label>XP (+)</label>
-                  <input
-                    type="number"
-                    min="10"
-                    max="100"
-                    step="10"
-                    value={rewardXp}
-                    onChange={(e) => setRewardXp(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.actions}>
-                <button type="button" className={styles.cancelBtn} onClick={onClose}>
-                  CANCEL
-                </button>
-                <button type="submit" className={styles.submitBtn}>
-                  CONFIRM
-                </button>
-              </div>
-            </form>
-          </motion.div>
+    <OverlayPanel isOpen={isOpen} onClose={close} title="New mission" subtitle="NAME IT. PICK A STAT. SET REWARD.">
+      <form onSubmit={handleSubmit}>
+        <input
+          className={styles.nameInput}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="MISSION NAME..."
+          aria-label="Mission name"
+          autoFocus
+        />
+
+        <div className={styles.label}>TARGET STAT</div>
+        <div className={styles.statPicks} role="radiogroup" aria-label="Target stat">
+          {STATS_ORDER.map((stat) => (
+            <button
+              key={stat}
+              type="button"
+              role="radio"
+              aria-checked={rewardStat === stat}
+              className={`${styles.statPick} ${rewardStat === stat ? styles.statPickActive : ""}`}
+              onClick={() => setRewardStat(stat)}
+            >
+              <span>{STAT_GLYPHS[stat]}</span>
+              <span>{stat}</span>
+            </button>
+          ))}
         </div>
-      )}
-    </AnimatePresence>
+
+        <label className={styles.label} htmlFor="new-mission-xp">
+          XP REWARD &mdash; {rewardXp}
+        </label>
+        <input
+          id="new-mission-xp"
+          className={styles.slider}
+          type="range"
+          min={10}
+          max={60}
+          step={5}
+          value={rewardXp}
+          onChange={(e) => setRewardXp(Number(e.target.value))}
+        />
+
+        <div className={styles.actions}>
+          <button type="button" className={styles.cancelBtn} onClick={close}>
+            CANCEL
+          </button>
+          <button type="submit" className={styles.submitBtn} disabled={!title.trim()}>
+            ADD MISSION
+          </button>
+        </div>
+      </form>
+    </OverlayPanel>
   );
 }

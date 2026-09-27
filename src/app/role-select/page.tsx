@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProfile, RoleType } from "@/context/ProfileContext";
+import { useToast } from "@/context/ToastContext";
 import styles from "./page.module.css";
 
 const ROLES = [
@@ -42,27 +43,30 @@ const ROLES = [
 export default function RoleSelectScreen() {
   const router = useRouter();
   const { setRole } = useProfile();
+  const { showToast } = useToast();
   const [selectedId, setSelectedId] = useState<RoleType>(null);
 
   const handleConfirm = () => {
     if (selectedId) {
       setRole(selectedId);
+      showToast("Mask equipped", "rank");
       router.push("/home");
     }
   };
 
   return (
     <main className={styles.container}>
-      <div className={`${styles.halftoneOverlay} halftone-bg`} />
-
       <motion.h1
         className={styles.title}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        CHOOSE YOUR MASK
+        Choose
+        <br />
+        your mask
       </motion.h1>
+      <p className={styles.subtitle}>YOUR ROLE TUNES WHICH STATS MATTER MOST.</p>
 
       <div className={styles.list}>
         {ROLES.map((role, index) => {
@@ -76,20 +80,15 @@ export default function RoleSelectScreen() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <div
-                className={`${styles.card} skew-container ${
-                  isSelected ? styles.cardSelected : "hard-shadow"
-                }`}
+              <button
+                className={`${styles.card} ${isSelected ? styles.cardSelected : ""}`}
                 onClick={() => setSelectedId(role.id as RoleType)}
+                aria-pressed={isSelected}
               >
-                <div className="unskew-content">
+                <div>
                   <div className={styles.cardHeader}>
-                    <div
-                      className={`${styles.numeralChip} skew-container ${
-                        isSelected ? styles.numeralChipSelected : ""
-                      }`}
-                    >
-                      <span className="unskew-content">{role.numeral}</span>
+                    <div className={`${styles.numeralChip} ${isSelected ? styles.numeralChipSelected : ""}`}>
+                      {role.numeral}
                     </div>
                     <span className={styles.roleName}>{role.name}</span>
                   </div>
@@ -107,7 +106,7 @@ export default function RoleSelectScreen() {
                     )}
                   </AnimatePresence>
                 </div>
-              </div>
+              </button>
             </motion.div>
           );
         })}
@@ -122,7 +121,7 @@ export default function RoleSelectScreen() {
             exit={{ y: 100, opacity: 0 }}
           >
             <button className={styles.confirmButton} onClick={handleConfirm}>
-              <span className="unskew-content">CONFIRM</span>
+              CONFIRM
             </button>
           </motion.div>
         )}

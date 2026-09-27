@@ -2,73 +2,120 @@
 
 import React, { useState } from "react";
 import styles from "./page.module.css";
-import { useMissions } from "@/context/MissionContext";
+import { Mission, useMissions } from "@/context/MissionContext";
+import { useToast } from "@/context/ToastContext";
 import { MissionCard } from "@/components/MissionCard";
 import { NewMissionModal } from "@/components/NewMissionModal";
 import { WeatherBanner } from "@/components/WeatherBanner";
 import { AnimatePresence } from "framer-motion";
+import { useWeather } from "@/lib/useWeather";
+import { boostedXp } from "@/lib/weather";
 
 export default function MissionsPage() {
   const { missions, addMission, completeMission, uncompleteMission, deleteMission, isLoaded } = useMissions();
-  
+  const { showToast } = useToast();
+  const { condition } = useWeather();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
 
-  const activeMissions = missions.filter((m) => m.status === "active");
-  const completedMissions = missions.filter((m) => m.status === "completed");
+  if (!isLoaded) return null;
 
-  if (!isLoaded) return null; // Or a loading spinner
+  // Open missions first, cleared ones after
+  const ordered = [
+    ...missions.filter((m) => m.status === "active"),
+    ...missions.filter((m) => m.status === "completed"),
+  ];
+
+  const selectedGain = missions
+    .filter((m) => selected.includes(m.id) && m.status === "active")
+    .reduce((sum, m) => sum + boostedXp(m.rewardXp, condition, m.rewardStat), 0);
+
+  const toggleSelectMode = () => {
+    setSelectMode((on) => !on);
+    setSelected([]);
+  };
+
+  const handleToggle = (mission: Mission) => {
+    if (selectMode) {
+      if (mission.status !== "active") return;
+      setSelected((ids) => (ids.includes(mission.id) ? ids.filter((id) => id !== mission.id) : [...ids, mission.id]));
+    } else if (mission.status === "active") {
+      completeMission(mission.id);
+    } else {
+      uncompleteMission(mission.id);
+    }
+  };
+
+  const completeSelected = () => {
+    if (selected.length === 0) return;
+    selected.forEach((id) => completeMission(id, { quiet: true }));
+    showToast(`${selected.length} mission${selected.length > 1 ? "s" : ""} cleared${selectedGain ? ` +${selectedGain} XP` : ""}`);
+    setSelected([]);
+    setSelectMode(false);
+  };
 
   return (
     <main className={styles.container}>
       <WeatherBanner />
-      <div className={styles.headerContainer}>
-        <h1 className={styles.pageTitle}>MISSIONS</h1>
-        <button className={styles.addBtn} onClick={() => setIsModalOpen(true)}>
-          + NEW MISSION
+
+      <div className={styles.titleRow}>
+        <h1 className={styles.pageTitle}>Missions</h1>
+        <div className={styles.slash} aria-hidden />
+        <button
+          className={`${styles.selectBtn} ${selectMode ? styles.selectBtnActive : ""}`}
+          onClick={toggleSelectMode}
+          aria-pressed={selectMode}
+          title="Select multiple"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M2 6 L4.5 8.5 L9 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" />
+            <rect x="12" y="5.2" width="10" height="2.6" fill="currentColor" />
+            <path d="M2 16 L4.5 18.5 L9 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" />
+            <rect x="12" y="15.2" width="10" height="2.6" fill="currentColor" />
+          </svg>
+          <span>{selectMode ? "DONE" : "SELECT"}</span>
         </button>
       </div>
 
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>ACTIVE TARGETS</h2>
-        {activeMissions.length === 0 ? (
-          <div className={styles.emptyState}>No active targets. Add one, or tell your navigator your plans in chat.</div>
-        ) : (
-          <AnimatePresence>
-            {activeMissions.map((mission) => (
-              <MissionCard
-                key={mission.id}
-                mission={mission}
-                onComplete={completeMission}
-                onDelete={deleteMission}
-              />
-            ))}
-          </AnimatePresence>
+      {selectMode && (
+        <div className={styles.selectBar}>
+          <span className={styles.selectCount}>{selected.length} SELECTED</span>
+          {selectedGain > 0 && <span className={styles.selectXp}>+{selectedGain} XP</span>}
+          <button className={styles.selectComplete} onClick={completeSelected} disabled={selected.length === 0}>
+            COMPLETE
+          </button>
+        </div>
+      )}
+
+      <div className={styles.list}>
+        <AnimatePresence initial={false}>
+          {ordered.map((mission) => (
+            <MissionCard
+              key={mission.id}
+              mission={mission}
+              onToggle={handleToggle}
+              onDelete={deleteMission}
+              selectMode={selectMode}
+              selected={selected.includes(mission.id)}
+            />
+          ))}
+        </AnimatePresence>
+
+        {ordered.length === 0 && (
+          <p className={styles.emptyState}>No missions yet. Add one, or tell your navigator your plans in chat.</p>
         )}
+
+        <button className={styles.addTile} onClick={() => setIsModalOpen(true)}>
+          <span className={styles.addIcon}>+</span>
+          <span>ADD NEW MISSION</span>
+        </button>
+
+        <p className={styles.footnote}>MISSIONS MATCHING TODAY&apos;S WEATHER PAY &times;1.5 XP</p>
       </div>
 
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>MISSION ARCHIVE</h2>
-        {completedMissions.length === 0 ? (
-          <div className={styles.emptyState}>No targets neutralized yet.</div>
-        ) : (
-          <AnimatePresence>
-            {completedMissions.map((mission) => (
-              <MissionCard
-                key={mission.id}
-                mission={mission}
-                onUndo={uncompleteMission}
-                onDelete={deleteMission}
-              />
-            ))}
-          </AnimatePresence>
-        )}
-      </div>
-
-      <NewMissionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={addMission}
-      />
+      <NewMissionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={addMission} />
     </main>
   );
 }

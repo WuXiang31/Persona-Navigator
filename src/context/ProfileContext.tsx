@@ -20,8 +20,9 @@ interface ProfileContextType {
   role: RoleType;
   stats: Stats;
   setRole: (role: RoleType) => void;
-  // Applies an XP change (negative to undo), clamped to 0-500; returns the change actually applied
-  addXp: (stat: keyof Stats, xp: number) => number;
+  // Applies an XP change (negative to undo), clamped to 0-500; returns the change actually applied.
+  // `quiet` skips the per-change toast (rank-ups still show)
+  addXp: (stat: keyof Stats, xp: number, options?: { quiet?: boolean }) => number;
   isLoaded: boolean;
 }
 
@@ -66,7 +67,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
   }, [showToast]);
 
-  const addXp = (stat: keyof Stats, xp: number) => {
+  const addXp = (stat: keyof Stats, xp: number, { quiet = false }: { quiet?: boolean } = {}) => {
     const prev = statsStore.get();
     const nextValue = clampStat(prev[stat] + xp);
     const applied = nextValue - prev[stat];
@@ -81,7 +82,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    showToast(`${applied > 0 ? "+" : ""}${applied} ${stat}`, "xp");
+    if (!quiet) showToast(`${applied > 0 ? "+" : ""}${applied} XP ${stat}`, "xp");
     if (getRankIndex(nextValue) > getRankIndex(prev[stat])) {
       showToast(`Rank up! ${stat} → ${getRankName(nextValue)}`, "rank", 900);
     }

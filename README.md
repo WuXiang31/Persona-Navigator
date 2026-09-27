@@ -7,7 +7,10 @@ The visual style is angular red/black/white with halftone textures. All characte
 ## Features
 
 - **Five stats with ranks**: Knowledge, Vitality, Charm, Craft and Nerve. Each has 0-500 XP and one rank per 100 XP (Novice -> Apprentice -> Adept -> Expert -> Master). Stats are shown on a radar chart, with toasts for XP changes and rank-ups.
-- **Missions**: create missions that reward a stat, then complete or undo them. Undo takes back exactly the XP that was granted.
+- **Missions**: create missions with a target stat and an XP reward (10-60).
+  - Tap a mission card to complete it, and tap it again to undo. Undo takes back exactly the XP that was granted.
+  - **Select** mode completes several missions at once.
+  - The × on a card deletes it.
 - **Quick Log**: give +15 XP to a stat you just worked on.
 - **Weather bonus**: missions for today's weather stat give ×1.5 XP. Weather comes from your location via [Open-Meteo](https://open-meteo.com/), which needs no API key.
 - **Stat decay**: a stat that hasn't gained XP for 3 days loses 5 XP per extra day.
@@ -21,7 +24,7 @@ All data lives in the browser's `localStorage`. There are no accounts or backend
 
 ## Getting started
 
-Requirements: Node.js 20+ and a [Gemini API key](https://aistudio.google.com/apikey).
+Requirements: Node.js 22+ and a [Gemini API key](https://aistudio.google.com/apikey).
 
 ```bash
 npm install
@@ -82,7 +85,7 @@ src/
     (app)/missions/       Weather banner, active missions, archive
     (app)/chat/           AI navigator chat
     api/chat/route.ts     Gemini call: reply + proposed missions
-  components/             UI components (MissionCard, RadarChart, WeatherBanner, ...)
+  components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
   context/                Profile (stats, XP, decay), Missions, Toasts
   lib/                    Game rules and helpers (progression, weather, decay, retry, localStore)
                           with unit tests next to them (*.test.ts)
