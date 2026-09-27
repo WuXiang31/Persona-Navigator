@@ -6,10 +6,11 @@ import { Mission } from "@/context/MissionContext";
 interface MissionCardProps {
   mission: Mission;
   onComplete?: (id: string) => void;
+  onUndo?: (id: string) => void;
   onDelete?: (id: string) => void;
 }
 
-export function MissionCard({ mission, onComplete, onDelete }: MissionCardProps) {
+export function MissionCard({ mission, onComplete, onUndo, onDelete }: MissionCardProps) {
   const isCompleted = mission.status === "completed";
 
   return (
@@ -43,6 +44,14 @@ export function MissionCard({ mission, onComplete, onDelete }: MissionCardProps)
               onClick={() => onComplete(mission.id)}
             >
               TAKE HEART
+            </button>
+          )}
+          {isCompleted && onUndo && (
+            <button
+              className={styles.deleteBtn}
+              onClick={() => onUndo(mission.id)}
+            >
+              UNDO
             </button>
           )}
           {onDelete && (
