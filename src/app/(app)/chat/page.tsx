@@ -9,6 +9,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useMissions } from "@/context/MissionContext";
 import { COMPANION_NAME } from "@/lib/companion";
 import { createLocalStore, useLocalStore } from "@/lib/localStore";
+import { useWeather } from "@/lib/useWeather";
 
 const MAX_SAVED_MESSAGES = 100;
 const chatStore = createLocalStore<MessageData[]>("persona_chat", []);
@@ -19,6 +20,7 @@ function setMessages(update: (prev: MessageData[]) => MessageData[]) {
 
 export default function ChatPage() {
   const { role, stats } = useProfile();
+  const { condition: weather } = useWeather();
   const { missions, addMission } = useMissions();
   
   const messages = useLocalStore(chatStore);
@@ -64,6 +66,7 @@ export default function ChatPage() {
           messages: history.map(({ sender, text }) => ({ sender, text })),
           role,
           stats,
+          weather,
           activeMissions: missions.filter((m) => m.status === "active").map((m) => m.title),
         }),
       });
