@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
 import { ChatMessage, MessageData } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
@@ -8,35 +8,20 @@ import { MissionProposals, MissionProposal, ProposalStatus } from "@/components/
 import { useProfile } from "@/context/ProfileContext";
 import { useMissions } from "@/context/MissionContext";
 import { COMPANION_NAME } from "@/lib/companion";
+import { createLocalStore, useLocalStore } from "@/lib/localStore";
 
-// Chat history lives in localStorage; useSyncExternalStore keeps the page in sync with it
-const CHAT_KEY = "persona_chat";
 const MAX_SAVED_MESSAGES = 100;
-const chatListeners = new Set<() => void>();
+const chatStore = createLocalStore<MessageData[]>("persona_chat", []);
 
-function subscribeChat(listener: () => void) {
-  chatListeners.add(listener);
-  return () => {
-    chatListeners.delete(listener);
-  };
-}
-
-function readChat() {
-  return localStorage.getItem(CHAT_KEY) ?? "[]";
-}
-
-function setMessages(update: MessageData[] | ((prev: MessageData[]) => MessageData[])) {
-  const next = typeof update === "function" ? update(JSON.parse(readChat())) : update;
-  localStorage.setItem(CHAT_KEY, JSON.stringify(next.slice(-MAX_SAVED_MESSAGES)));
-  chatListeners.forEach((l) => l());
+function setMessages(update: (prev: MessageData[]) => MessageData[]) {
+  chatStore.set((prev) => update(prev).slice(-MAX_SAVED_MESSAGES));
 }
 
 export default function ChatPage() {
   const { role } = useProfile();
   const { missions, addMission } = useMissions();
   
-  const rawChat = useSyncExternalStore(subscribeChat, readChat, () => "[]");
-  const messages: MessageData[] = useMemo(() => JSON.parse(rawChat), [rawChat]);
+  const messages = useLocalStore(chatStore);
 
   const welcome: MessageData = {
     id: "welcome-1",
@@ -65,7 +50,7 @@ export default function ChatPage() {
       timestamp: Date.now(),
     };
     const history = [...messages, userMsg];
-    setMessages(history);
+    setMessages((prev) => [...prev, userMsg]);
     
     setIsTyping(true);
     
