@@ -43,7 +43,7 @@ export function MissionCard({ mission, onComplete, onUndo, onDelete }: MissionCa
               className={styles.completeBtn}
               onClick={() => onComplete(mission.id)}
             >
-              TAKE HEART
+              COMPLETE
             </button>
           )}
           {isCompleted && onUndo && (
