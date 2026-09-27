@@ -119,4 +119,3 @@ There is no test runner in the repo yet. Current practice:
 - Accounts and cloud sync (Firebase was used in the Flutter version).
 - Squad (friends) features.
 - The desktop three-pane layout from the design handoff.
-- Remove the leftover Flutter files in the root `lib/` directory. The Flutter app itself is archived in `archive/flutter_legacy/`.

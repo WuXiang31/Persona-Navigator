@@ -14,7 +14,7 @@ Whenever implementing a new feature in this app, you MUST test it to ensure it w
 
 ## The 6-Part Development Lifecycle
 All feature development must follow this strict 6-part pipeline. When possible, these phases should be delegated to specialized subagents:
-1. **Planning:** Researching requirements, exploring the codebase (including `design_handoff_persona_navigator/`), and writing an implementation plan.
+1. **Planning:** Researching requirements, exploring the codebase (including `design/handoff/`), and writing an implementation plan.
 2. **Design:** Defining the UI/UX aesthetics, layout, and visual assets. Match the design handoff's angular red/black/white style, and keep all names, characters and copy original (see its IP constraint).
 3. **Engineering:** Architecting the data models, state (React context + `createLocalStore` in `src/lib/localStore.ts`), and game logic in `src/lib/`.
 4. **Implement (Developing):** Writing the TypeScript/React code and assembling the UI components (CSS Modules, framer-motion).
