@@ -1,51 +1,52 @@
 .navContainer {
   position: fixed;
-  bottom: 0;
   left: 0;
-  width: 100vw;
-  height: 80px;
-  background-color: var(--color-black);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  right: 0;
+  bottom: 0;
   z-index: 50;
+  height: calc(68px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #000;
 }
 
 .navItem {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
   position: relative;
-}
-
-.navButton {
-  font-family: var(--font-anybody);
-  font-weight: 900;
-  font-style: italic;
-  font-size: 1.1rem;
-  color: var(--color-text-main);
-  padding: 8px 16px;
-  transition: all 0.2s ease;
-  z-index: 2;
+  padding: 9px 18px;
 }
 
 .activeIndicator {
   position: absolute;
-  width: 80%;
-  height: 60%;
-  background-color: var(--color-primary-red);
+  inset: 0;
+  z-index: 0;
+  transform: skewX(-10deg);
+  background: var(--color-primary-red);
+}
+
+.navButton {
+  position: relative;
   z-index: 1;
-  box-shadow: 4px 4px 0 var(--color-black);
+  display: inline-block;
+  transform: skewX(-10deg);
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 2px;
+  transition: color 0.15s ease;
 }
 
 .activeText {
-  color: var(--color-text-main);
+  color: #fff;
 }
 
 .inactiveText {
-  color: var(--color-text-muted);
+  color: #777;
+}
+
+.navItem:hover .inactiveText {
+  color: #fff;
 }

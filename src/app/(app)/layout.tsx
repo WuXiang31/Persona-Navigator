@@ -8,7 +8,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div style={{ paddingBottom: "80px", minHeight: "100vh", position: "relative" }}>
+    <div style={{ paddingBottom: "68px", minHeight: "100vh", position: "relative" }}>
       {children}
       <BottomNav />
     </div>
