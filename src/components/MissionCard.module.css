@@ -1,152 +1,152 @@
-.cardWrapper {
+/* Quest card from the design handoff: skewed dark slab, colored left edge, tap to toggle */
+.card {
   position: relative;
-  width: 100%;
-  margin-bottom: 24px;
+  transform: skewX(-8deg);
+  background: var(--color-surface);
+  border-left: 5px solid var(--color-primary-red);
+  padding: 14px 18px;
+  margin-bottom: 13px;
+  cursor: pointer;
   font-family: var(--font-outfit);
+  color: var(--color-text-main);
+  transition: background-color 0.15s ease;
+  outline: none;
 }
 
-.bgShadow {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  right: -8px;
-  bottom: -8px;
-  background-color: #000;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
-  z-index: 0;
-  opacity: 0.3;
+.card:hover,
+.card:focus-visible {
+  background: var(--color-surface-alt);
 }
 
-.cardContent {
-  position: relative;
-  background-color: #fff;
-  border: 4px solid #000;
-  padding: 16px;
-  z-index: 1;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
-  transition: all 0.3s ease;
-}
-
-.cardContent::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 8px;
-  height: 100%;
-  background-color: #e50000; /* P5 Red */
-}
-
-/* Completed State */
-.completed .cardContent {
-  background-color: #f0f0f0;
-  border-color: #888;
-}
-.completed .cardContent::before {
-  background-color: #888;
-}
-.completed .title {
-  text-decoration: line-through;
-  color: #666;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-left: 12px;
-  margin-bottom: 12px;
-}
-
-.title {
-  margin: 0;
-  color: #000;
-  font-size: 1.25rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-}
-
-.rewardBadge {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  background: #000;
-  color: #fff;
-  padding: 4px 8px;
-  transform: skew(-10deg);
-}
-
-.rewardStat {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: #e50000;
-}
-
-.rewardXp {
-  font-size: 0.9rem;
-  font-weight: 800;
+.card:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-accent-yellow);
 }
 
 .boosted {
-  color: var(--color-accent-yellow);
+  border-left-color: var(--color-accent-yellow);
 }
 
-.description {
-  margin: 0 0 16px 12px;
-  font-size: 0.9rem;
-  color: #333;
+.done {
+  background: #161616;
+  border-left-color: #333;
 }
 
-.actions {
+.selected {
+  background: #2a2410;
+  border-left-color: var(--color-accent-yellow);
+}
+
+.topRow {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 16px;
+  align-items: center;
+  gap: 10px;
 }
 
-.completeBtn {
-  background-color: #e50000;
-  color: white;
-  border: 2px solid #000;
-  padding: 8px 16px;
-  font-family: var(--font-anybody);
+.checkbox {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 2px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
   font-weight: 900;
-  font-style: italic;
-  font-size: 1.1rem;
+  font-size: 14px;
+}
+
+.done .checkbox {
+  border-color: var(--color-primary-red);
+  background: var(--color-primary-red);
+}
+
+.selected .checkbox {
+  border-color: var(--color-accent-yellow);
+  background: var(--color-accent-yellow);
+  color: #111;
+}
+
+.title {
+  flex: 1;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  cursor: pointer;
-  transform: skew(-10deg);
-  transition: transform 0.1s, background-color 0.2s;
-  box-shadow: 2px 2px 0px #000;
 }
 
-.completeBtn:hover {
-  transform: skew(-10deg) scale(1.05);
-}
-
-.completeBtn:active {
-  transform: skew(-10deg) scale(0.95);
-  box-shadow: 0px 0px 0px #000;
+.done:not(.selecting) .title {
+  color: #666;
+  text-decoration: line-through;
+  text-decoration-color: var(--color-primary-red);
+  text-decoration-thickness: 3px;
 }
 
 .deleteBtn {
-  background-color: transparent;
-  color: #000;
-  border: 2px solid #000;
-  padding: 8px 16px;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  margin: -4px -8px -4px 0;
+  color: #555;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.deleteBtn:hover,
+.deleteBtn:focus-visible {
+  color: var(--color-primary-red);
+}
+
+.description {
+  margin: 4px 0 0 34px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-left: 34px;
+}
+
+.glyph {
+  color: var(--color-primary-red);
+  font-size: 13px;
+}
+
+.statName {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.xp {
+  margin-left: auto;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.xpBoosted {
+  color: var(--color-accent-yellow);
+}
+
+.stamp {
+  position: absolute;
+  right: 44px;
+  top: -8px;
+  background: var(--color-primary-red);
+  color: #fff;
+  transform: rotate(6deg);
+  padding: 2px 10px;
   font-family: var(--font-anybody);
   font-weight: 900;
   font-style: italic;
-  font-size: 1rem;
-  text-transform: uppercase;
-  cursor: pointer;
-  transform: skew(-10deg);
-  transition: all 0.2s;
-}
-
-.deleteBtn:hover {
-  background-color: #000;
-  color: #fff;
+  font-size: 12px;
+  letter-spacing: 2px;
 }

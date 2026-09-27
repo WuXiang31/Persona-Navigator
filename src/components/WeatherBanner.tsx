@@ -20,7 +20,7 @@ export function WeatherBanner() {
     <div className={styles.banner} style={{ background: info.bg, color: info.fg }}>
       <span className={styles.label}>{info.label}</span>
       <span className={styles.bonus}>
-        Today&apos;s bonus: {info.bonus === "all" ? "ALL STATS" : info.bonus} ×{WEATHER_BOOST}
+        Today&apos;s bonus: {info.bonus === "all" ? "ALL STATS" : info.bonus} &times;{WEATHER_BOOST}
       </span>
     </div>
   );

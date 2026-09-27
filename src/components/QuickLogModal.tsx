@@ -1,8 +1,8 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import styles from "./QuickLogModal.module.css";
+import { OverlayPanel } from "./OverlayPanel";
 import { useProfile, Stats } from "@/context/ProfileContext";
-import { MAX_STAT, QUICK_LOG_XP, STATS_ORDER, getRankColor, getRankName } from "@/lib/progression";
+import { QUICK_LOG_XP, STATS_ORDER, STAT_GLYPHS } from "@/lib/progression";
 
 interface QuickLogModalProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface QuickLogModalProps {
 }
 
 export function QuickLogModal({ isOpen, onClose }: QuickLogModalProps) {
-  const { stats, addXp } = useProfile();
+  const { addXp } = useProfile();
 
   const handleLog = (stat: keyof Stats) => {
     addXp(stat, QUICK_LOG_XP);
@@ -18,45 +18,21 @@ export function QuickLogModal({ isOpen, onClose }: QuickLogModalProps) {
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className={styles.overlay} onClick={onClose}>
-          <motion.div
-            className={styles.modalContent}
-            initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
-            animate={{ opacity: 1, scale: 1, rotate: -2 }}
-            exit={{ opacity: 0, scale: 0.8, rotate: -5 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={styles.modalBg} />
-            <div className={styles.panel}>
-              <h2 className={styles.header}>QUICK LOG</h2>
-              <p className={styles.subtitle}>What did you work on? +{QUICK_LOG_XP} XP</p>
-
-              {STATS_ORDER.map((stat) => (
-                <button key={stat} className={styles.statRow} onClick={() => handleLog(stat)}>
-                  <span className={styles.statName}>{stat}</span>
-                  <span className={styles.rank} style={{ color: getRankColor(stats[stat]) }}>
-                    {getRankName(stats[stat])}
-                  </span>
-                  <span className={styles.barTrack}>
-                    <span
-                      className={styles.barFill}
-                      style={{ width: `${(stats[stat] / MAX_STAT) * 100}%`, background: getRankColor(stats[stat]) }}
-                    />
-                  </span>
-                  <span className={styles.xp}>{stats[stat]}</span>
-                </button>
-              ))}
-
-              <button className={styles.cancelBtn} onClick={onClose}>
-                CANCEL
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <OverlayPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Quick log"
+      subtitle={`TAP WHAT YOU DID. +${QUICK_LOG_XP} XP EACH.`}
+    >
+      <div className={styles.list}>
+        {STATS_ORDER.map((stat) => (
+          <button key={stat} className={styles.row} onClick={() => handleLog(stat)}>
+            <span className={styles.glyph}>{STAT_GLYPHS[stat]}</span>
+            <span className={styles.name}>{stat}</span>
+            <span className={styles.xp}>+{QUICK_LOG_XP}</span>
+          </button>
+        ))}
+      </div>
+    </OverlayPanel>
   );
 }
