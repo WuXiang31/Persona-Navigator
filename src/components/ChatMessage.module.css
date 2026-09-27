@@ -8,7 +8,7 @@
   justify-content: flex-end;
 }
 
-.monaWrapper {
+.companionWrapper {
   justify-content: flex-start;
 }
 
@@ -33,7 +33,7 @@
   box-shadow: 4px 4px 0px #000;
 }
 
-.monaBubble {
+.companionBubble {
   background-color: #000;
   color: #fff;
   border: 3px solid #e50000;
@@ -48,6 +48,6 @@
   transform: skew(5deg); /* Counter-skew for user */
 }
 
-.monaBubble .text {
-  transform: skew(-5deg); /* Counter-skew for mona */
+.companionBubble .text {
+  transform: skew(-5deg); /* Counter-skew for companion */
 }
