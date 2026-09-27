@@ -4,26 +4,21 @@ import React, { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
 import { ChatMessage, MessageData } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
+import { MissionProposals, MissionProposal, ProposalStatus } from "@/components/MissionProposals";
 import { useProfile } from "@/context/ProfileContext";
-
-const MONA_RESPONSES = [
-  "Looking sharp, Joker. What's our next move?",
-  "Don't push yourself too hard, it's late. You should get some sleep.",
-  "I sense a Treasure nearby... oh wait, that's just your homework.",
-  "A Phantom Thief always completes their Missions!",
-  "Make sure you're increasing your Charm... you'll need it.",
-  "You've been grinding stats, haven't you? Impressive.",
-];
+import { useMissions } from "@/context/MissionContext";
+import { COMPANION_NAME } from "@/lib/companion";
 
 export default function ChatPage() {
   const { role } = useProfile();
+  const { missions, addMission } = useMissions();
   
   const [messages, setMessages] = useState<MessageData[]>([
     {
       id: "welcome-1",
-      sender: "mona",
-      text: `Welcome to the Metaverse, ${role ? role : "trickster"}. Ready to steal some hearts?`,
-      timestamp: Date.now(),
+      sender: "companion",
+      text: `${COMPANION_NAME} here${role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
+      timestamp: 0,
     }
   ]);
   
@@ -46,7 +41,8 @@ export default function ChatPage() {
       text,
       timestamp: Date.now(),
     };
-    setMessages((prev) => [...prev, userMsg]);
+    const history = [...messages, userMsg];
+    setMessages(history);
     
     setIsTyping(true);
     
@@ -56,15 +52,19 @@ export default function ChatPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({
+          messages: history.map(({ sender, text }) => ({ sender, text })),
+          role,
+          activeMissions: missions.filter((m) => m.status === "active").map((m) => m.title),
+        }),
       });
 
       if (!response.ok) {
-        console.warn('Failed to fetch from Mona API, status:', response.status);
+        console.warn('Failed to fetch from chat API, status:', response.status);
         const errorMsg: MessageData = {
           id: Math.random().toString(36).substring(2, 9),
-          sender: "mona",
-          text: "Ugh, this cognitive static is awful! The Metaverse signal just dropped... what were you saying?",
+          sender: "companion",
+          text: "Tch, the signal just dropped. What were you saying?",
           timestamp: Date.now(),
         };
         setMessages((prev) => [...prev, errorMsg]);
@@ -73,20 +73,23 @@ export default function ChatPage() {
 
       const data = await response.json();
       
-      const monaMsg: MessageData = {
+      const companionMsg: MessageData = {
         id: Math.random().toString(36).substring(2, 9),
-        sender: "mona",
+        sender: "companion",
         text: data.reply || "...",
         timestamp: Date.now(),
+        proposals: Array.isArray(data.missions) && data.missions.length
+          ? data.missions.map((m: Omit<MissionProposal, "proposalStatus">) => ({ ...m, proposalStatus: "pending" }))
+          : undefined,
       };
       
-      setMessages((prev) => [...prev, monaMsg]);
+      setMessages((prev) => [...prev, companionMsg]);
     } catch (error) {
       console.warn('Chat request failed:', error);
       const errorMsg: MessageData = {
         id: Math.random().toString(36).substring(2, 9),
-        sender: "mona",
-        text: "Whoa! Looks like a Palace collapsed on our connection. Let's try that again later.",
+        sender: "companion",
+        text: "Our connection got cut off. Let's try that again in a bit.",
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -95,19 +98,52 @@ export default function ChatPage() {
     }
   };
 
+  // Moves the chosen proposals of one message from "pending" to a final status,
+  // adding them to the mission list when accepted
+  const resolveProposals = (messageId: string, indices: number[], status: ProposalStatus) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg?.proposals) return;
+
+    const targets = indices.filter((i) => msg.proposals![i]?.proposalStatus === "pending");
+    if (status === "accepted") {
+      targets.forEach((i) => {
+        const { title, description, rewardStat, rewardXp } = msg.proposals![i];
+        addMission({ title, description, rewardStat, rewardXp });
+      });
+    }
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId && m.proposals
+          ? { ...m, proposals: m.proposals.map((p, i) => (targets.includes(i) ? { ...p, proposalStatus: status } : p)) }
+          : m
+      )
+    );
+  };
+
   return (
     <main className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.pageTitle}>MONA SECURE CHAT</h1>
+        <h1 className={styles.pageTitle}>{COMPANION_NAME} / NAVIGATOR ONLINE</h1>
       </header>
 
       <div className={styles.messageList}>
         {messages.map((msg) => (
-          <ChatMessage key={msg.id} message={msg} />
+          <React.Fragment key={msg.id}>
+            <ChatMessage message={msg} />
+            {msg.proposals && (
+              <MissionProposals
+                proposals={msg.proposals}
+                onAccept={(i) => resolveProposals(msg.id, [i], "accepted")}
+                onDismiss={(i) => resolveProposals(msg.id, [i], "dismissed")}
+                onAcceptAll={() => resolveProposals(msg.id, msg.proposals!.map((_, i) => i), "accepted")}
+              />
+            )}
+          </React.Fragment>
         ))}
         {isTyping && (
           <div style={{ padding: "10px", fontFamily: "var(--font-outfit)", fontStyle: "italic", color: "#888" }}>
-            Mona is typing...
+            {COMPANION_NAME} is typing...
           </div>
         )}
         <div ref={messagesEndRef} />
