@@ -5,6 +5,7 @@ import styles from "./page.module.css";
 import { useMissions } from "@/context/MissionContext";
 import { MissionCard } from "@/components/MissionCard";
 import { NewMissionModal } from "@/components/NewMissionModal";
+import { WeatherBanner } from "@/components/WeatherBanner";
 import { AnimatePresence } from "framer-motion";
 
 export default function MissionsPage() {
@@ -19,6 +20,7 @@ export default function MissionsPage() {
 
   return (
     <main className={styles.container}>
+      <WeatherBanner />
       <div className={styles.headerContainer}>
         <h1 className={styles.pageTitle}>MISSIONS</h1>
         <button className={styles.addBtn} onClick={() => setIsModalOpen(true)}>
