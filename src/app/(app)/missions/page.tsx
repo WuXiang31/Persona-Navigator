@@ -9,12 +9,15 @@ import { NewMissionModal } from "@/components/NewMissionModal";
 import { WeatherBanner } from "@/components/WeatherBanner";
 import { AnimatePresence } from "framer-motion";
 import { useWeather } from "@/lib/useWeather";
-import { boostedXp } from "@/lib/weather";
+import { missionXp } from "@/lib/mask";
+import { STAT_GLYPHS } from "@/lib/progression";
+import { useProfile } from "@/context/ProfileContext";
 
 export default function MissionsPage() {
   const { missions, addMission, completeMission, uncompleteMission, deleteMission, isLoaded } = useMissions();
   const { showToast } = useToast();
   const { condition } = useWeather();
+  const { mask } = useProfile();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
@@ -30,7 +33,7 @@ export default function MissionsPage() {
 
   const selectedGain = missions
     .filter((m) => selected.includes(m.id) && m.status === "active")
-    .reduce((sum, m) => sum + boostedXp(m.rewardXp, condition, m.rewardStat), 0);
+    .reduce((sum, m) => sum + missionXp(m.rewardXp, m.rewardStat, condition, mask), 0);
 
   const toggleSelectMode = () => {
     setSelectMode((on) => !on);
@@ -89,6 +92,31 @@ export default function MissionsPage() {
         </div>
       )}
 
+      {mask && mask.routines.length > 0 && !selectMode && (
+        <section className={styles.routines}>
+          <p className={styles.routinesLabel}>{mask.name} · ROUTINES</p>
+          <div className={styles.routineRow}>
+            {mask.routines.map((routine, i) => {
+              const active = missions.some((m) => m.status === "active" && m.title === routine.title);
+              return (
+                <button
+                  key={`${routine.title}-${i}`}
+                  className={styles.routineChip}
+                  onClick={() => addMission(routine)}
+                  disabled={active}
+                  title={routine.description || undefined}
+                >
+                  <span>{active ? "\u2713" : "+"} {routine.title}</span>
+                  <span className={styles.routineXp}>
+                    {STAT_GLYPHS[routine.rewardStat]} {missionXp(routine.rewardXp, routine.rewardStat, condition, mask)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <div className={styles.list}>
         <AnimatePresence initial={false}>
           {ordered.map((mission) => (
@@ -112,7 +140,10 @@ export default function MissionsPage() {
           <span>ADD NEW MISSION</span>
         </button>
 
-        <p className={styles.footnote}>MISSIONS MATCHING TODAY&apos;S WEATHER PAY &times;1.5 XP</p>
+        <p className={styles.footnote}>
+          MISSIONS MATCHING TODAY&apos;S WEATHER PAY &times;1.5 XP
+          {mask ? <> &middot; YOUR FOCUS STATS PAY &times;1.25</> : null}
+        </p>
       </div>
 
       <NewMissionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={addMission} />

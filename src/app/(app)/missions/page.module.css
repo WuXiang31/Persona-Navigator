@@ -147,3 +147,57 @@
   letter-spacing: 2px;
   color: var(--color-text-faint);
 }
+
+/* One-tap routines from the equipped mask */
+.routines {
+  padding: 14px 0 0 16px;
+}
+
+.routinesLabel {
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-primary-red);
+}
+
+.routineRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 4px 16px 8px 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.routineChip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  transform: skewX(-8deg);
+  background: var(--color-black);
+  border: 2px solid var(--color-black);
+  box-shadow: 3px 3px 0 var(--color-primary-red);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.routineChip:hover:not(:disabled) {
+  border-color: var(--color-primary-red);
+}
+
+.routineChip:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: default;
+}
+
+.routineXp {
+  color: var(--color-accent-yellow);
+}
