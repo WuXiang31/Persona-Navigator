@@ -42,3 +42,8 @@ next-env.d.ts
 
 # editor settings
 .vscode/
+
+# agent skills installed by `vercel integration add` (Clerk, Neon)
+.agents/skills/
+.claude/
+skills-lock.json
