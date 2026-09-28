@@ -73,10 +73,16 @@
   gap: 8px;
 }
 
+/* Explicit color: the card is white, so the page's light text color would make the title vanish */
 .title {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  color: #000;
   text-transform: uppercase;
 }
 
