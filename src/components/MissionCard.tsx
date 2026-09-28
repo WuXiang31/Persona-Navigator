@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 import styles from "./MissionCard.module.css";
 import { Mission } from "@/context/MissionContext";
 import { useWeather } from "@/lib/useWeather";
-import { boostedXp, isBoosted } from "@/lib/weather";
+import { isBoosted } from "@/lib/weather";
+import { isFocusStat, missionXp } from "@/lib/mask";
+import { useProfile } from "@/context/ProfileContext";
 import { STAT_GLYPHS } from "@/lib/progression";
 
 interface MissionCardProps {
@@ -18,9 +20,10 @@ interface MissionCardProps {
 
 export function MissionCard({ mission, onToggle, onDelete, selectMode = false, selected = false }: MissionCardProps) {
   const { condition } = useWeather();
+  const { mask } = useProfile();
   const done = mission.status === "completed";
-  const boosted = isBoosted(condition, mission.rewardStat);
-  const xp = done ? mission.awardedXp ?? mission.rewardXp : boostedXp(mission.rewardXp, condition, mission.rewardStat);
+  const boosted = isBoosted(condition, mission.rewardStat) || isFocusStat(mask, mission.rewardStat);
+  const xp = done ? mission.awardedXp ?? mission.rewardXp : missionXp(mission.rewardXp, mission.rewardStat, condition, mask);
 
   const checked = selectMode ? selected : done;
   const stateClass = selectMode

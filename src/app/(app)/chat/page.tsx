@@ -19,7 +19,7 @@ function setMessages(update: (prev: MessageData[]) => MessageData[]) {
 }
 
 export default function ChatPage() {
-  const { role, stats } = useProfile();
+  const { role, stats, profile, mask } = useProfile();
   const { condition: weather } = useWeather();
   const { missions, addMission } = useMissions();
   
@@ -28,7 +28,7 @@ export default function ChatPage() {
   const welcome: MessageData = {
     id: "welcome-1",
     sender: "companion",
-    text: `${COMPANION_NAME} here${role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
+    text: `${COMPANION_NAME} here${mask ? `, ${mask.name}` : role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
     timestamp: 0,
   };
 
@@ -65,6 +65,8 @@ export default function ChatPage() {
         body: JSON.stringify({
           messages: history.map(({ sender, text }) => ({ sender, text })),
           role,
+          profile,
+          mask,
           stats,
           weather,
           activeMissions: missions.filter((m) => m.status === "active").map((m) => m.title),

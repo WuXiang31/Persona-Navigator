@@ -2,21 +2,14 @@ import { NextResponse } from 'next/server';
 import { MAX_STAT, STATS_ORDER, getRankName } from '@/lib/progression';
 import { WEATHER_BOOST, WEATHER_INFO, WeatherCondition } from '@/lib/weather';
 import { sanitizeMissions } from '@/lib/missionProposals';
-import { RETRYABLE_STATUS, fetchWithRetry } from '@/lib/retry';
+import { FOCUS_BOOST, describeProfile, sanitizeMask, sanitizeProfile } from '@/lib/mask';
+import { GeminiContent, generateJson } from '@/lib/gemini';
+import { MISSION_RULES, MISSION_SCHEMA, companionPersona } from '@/lib/prompts';
 
 // Leaves room for a few Gemini retries (the platform may cap this lower)
 export const maxDuration = 60;
 
 const MAX_HISTORY = 12;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
-// Lighter model tried when the main one is still overloaded; set GEMINI_FALLBACK_MODEL=none to disable
-const GEMINI_FALLBACK_MODEL =
-  process.env.GEMINI_FALLBACK_MODEL === 'none' ? null : process.env.GEMINI_FALLBACK_MODEL || 'gemini-flash-lite-latest';
-
-// Original default persona; set COMPANION_PERSONA in .env.local to swap in your own
-const DEFAULT_PERSONA = `You are Vesper, an original masked fox spirit and the user's navigator in this self-improvement app.
-Your tone is sly, sharp-tongued and confident, but you genuinely want the user to grow. You are a partner and guide, never a pet.
-Keep your responses short and punchy (under 45 words). Do not use markdown or emojis unless absolutely necessary.`;
 
 const MISSION_PROMPT = `Always reply in the same language the user writes in.
 
@@ -24,39 +17,19 @@ Besides chatting, you turn the user's plans into Missions.
 When the user describes things they intend or need to do (today, tomorrow, this week...), propose one mission per concrete task in "missions".
 When the user is just chatting, venting, or asking questions, return an empty "missions" array.
 Do not propose missions that duplicate the user's current active missions.
-When the user asks what to do, has nothing planned, or seems stuck, you may suggest 1-2 missions that train their weakest stats, and say which stat you are targeting.
+When the user asks what to do, has nothing planned, or seems stuck, you may suggest 1-2 missions that fit who they are and train their weakest or focus stats, and say which stat you are targeting. Prefer their mask's routines when one fits.
 You can comment on the user's stats and ranks when it fits, but don't recite them unprompted.
+When the user has a mask, encourage them in terms of the identity they chose: each finished mission is a vote for who they want to become.
 When suggesting missions, favor the stat boosted by today's weather if it makes sense.
 
-Mission rules:
-- title: short and actionable, max ~40 characters, in the user's language.
-- description: one short line of detail (time, place, amount), or an empty string.
-- rewardStat: the stat the task grows most:
-  knowledge = studying, reading, learning, research
-  vitality = exercise, sleep, health, cooking, chores
-  charm = socializing, communication, dating, networking, appearance
-  craft = work output, coding, making things, skills practice, admin tasks
-  nerve = facing fears, hard conversations, presentations, trying something new
-- rewardXp: 10 to 100 in steps of 10, scaled by effort (quick errand = 10-20, an hour of focused work = 40-60, a big challenge = 80-100).
+${MISSION_RULES}
 In "reply", react in character and, if you proposed missions, briefly tell the user to review them.`;
 
 const RESPONSE_SCHEMA = {
   type: 'OBJECT',
   properties: {
     reply: { type: 'STRING' },
-    missions: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          title: { type: 'STRING' },
-          description: { type: 'STRING' },
-          rewardStat: { type: 'STRING', enum: [...STATS_ORDER] },
-          rewardXp: { type: 'INTEGER' },
-        },
-        required: ['title', 'description', 'rewardStat', 'rewardXp'],
-      },
-    },
+    missions: { type: 'ARRAY', items: MISSION_SCHEMA },
   },
   required: ['reply', 'missions'],
 };
@@ -74,6 +47,8 @@ export async function POST(request: Request) {
     const history: HistoryMessage[] = Array.isArray(body.messages) ? body.messages : [];
     const activeMissions: string[] = Array.isArray(body.activeMissions) ? body.activeMissions : [];
     const role: string | null = typeof body.role === 'string' ? body.role : null;
+    const profile = sanitizeProfile(body.profile);
+    const mask = sanitizeMask(body.mask);
     const stats: Partial<Record<Stat, number>> = body.stats && typeof body.stats === 'object' ? body.stats : {};
     const weather: WeatherCondition | null =
       typeof body.weather === 'string' && Object.hasOwn(WEATHER_INFO, body.weather) ? body.weather : null;
@@ -81,7 +56,7 @@ export async function POST(request: Request) {
     // Gemini expects the conversation to open with a user turn
     const recent = history.filter((m) => m && typeof m.text === 'string' && m.text.trim()).slice(-MAX_HISTORY);
     const firstUser = recent.findIndex((m) => m.sender === 'user');
-    const contents = (firstUser === -1 ? [] : recent.slice(firstUser)).map((m) => ({
+    const contents: GeminiContent[] = (firstUser === -1 ? [] : recent.slice(firstUser)).map((m) => ({
       role: m.sender === 'user' ? 'user' : 'model',
       parts: [{ text: m.text }],
     }));
@@ -90,13 +65,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
-    }
-
     const context = [
-      `The user's role: ${role ?? 'not chosen yet'}.`,
+      profile ? `About the user:\n${describeProfile(profile)}` : '',
+      mask
+        ? [
+            `The user's mask: "${mask.name}". Identity: "${mask.identity}".`,
+            `Focus stats (x${FOCUS_BOOST} XP): ${mask.focusStats.join(', ')}.`,
+            mask.routines.length
+              ? `Their routine missions:\n${mask.routines.map((r) => `- ${r.title} (${r.rewardStat}, ${r.rewardXp} XP)`).join('\n')}`
+              : '',
+          ].filter(Boolean).join('\n')
+        : `The user's role: ${role ?? 'not chosen yet'}.`,
       `The user's stats (XP out of ${MAX_STAT}, one rank per 100 XP):\n${STATS_ORDER.map((stat) => {
         const xp = Number(stats[stat]) || 0;
         return `- ${stat}: ${xp} XP (${getRankName(xp)})`;
@@ -107,58 +86,20 @@ export async function POST(request: Request) {
       activeMissions.length
         ? `The user's current active missions:\n${activeMissions.map((t) => `- ${t}`).join('\n')}`
         : 'The user has no active missions.',
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 
-    const requestBody = JSON.stringify({
-      system_instruction: {
-        parts: { text: `${process.env.COMPANION_PERSONA || DEFAULT_PERSONA}\n\n${MISSION_PROMPT}\n\n${context}` }
-      },
+    const result = await generateJson({
+      system: `${companionPersona()}\n\n${MISSION_PROMPT}\n\n${context}`,
       contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-        responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
-      }
+      schema: RESPONSE_SCHEMA,
     });
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
 
-    // Retry overloads (503) and rate limits with backoff; with a fallback model, the main one
-    // gets a single retry so a busy model hands over quickly
-    const attempts = GEMINI_FALLBACK_MODEL
-      ? [{ model: GEMINI_MODEL, retries: 1 }, { model: GEMINI_FALLBACK_MODEL, retries: 2 }]
-      : [{ model: GEMINI_MODEL, retries: 2 }];
-    let response!: Response;
-    for (const { model, retries } of attempts) {
-      response = await fetchWithRetry(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody },
-        { retries }
-      );
-      if (response.ok || !RETRYABLE_STATUS.has(response.status)) break;
-      console.warn(`Gemini model ${model} still unavailable (${response.status}) after retries`);
-    }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Gemini API Error:", errorText);
-      return NextResponse.json({ error: 'Failed to fetch from Gemini' }, { status: response.status });
-    }
-
-    const data = await response.json();
-    const rawText: string | undefined = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    let parsed: { reply?: unknown; missions?: unknown } = {};
-    try {
-      parsed = rawText ? JSON.parse(rawText) : {};
-    } catch {
-      console.error("Gemini returned non-JSON output:", rawText);
-    }
-
-    const reply = typeof parsed.reply === 'string' && parsed.reply.trim()
-      ? parsed.reply
+    const reply = typeof result.data.reply === 'string' && result.data.reply.trim()
+      ? result.data.reply
       : "Hmph. I have nothing to say to that.";
 
-    return NextResponse.json({ reply, missions: sanitizeMissions(parsed.missions) });
+    return NextResponse.json({ reply, missions: sanitizeMissions(result.data.missions) });
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -5,6 +5,8 @@ export const SYNCED_KEYS = [
   "persona_decay",
   "persona_missions",
   "persona_chat",
+  "persona_profile",
+  "persona_mask",
 ] as const;
 
 export type SyncedKey = (typeof SYNCED_KEYS)[number];

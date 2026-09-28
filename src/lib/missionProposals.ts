@@ -13,17 +13,17 @@ export interface ProposedMission {
   rewardXp: number;
 }
 
-const isStat = (value: unknown): value is keyof Stats =>
+export const isStat = (value: unknown): value is keyof Stats =>
   typeof value === "string" && (STATS_ORDER as readonly string[]).includes(value);
 
 // Keeps only well-formed missions from the model output: valid stat, non-empty title,
-// XP rounded to a multiple of 10 within 10-100, at most MAX_PROPOSED_MISSIONS
-export function sanitizeMissions(raw: unknown): ProposedMission[] {
+// XP rounded to a multiple of 10 within 10-100, at most `limit` missions
+export function sanitizeMissions(raw: unknown, limit = MAX_PROPOSED_MISSIONS): ProposedMission[] {
   if (!Array.isArray(raw)) return [];
 
   return raw
     .filter((m) => m && typeof m.title === "string" && m.title.trim() && isStat(m.rewardStat))
-    .slice(0, MAX_PROPOSED_MISSIONS)
+    .slice(0, limit)
     .map((m) => {
       const xp = Number(m.rewardXp);
       const rounded = Number.isFinite(xp) ? Math.round(xp / 10) * 10 : DEFAULT_REWARD_XP;

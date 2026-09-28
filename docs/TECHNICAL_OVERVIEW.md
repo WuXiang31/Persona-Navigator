@@ -18,7 +18,7 @@ Browser
   ClerkProvider       session, <SignIn>/<SignUp>/<UserButton>
   ToastProvider
     CloudSyncProvider   load account save on sign-in, push local writes <---> /api/state <---> Neon
-      ProfileProvider   role, stats, addXp, daily decay
+      ProfileProvider   role, profile, mask, stats, addXp, daily decay
         MissionProvider missions, complete/undo (weather-boosted XP)
           pages ---- POST /api/chat ----> Gemini
   useWeather() ---- geolocation + fetch ----> Open-Meteo
@@ -44,6 +44,8 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 | `persona_decay` | `DecayState` | `ProfileContext` | Per-stat last trained day, plus the last day decay was charged |
 | `persona_missions` | `Mission[]` | `MissionContext` | `awardedXp` is set while a mission is completed |
 | `persona_chat` | `MessageData[]` | chat page | Last 100 messages, including proposal accept/pass state |
+| `persona_profile` | `PlayerProfile` | `ProfileContext` | Awakening answers (see [Personal masks](#personal-masks-maskts)) |
+| `persona_mask` | `Mask` | `ProfileContext` | The personal mask; `null` until the player awakens one |
 | `persona_weather` | `{ condition, fetchedAt }` | `useWeather` | `condition` is `null` when location or the API is unavailable. Per device, not synced. |
 | `persona_owner` | Clerk user ID | `CloudSyncProvider` | Which account the local game state belongs to. Not synced. |
 
@@ -51,7 +53,7 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 
 Each account's save lives in Neon Postgres. The browser keeps working on `localStorage`, so every guarantee above (synchronous reads, no double XP) still holds.
 
-- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat.
+- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat, profile, mask.
 - **Connection** (`src/db/index.ts`): `pg` pool on the pooled `DATABASE_URL`, registered with `attachDatabasePool` from `@vercel/functions` for Fluid Compute.
 - **API** (`src/app/api/state/route.ts`, Clerk-authenticated; signed out -> 401):
   - `GET` -> `{ entries: { key: rawValue } }` for the signed-in user.
@@ -77,7 +79,7 @@ All tunable constants live in `src/lib/`.
 - `addXp(stat, xp)` clamps the result and returns the change actually applied. It shows an XP toast, and a delayed (900 ms) "Rank up!" toast when the rank index increases.
 
 ### Missions (`MissionContext.tsx`)
-- `completeMission` grants `boostedXp(rewardXp, weather, stat)` and stores the applied amount as `awardedXp`.
+- `completeMission` grants `missionXp(rewardXp, stat, weather, mask)` (weather ×1.5 and focus ×1.25 multiply, then round) and stores the applied amount as `awardedXp`. With a personal mask it also shows an "A vote for {mask}" toast (skipped when `quiet`).
 - `uncompleteMission` subtracts `awardedXp`, so undo is exact even when the stat was capped or boosted.
 - Quick Log grants `QUICK_LOG_XP` (15) to a chosen stat.
 - `addXp(stat, xp, { quiet })` and `completeMission(id, { quiet })`: `quiet` skips the per-change XP toast. Rank-up toasts still show. Multi-select uses it to show a single "N missions cleared +X XP" toast.
@@ -86,12 +88,24 @@ All tunable constants live in `src/lib/`.
 Mission cards follow the design handoff:
 - **Toggle**: tapping a card completes it, and tapping again reopens it (`uncompleteMission`). A completed card is struck through and stamped COMPLETE.
 - **Delete**: the × in the corner deletes the mission. It is hidden in select mode.
-- **Left edge color**: red = normal, gold = weather-boosted, gray = done, gold with a tinted background = selected.
+- **Left edge color**: red = normal, gold = boosted (weather or focus stat, XP shows ⚡), gray = done, gold with a tinted background = selected.
 - **Select mode** (Missions page): tapping selects active missions. The bar shows the count and the combined weather-boosted XP, and COMPLETE clears them all.
 - **New missions**: name, target stat, and XP from a 10-60 slider in steps of 5. AI-proposed missions can still carry 10-100 XP and a description.
 - **Home screen** keeps its original layout (speech bubble, case file radar, stat chips, weather banner, active targets with + ADD, Quick Log). Only its mission cards use the redesigned `MissionCard`.
 - **Shared constants**: stat glyphs (◆ ▲ ★ ⬢ ⚡) and 3-letter codes live in `STAT_GLYPHS` / `STAT_SHORT` in `progression.ts`.
 - **Overlays**: Quick Log and New Mission share the `OverlayPanel` component.
+
+### Personal masks (`mask.ts`)
+
+The five preset roles were replaced by a mask generated for each player.
+
+- **Awakening** (`src/app/awakening/`): four steps (age range, occupation + detail, situations multi-select + free text, aspiration), then `POST /api/mask`, then a review screen where the name, identity and focus stats can be edited and routines removed. REROLL asks again; EQUIP saves `persona_profile` and `persona_mask` and goes to `/home`. Re-entering prefills the saved answers. The questionnaire tells players their answers go to Gemini.
+- **Types**: `PlayerProfile { ageRange, occupation, occupationDetail, situations[], aspiration }` (option ids in `AGE_RANGES`, `OCCUPATIONS`, `SITUATIONS`); `Mask { name, identity, focusStats: [Stat, Stat], routines: ProposedMission[], equippedAt }`.
+- **Focus bonus**: `FOCUS_BOOST` = 1.25 for missions whose stat is one of `mask.focusStats`. `missionXp` applies it with the weather bonus; the Missions select total and `MissionCard` use the same function, so shown XP always equals granted XP.
+- **Routines**: shown as one-tap chips on the Missions page; tapping adds the routine as a normal mission. A chip is disabled while an active mission with the same title exists.
+- **Legacy roles**: players with a `persona_role` but no mask get `legacyMask(role)`, the old role's name, a one-line identity and its focus stats (e.g. athlete -> vitality + nerve), with no routines. Status invites them to "Awaken your personal mask". `useProfile().mask` is the personal mask or this fallback; `hasPersonalMask` tells them apart.
+- **Validation**: `sanitizeProfile` (known ids, trimmed text ≤ 200 chars, ≤ 12 situations) and `sanitizeMask` (name ≤ 40, identity ≤ 160, two distinct valid focus stats, routines through `sanitizeMissions` capped at `MAX_ROUTINES` = 10).
+- `/role-select` now redirects to `/awakening`.
 
 ### Weather bonus (`weather.ts`, `useWeather.ts`)
 
@@ -122,9 +136,9 @@ Mission cards follow the design handoff:
   - Pages: signed-out visitors are redirected to `/sign-in?redirect_url=...`. The proxy passes `signInUrl`, so the redirect goes to our page, not Clerk's hosted portal.
   - `/api/*`: signed-out calls get `401 { error: "Sign in required" }` instead of a redirect.
 - **Pages**: `src/app/sign-in/[[...sign-in]]` and `src/app/sign-up/[[...sign-up]]` render Clerk's `<SignIn>` / `<SignUp>` inside a shared frame (`src/app/auth.module.css`).
-- **Redirects** (props on `ClerkProvider` in `src/app/layout.tsx`): after sign-up -> `/role-select`, after sign-in -> `/home`, after sign-out -> `/`.
-- **Welcome screen**: signed-in players with a saved role are sent straight to `/home`. Otherwise BEGIN goes to `/sign-up` (signed out) or `/role-select` (signed in), and a LOG IN link is shown to signed-out visitors.
-- **Status screen**: `<UserButton>` in the header opens account settings and sign-out. "Change mask" links back to `/role-select`.
+- **Redirects** (props on `ClerkProvider` in `src/app/layout.tsx`): after sign-up -> `/awakening`, after sign-in -> `/home`, after sign-out -> `/`.
+- **Welcome screen**: signed-in players with a mask (personal or legacy role) are sent straight to `/home`. Otherwise BEGIN goes to `/sign-up` (signed out) or `/awakening` (signed in), and a LOG IN link is shown to signed-out visitors.
+- **Status screen**: `<UserButton>` in the header opens account settings and sign-out. The speech bubble shows the mask name and identity, and "Change mask" (or "Awaken your personal mask") links to `/awakening`.
 - **Theme**: `appearance.variables` on `ClerkProvider` match the red/black/white tokens in `globals.css`.
 - **Sign-in methods** (Google, email code, email + password) are configured in the Clerk Dashboard, not in code.
 
@@ -135,7 +149,9 @@ Mission cards follow the design handoff:
 ```ts
 {
   messages: { sender: "user" | "companion"; text: string }[]; // last 12 are used
-  role: string | null;
+  role: string | null;          // legacy role, used only when there is no mask
+  profile: PlayerProfile | null;
+  mask: Mask | null;
   stats: Record<Stat, number>;
   weather: WeatherCondition | null;
   activeMissions: string[]; // titles, used to avoid duplicates
@@ -152,7 +168,8 @@ Mission cards follow the design handoff:
   - The route sets `maxDuration = 60` so retries fit within the serverless time limit.
 - **System prompt**: persona + mission rules + context.
   - The persona is `COMPANION_PERSONA` from the environment, or the built-in Vesper persona.
-  - The context block includes the role, each stat's XP and rank, today's weather bonus, and the active missions.
+  - The context block includes the profile, the mask (name, identity, focus stats, routines) or else the legacy role, each stat's XP and rank, today's weather bonus, and the active missions. The prompt asks the navigator to prefer routines and to frame encouragement around the identity.
+  - The Gemini call (structured output, retries, fallback model) is shared with `/api/mask` through `generateJson` in `src/lib/gemini.ts`; the persona and mission rules live in `src/lib/prompts.ts`.
 - **Output sanitizing** (`sanitizeMissions` in `src/lib/missionProposals.ts`):
   - Unknown stats are dropped.
   - XP is clamped to 10-100 and rounded to a multiple of 10.
@@ -165,6 +182,16 @@ If every attempt fails, the API returns the last error status and the chat shows
 
 Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite` return 404. Check a model with the ListModels API and a test call before configuring it.
 
+## Mask generation (`src/app/api/mask/route.ts`)
+
+**Request** (`POST /api/mask`, signed in): `{ profile: PlayerProfile }`. An invalid profile gets 400.
+
+**Response**: `{ mask: Mask }`, or `{ error }` (502 when the output has no usable name or routines).
+
+- The prompt asks for a 2-4 word original name, a first-person identity grounded in the aspiration, the two most relevant focus stats, and 6-10 small, safe, repeatable routines that fit the player's life. Routines must cover the focus stats most, plus at least one vitality and one charm mission. They follow the same `MISSION_RULES` as chat proposals.
+- Every field is written in the language of the player's free-text answers (Chinese answers get a Chinese name, identity and routines).
+- Temperature 0.9, so REROLL gives a different mask.
+
 ## Testing
 
 - **Unit tests**: Vitest (`npm test`). Test files sit next to the code as `src/lib/*.test.ts` and cover:
@@ -175,6 +202,7 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
   - retry/backoff
   - the localStorage store, including the `onStoreWrite` / `refreshStores` sync hooks
   - cloud sync hydration rules (`planHydration`)
+  - masks: `missionXp` (focus × weather, rounding), focus-stat, mask and profile sanitizing, legacy role presets
 - **Environments**: tests run in Node by default. A file that needs the DOM opts in with a `/** @vitest-environment jsdom */` docblock. The `@/` alias comes from `resolve.tsconfigPaths` in `vitest.config.mts`.
 - **CI**: `.github/workflows/ci.yml` runs lint, `tsc --noEmit`, tests and build on pushes to `main` and on pull requests.
 - **UI flows**: checked in a real browser (headless Chrome driven by puppeteer-core) by seeding `localStorage`, clicking through, and asserting on stored state. For weather, the Open-Meteo request is intercepted to force a condition.
@@ -182,6 +210,6 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 
 ## Roadmap
 
-- Personalized masks: an onboarding questionnaire (age, occupation, current situation, aspiration) that generates a personal mask with an identity statement, two focus stats (XP ×1.25) and a routine mission pool, followed by 4-week chapters with a recap.
+- Chapters: wearing a mask starts a 4-week chapter; at the end, a recap (XP per stat, missions cleared, most/least trained stat, an AI summary) and a prompt to re-awaken.
 - Squad (friends) features.
 - The desktop three-pane layout from the design handoff.

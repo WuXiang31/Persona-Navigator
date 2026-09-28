@@ -3,7 +3,8 @@
 import React, { createContext, useContext } from "react";
 import { Stats, useProfile } from "./ProfileContext";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
-import { boostedXp } from "@/lib/weather";
+import { missionXp } from "@/lib/mask";
+import { useToast } from "./ToastContext";
 import { getWeatherCondition } from "@/lib/useWeather";
 
 export type MissionStatus = "active" | "completed";
@@ -38,7 +39,8 @@ const MissionContext = createContext<MissionContextType | undefined>(undefined);
 export function MissionProvider({ children }: { children: React.ReactNode }) {
   const missions = useLocalStore(missionsStore);
   const isLoaded = useIsClient();
-  const { addXp } = useProfile();
+  const { addXp, mask, hasPersonalMask } = useProfile();
+  const { showToast } = useToast();
 
   const addMission = (missionData: Omit<Mission, "id" | "status" | "createdAt">) => {
     const newMission: Mission = {
@@ -54,9 +56,11 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     const mission = missionsStore.get().find((m) => m.id === id);
     if (!mission || mission.status === "completed") return;
 
-    const xp = boostedXp(mission.rewardXp, getWeatherCondition(), mission.rewardStat);
+    const xp = missionXp(mission.rewardXp, mission.rewardStat, getWeatherCondition(), mask);
     const awardedXp = addXp(mission.rewardStat, xp, options);
     missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "completed", awardedXp } : m)));
+    // Each finished mission is a vote for the identity the player chose
+    if (hasPersonalMask && mask && !options?.quiet) showToast(`A vote for ${mask.name}`, "info", 500);
   };
 
   const uncompleteMission = (id: string) => {
