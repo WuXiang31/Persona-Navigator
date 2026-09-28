@@ -19,6 +19,7 @@ import {
   SITUATIONS,
 } from "@/lib/mask";
 import type { Stats } from "@/context/ProfileContext";
+import { currentLang, useT } from "@/lib/i18n";
 import styles from "./page.module.css";
 
 type Step = "age" | "occupation" | "situation" | "aspiration" | "forging" | "review";
@@ -28,6 +29,7 @@ export default function AwakeningPage() {
   const router = useRouter();
   const { profile: saved, setProfile, equipMask, isLoaded } = useProfile();
   const { showToast } = useToast();
+  const t = useT();
 
   // Answers start from the saved profile, so re-awakening edits rather than restarts
   const [step, setStep] = useState<Step>("age");
@@ -66,14 +68,14 @@ export default function AwakeningPage() {
       const res = await fetch("/api/mask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile }),
+        body: JSON.stringify({ profile, lang: currentLang() }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const { mask } = (await res.json()) as { mask: Mask };
       setDraft(mask);
       setStep("review");
     } catch {
-      setError("The mask wouldn't form. The navigator may be overloaded; try again.");
+      setError(t.awakening.error);
       setStep("aspiration");
     }
   };
@@ -83,7 +85,7 @@ export default function AwakeningPage() {
     if (!profile || !draft || !draft.name.trim() || draft.routines.length === 0) return;
     setProfile(profile);
     equipMask({ ...draft, name: draft.name.trim(), identity: draft.identity.trim(), equippedAt: Date.now() });
-    showToast("Mask awakened", "rank");
+    showToast(t.toast.maskAwakened, "rank");
     router.push("/home");
   };
 
@@ -115,7 +117,7 @@ export default function AwakeningPage() {
     <main className={styles.container}>
       {questionIndex >= 0 && (
         <>
-          <p className={styles.kicker}>AWAKENING · {questionIndex + 1}/{QUESTION_STEPS.length}</p>
+          <p className={styles.kicker}>{t.awakening.kicker(questionIndex + 1, QUESTION_STEPS.length)}</p>
           <div className={styles.progress} aria-hidden>
             {QUESTION_STEPS.map((s, i) => (
               <span key={s} className={i <= questionIndex ? styles.progressOn : ""} />
@@ -135,7 +137,7 @@ export default function AwakeningPage() {
         >
           {step === "age" && (
             <>
-              <h1 className={styles.title}>How old are you?</h1>
+              <h1 className={styles.title}>{t.awakening.ageTitle}</h1>
               <div className={styles.options}>
                 {AGE_RANGES.map((a) => (
                   <button
@@ -144,7 +146,7 @@ export default function AwakeningPage() {
                     onClick={() => setAgeRange(a.id)}
                     aria-pressed={ageRange === a.id}
                   >
-                    {a.label}
+                    {t.awakening.ages[a.id]}
                   </button>
                 ))}
               </div>
@@ -153,7 +155,7 @@ export default function AwakeningPage() {
 
           {step === "occupation" && (
             <>
-              <h1 className={styles.title}>What do you do?</h1>
+              <h1 className={styles.title}>{t.awakening.occupationTitle}</h1>
               <div className={styles.options}>
                 {OCCUPATIONS.map((o) => (
                   <button
@@ -162,18 +164,18 @@ export default function AwakeningPage() {
                     onClick={() => setOccupation(o.id)}
                     aria-pressed={occupation === o.id}
                   >
-                    {o.label}
+                    {t.awakening.occupations[o.id]}
                   </button>
                 ))}
               </div>
               <label className={styles.label}>
-                MORE DETAIL (OPTIONAL)
+                {t.awakening.detailLabel}
                 <input
                   className={styles.input}
                   value={occupationDetail}
                   maxLength={MAX_TEXT_LENGTH}
                   onChange={(e) => setOccupationDetail(e.target.value)}
-                  placeholder="e.g. 3rd-year Computer Science"
+                  placeholder={t.awakening.detailPlaceholder}
                 />
               </label>
             </>
@@ -181,8 +183,8 @@ export default function AwakeningPage() {
 
           {step === "situation" && (
             <>
-              <h1 className={styles.title}>What&apos;s going on lately?</h1>
-              <p className={styles.hint}>Pick any that fit.</p>
+              <h1 className={styles.title}>{t.awakening.situationTitle}</h1>
+              <p className={styles.hint}>{t.awakening.situationHint}</p>
               <div className={styles.options}>
                 {SITUATIONS.map((s) => (
                   <button
@@ -191,18 +193,18 @@ export default function AwakeningPage() {
                     onClick={() => toggleSituation(s.id)}
                     aria-pressed={situations.includes(s.id)}
                   >
-                    {s.label}
+                    {t.awakening.situations[s.id]}
                   </button>
                 ))}
               </div>
               <label className={styles.label}>
-                ANYTHING ELSE?
+                {t.awakening.otherLabel}
                 <input
                   className={styles.input}
                   value={customSituation}
                   maxLength={MAX_TEXT_LENGTH}
                   onChange={(e) => setCustomSituation(e.target.value)}
-                  placeholder="e.g. Preparing for finals in December"
+                  placeholder={t.awakening.otherPlaceholder}
                 />
               </label>
             </>
@@ -210,19 +212,18 @@ export default function AwakeningPage() {
 
           {step === "aspiration" && (
             <>
-              <h1 className={styles.title}>Who do you want to become?</h1>
-              <p className={styles.hint}>One sentence. This becomes the identity your missions vote for.</p>
+              <h1 className={styles.title}>{t.awakening.aspirationTitle}</h1>
+              <p className={styles.hint}>{t.awakening.aspirationHint}</p>
               <textarea
                 className={`${styles.input} ${styles.textarea}`}
                 value={aspiration}
                 maxLength={MAX_TEXT_LENGTH}
                 onChange={(e) => setAspiration(e.target.value)}
-                placeholder="e.g. An engineer who ships real products, stays healthy and speaks up"
+                placeholder={t.awakening.aspirationPlaceholder}
               />
               {error && <p className={styles.error}>{error}</p>}
               <p className={styles.privacy}>
-                Your answers are saved to your account and sent to the AI navigator (Gemini) only to design your
-                mask and missions.
+                {t.awakening.privacy}
               </p>
             </>
           )}
@@ -234,13 +235,13 @@ export default function AwakeningPage() {
                 animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.08, 1] }}
                 transition={{ repeat: Infinity, duration: 1.4 }}
               />
-              <h1 className={styles.title}>Forging your mask...</h1>
+              <h1 className={styles.title}>{t.awakening.forging}</h1>
             </div>
           )}
 
           {step === "review" && draft && (
             <>
-              <p className={styles.kicker}>YOUR MASK</p>
+              <p className={styles.kicker}>{t.awakening.yourMask}</p>
               {/* A textarea so long names wrap instead of scrolling out of view; newlines are stripped */}
               <textarea
                 className={styles.maskName}
@@ -248,17 +249,17 @@ export default function AwakeningPage() {
                 maxLength={MAX_NAME_LENGTH}
                 rows={1}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value.replace(/\n/g, " ") })}
-                aria-label="Mask name"
+                aria-label={t.awakening.maskName}
               />
               <textarea
                 className={styles.identity}
                 value={draft.identity}
                 maxLength={MAX_IDENTITY_LENGTH}
                 onChange={(e) => setDraft({ ...draft, identity: e.target.value })}
-                aria-label="Identity statement"
+                aria-label={t.awakening.identity}
               />
 
-              <p className={styles.label}>FOCUS STATS · &times;1.25 XP</p>
+              <p className={styles.label}>{t.awakening.focusStats}</p>
               <div className={styles.statRow}>
                 {STATS_ORDER.map((stat) => (
                   <button
@@ -267,12 +268,12 @@ export default function AwakeningPage() {
                     onClick={() => toggleFocus(stat)}
                     aria-pressed={draft.focusStats.includes(stat)}
                   >
-                    {STAT_GLYPHS[stat]} {stat}
+                    {STAT_GLYPHS[stat]} {t.stat[stat]}
                   </button>
                 ))}
               </div>
 
-              <p className={styles.label}>ROUTINES</p>
+              <p className={styles.label}>{t.awakening.routines}</p>
               <ul className={styles.routines}>
                 {draft.routines.map((r, i) => (
                   <li key={`${r.title}-${i}`} className={styles.routine}>
@@ -286,7 +287,7 @@ export default function AwakeningPage() {
                     <button
                       className={styles.remove}
                       onClick={() => setDraft({ ...draft, routines: draft.routines.filter((_, j) => j !== i) })}
-                      aria-label={`Remove ${r.title}`}
+                      aria-label={t.awakening.remove(r.title)}
                     >
                       &times;
                     </button>
@@ -301,10 +302,10 @@ export default function AwakeningPage() {
       {questionIndex >= 0 && (
         <div className={styles.actions}>
           <button className={styles.back} onClick={back}>
-            BACK
+            {t.awakening.back}
           </button>
           <button className={styles.primary} onClick={next} disabled={!canContinue}>
-            {step === "aspiration" ? "FORGE MASK" : "NEXT"}
+            {step === "aspiration" ? t.awakening.forge : t.awakening.next}
           </button>
         </div>
       )}
@@ -312,14 +313,14 @@ export default function AwakeningPage() {
       {step === "review" && draft && (
         <div className={styles.actions}>
           <button className={styles.back} onClick={forge}>
-            REROLL
+            {t.awakening.reroll}
           </button>
           <button
             className={styles.primary}
             onClick={equip}
             disabled={!draft.name.trim() || draft.routines.length === 0}
           >
-            EQUIP
+            {t.awakening.equip}
           </button>
         </div>
       )}

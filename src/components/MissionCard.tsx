@@ -6,6 +6,7 @@ import { useWeather } from "@/lib/useWeather";
 import { isBoosted } from "@/lib/weather";
 import { isFocusStat, missionXp } from "@/lib/mask";
 import { useProfile } from "@/context/ProfileContext";
+import { useT } from "@/lib/i18n";
 import { STAT_GLYPHS } from "@/lib/progression";
 
 interface MissionCardProps {
@@ -21,6 +22,7 @@ interface MissionCardProps {
 export function MissionCard({ mission, onToggle, onDelete, selectMode = false, selected = false }: MissionCardProps) {
   const { condition } = useWeather();
   const { mask } = useProfile();
+  const t = useT();
   const done = mission.status === "completed";
   const boosted = isBoosted(condition, mission.rewardStat) || isFocusStat(mask, mission.rewardStat);
   const xp = done ? mission.awardedXp ?? mission.rewardXp : missionXp(mission.rewardXp, mission.rewardStat, condition, mask);
@@ -65,7 +67,7 @@ export function MissionCard({ mission, onToggle, onDelete, selectMode = false, s
         {onDelete && !selectMode && (
           <button
             className={styles.deleteBtn}
-            aria-label={`Delete ${mission.title}`}
+            aria-label={t.card.delete(mission.title)}
             onClick={(e) => {
               e.stopPropagation();
               onDelete(mission.id);
@@ -80,13 +82,13 @@ export function MissionCard({ mission, onToggle, onDelete, selectMode = false, s
 
       <div className={styles.metaRow}>
         <span className={styles.glyph}>{STAT_GLYPHS[mission.rewardStat]}</span>
-        <span className={styles.statName}>{mission.rewardStat}</span>
+        <span className={styles.statName}>{t.stat[mission.rewardStat]}</span>
         <span className={`${styles.xp} ${boosted ? styles.xpBoosted : ""}`}>
-          {done ? "EARNED " : ""}+{xp} XP{boosted && !done ? " \u26A1" : ""}
+          {done ? t.card.earned : ""}+{xp} XP{boosted && !done ? " \u26A1" : ""}
         </span>
       </div>
 
-      {done && !selectMode && <span className={styles.stamp}>COMPLETE</span>}
+      {done && !selectMode && <span className={styles.stamp}>{t.card.complete}</span>}
     </motion.div>
   );
 }

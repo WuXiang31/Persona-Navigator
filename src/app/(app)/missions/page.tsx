@@ -11,6 +11,7 @@ import { AnimatePresence } from "framer-motion";
 import { useWeather } from "@/lib/useWeather";
 import { missionXp } from "@/lib/mask";
 import { STAT_GLYPHS } from "@/lib/progression";
+import { useT } from "@/lib/i18n";
 import { useProfile } from "@/context/ProfileContext";
 
 export default function MissionsPage() {
@@ -18,6 +19,7 @@ export default function MissionsPage() {
   const { showToast } = useToast();
   const { condition } = useWeather();
   const { mask } = useProfile();
+  const t = useT();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
@@ -54,7 +56,7 @@ export default function MissionsPage() {
   const completeSelected = () => {
     if (selected.length === 0) return;
     selected.forEach((id) => completeMission(id, { quiet: true }));
-    showToast(`${selected.length} mission${selected.length > 1 ? "s" : ""} cleared${selectedGain ? ` +${selectedGain} XP` : ""}`);
+    showToast(t.toast.cleared(selected.length, selectedGain));
     setSelected([]);
     setSelectMode(false);
   };
@@ -64,13 +66,13 @@ export default function MissionsPage() {
       <WeatherBanner />
 
       <div className={styles.titleRow}>
-        <h1 className={styles.pageTitle}>Missions</h1>
+        <h1 className={styles.pageTitle}>{t.missions.title}</h1>
         <div className={styles.slash} aria-hidden />
         <button
           className={`${styles.selectBtn} ${selectMode ? styles.selectBtnActive : ""}`}
           onClick={toggleSelectMode}
           aria-pressed={selectMode}
-          title="Select multiple"
+          title={t.missions.selectMultiple}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path d="M2 6 L4.5 8.5 L9 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" />
@@ -78,23 +80,23 @@ export default function MissionsPage() {
             <path d="M2 16 L4.5 18.5 L9 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" />
             <rect x="12" y="15.2" width="10" height="2.6" fill="currentColor" />
           </svg>
-          <span>{selectMode ? "DONE" : "SELECT"}</span>
+          <span>{selectMode ? t.missions.done : t.missions.select}</span>
         </button>
       </div>
 
       {selectMode && (
         <div className={styles.selectBar}>
-          <span className={styles.selectCount}>{selected.length} SELECTED</span>
+          <span className={styles.selectCount}>{t.missions.selected(selected.length)}</span>
           {selectedGain > 0 && <span className={styles.selectXp}>+{selectedGain} XP</span>}
           <button className={styles.selectComplete} onClick={completeSelected} disabled={selected.length === 0}>
-            COMPLETE
+            {t.missions.complete}
           </button>
         </div>
       )}
 
       {mask && mask.routines.length > 0 && !selectMode && (
         <section className={styles.routines}>
-          <p className={styles.routinesLabel}>{mask.name} · ROUTINES</p>
+          <p className={styles.routinesLabel}>{t.missions.routines(mask.name)}</p>
           <div className={styles.routineRow}>
             {mask.routines.map((routine, i) => {
               const active = missions.some((m) => m.status === "active" && m.title === routine.title);
@@ -132,17 +134,17 @@ export default function MissionsPage() {
         </AnimatePresence>
 
         {ordered.length === 0 && (
-          <p className={styles.emptyState}>No missions yet. Add one, or tell your navigator your plans in chat.</p>
+          <p className={styles.emptyState}>{t.missions.empty}</p>
         )}
 
         <button className={styles.addTile} onClick={() => setIsModalOpen(true)}>
           <span className={styles.addIcon}>+</span>
-          <span>ADD NEW MISSION</span>
+          <span>{t.missions.addNew}</span>
         </button>
 
         <p className={styles.footnote}>
-          MISSIONS MATCHING TODAY&apos;S WEATHER PAY &times;1.5 XP
-          {mask ? <> &middot; YOUR FOCUS STATS PAY &times;1.25</> : null}
+          {t.missions.footnote}
+          {mask ? t.missions.footnoteFocus : null}
         </p>
       </div>
 

@@ -5,10 +5,13 @@ import { motion } from "framer-motion";
 import { useProfile } from "@/context/ProfileContext";
 import { STAT_GLYPHS } from "@/lib/progression";
 import { Recap, buildRecap, dayLabel, monthLabel } from "@/lib/chapter";
+import { Messages, useLang, useT } from "@/lib/i18n";
 import styles from "./page.module.css";
 
 export default function ChaptersPage() {
   const { chapter, recaps, log, stats, mask, isLoaded } = useProfile();
+  const t = useT();
+  const lang = useLang();
   if (!isLoaded) return null;
 
   // The chapter in progress, summarized so far with the same rules as a finished recap
@@ -19,33 +22,33 @@ export default function ChaptersPage() {
   return (
     <main className={styles.container}>
       <div className={styles.titleRow}>
-        <h1 className={styles.pageTitle}>Chapters</h1>
+        <h1 className={styles.pageTitle}>{t.chapters.title}</h1>
         <div className={styles.slash} aria-hidden />
       </div>
 
       {chapter && current && (
         <section className={styles.current}>
           <p className={styles.currentKicker}>
-            CHAPTER {chapter.number} &middot; IN PROGRESS
+            {t.chapters.inProgress(chapter.number)}
           </p>
-          <h2 className={styles.currentTitle}>{monthLabel(chapter.month)}</h2>
+          <h2 className={styles.currentTitle}>{monthLabel(chapter.month, lang)}</h2>
           <p className={styles.currentMeta}>
-            DAY {now.getDate()}/{daysInMonth}
+            {t.chapters.day(now.getDate(), daysInMonth)}
             {mask && <> &middot; {mask.name}</>}
           </p>
           <div className={styles.currentStats}>
-            <Stat value={current.missionsCleared} label={mask ? "votes so far" : "missions"} />
-            <Stat value={current.activeDays} label="active days" />
-            <Stat value={current.longestStreak} label="best streak" />
+            <Stat value={current.missionsCleared} label={mask ? t.chapters.votesSoFar : t.chapters.missions} />
+            <Stat value={current.activeDays} label={t.chapters.activeDays} />
+            <Stat value={current.longestStreak} label={t.chapters.bestStreak} />
           </div>
-          <p className={styles.currentNote}>The recap unlocks the first time you open the app next month.</p>
+          <p className={styles.currentNote}>{t.chapters.unlockNote}</p>
         </section>
       )}
 
-      <h2 className={styles.sectionTitle}>FINISHED</h2>
+      <h2 className={styles.sectionTitle}>{t.chapters.finished}</h2>
       {recaps.length === 0 ? (
         <p className={styles.empty}>
-          No finished chapters yet. When this month ends, its recap will wait for you here.
+          {t.chapters.empty}
         </p>
       ) : (
         <ul className={styles.list}>
@@ -56,7 +59,7 @@ export default function ChaptersPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
             >
-              <RecapCard recap={recap} />
+              <RecapCard recap={recap} t={t} lang={lang} />
             </motion.li>
           ))}
         </ul>
@@ -65,33 +68,33 @@ export default function ChaptersPage() {
   );
 }
 
-function RecapCard({ recap }: { recap: Recap }) {
+function RecapCard({ recap, t, lang }: { recap: Recap; t: Messages; lang: "en" | "zh" }) {
   const rankUps = recap.stats.filter((s) => s.endRank !== s.startRank).length;
   return (
     <Link href={`/recap/${recap.month}`} className={styles.card}>
       <div className={styles.cardHead}>
         <span className={styles.cardNumber}>CH.{recap.number}</span>
-        <span className={styles.cardMonth}>{monthLabel(recap.month)}</span>
-        {!recap.seen && <span className={styles.newTag}>NEW</span>}
+        <span className={styles.cardMonth}>{monthLabel(recap.month, lang)}</span>
+        {!recap.seen && <span className={styles.newTag}>{t.chapters.newTag}</span>}
       </div>
       <p className={styles.cardMask}>
-        {recap.mask?.name ?? "No mask"} &middot; {dayLabel(recap.startedOn)} – {dayLabel(recap.endedOn)}
+        {recap.mask?.name ?? t.chapters.noMask} &middot; {dayLabel(recap.startedOn, lang)} – {dayLabel(recap.endedOn, lang)}
       </p>
       <div className={styles.cardStats}>
         <span>
-          <strong>{recap.missionsCleared}</strong> {recap.mask ? "votes" : "missions"}
+          <strong>{recap.missionsCleared}</strong> {recap.mask ? t.chapters.votes : t.chapters.missions}
         </span>
         <span>
-          <strong>{recap.longestStreak}</strong>-day streak
+          {t.chapters.streak(recap.longestStreak)}
         </span>
         {recap.mostImproved && (
           <span>
-            {STAT_GLYPHS[recap.mostImproved]} <strong>{recap.mostImproved}</strong>
+            {STAT_GLYPHS[recap.mostImproved]} <strong>{t.stat[recap.mostImproved]}</strong>
           </span>
         )}
         {rankUps > 0 && (
           <span className={styles.rankUps}>
-            {rankUps} rank-up{rankUps > 1 ? "s" : ""}
+            {t.chapters.rankUps(rankUps)}
           </span>
         )}
       </div>

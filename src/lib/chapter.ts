@@ -199,14 +199,16 @@ export function planRollover(
   };
 }
 
-// "August 2026"
-export function monthLabel(month: MonthKey): string {
+const LOCALES = { en: "en", zh: "zh-CN" } as const;
+
+// "August 2026" / "2026年8月"
+export function monthLabel(month: MonthKey, lang: keyof typeof LOCALES = "en"): string {
   const [y, m] = month.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("en", { month: "long", year: "numeric" });
+  return new Date(y, m - 1, 1).toLocaleDateString(LOCALES[lang], { month: "long", year: "numeric" });
 }
 
-// "Aug 31"
-export function dayLabel(key: string): string {
+// "Aug 31" / "8月31日"
+export function dayLabel(key: string, lang: keyof typeof LOCALES = "en"): string {
   const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("en", { month: "short", day: "numeric" });
+  return new Date(y, m - 1, d).toLocaleDateString(LOCALES[lang], { month: "short", day: "numeric" });
 }

@@ -10,6 +10,7 @@ import { useMissions } from "@/context/MissionContext";
 import { COMPANION_NAME } from "@/lib/companion";
 import { createLocalStore, useLocalStore } from "@/lib/localStore";
 import { useWeather } from "@/lib/useWeather";
+import { useT } from "@/lib/i18n";
 
 const MAX_SAVED_MESSAGES = 100;
 const chatStore = createLocalStore<MessageData[]>("persona_chat", []);
@@ -24,11 +25,12 @@ export default function ChatPage() {
   const { missions, addMission } = useMissions();
   
   const messages = useLocalStore(chatStore);
+  const t = useT();
 
   const welcome: MessageData = {
     id: "welcome-1",
     sender: "companion",
-    text: `${COMPANION_NAME} here${mask ? `, ${mask.name}` : role ? `, ${role}` : ""}. Tell me what's on your plate today and I'll turn it into missions.`,
+    text: t.chat.welcome(COMPANION_NAME, mask?.name ?? role),
     timestamp: 0,
   };
 
@@ -78,7 +80,7 @@ export default function ChatPage() {
         const errorMsg: MessageData = {
           id: Math.random().toString(36).substring(2, 9),
           sender: "companion",
-          text: "Tch, the signal just dropped. What were you saying?",
+          text: t.chat.signalDropped,
           timestamp: Date.now(),
         };
         setMessages((prev) => [...prev, errorMsg]);
@@ -103,7 +105,7 @@ export default function ChatPage() {
       const errorMsg: MessageData = {
         id: Math.random().toString(36).substring(2, 9),
         sender: "companion",
-        text: "Our connection got cut off. Let's try that again in a bit.",
+        text: t.chat.connectionLost,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -138,7 +140,7 @@ export default function ChatPage() {
   return (
     <main className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.pageTitle}>{COMPANION_NAME} / NAVIGATOR ONLINE</h1>
+        <h1 className={styles.pageTitle}>{t.chat.header(COMPANION_NAME)}</h1>
       </header>
 
       <div className={styles.messageList}>
@@ -157,7 +159,7 @@ export default function ChatPage() {
         ))}
         {isTyping && (
           <div style={{ padding: "10px", fontFamily: "var(--font-outfit)", fontStyle: "italic", color: "#888" }}>
-            {COMPANION_NAME} is typing...
+            {t.chat.typing(COMPANION_NAME)}
           </div>
         )}
         <div ref={messagesEndRef} />

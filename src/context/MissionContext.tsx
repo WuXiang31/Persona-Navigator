@@ -5,6 +5,7 @@ import { Stats, useProfile } from "./ProfileContext";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 import { missionXp } from "@/lib/mask";
 import { isBoosted } from "@/lib/weather";
+import { messages } from "@/lib/i18n";
 import { useToast } from "./ToastContext";
 import { getWeatherCondition } from "@/lib/useWeather";
 
@@ -73,7 +74,7 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     });
     missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "completed", awardedXp } : m)));
     // Each finished mission is a vote for the identity the player chose
-    if (hasPersonalMask && mask && !options?.quiet) showToast(`A vote for ${mask.name}`, "info", 500);
+    if (hasPersonalMask && mask && !options?.quiet) showToast(messages().toast.vote(mask.name), "info", 500);
   };
 
   const uncompleteMission = (id: string) => {

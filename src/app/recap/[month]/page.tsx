@@ -5,17 +5,13 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useProfile } from "@/context/ProfileContext";
-import { MAX_STAT, STAT_GLYPHS } from "@/lib/progression";
+import { MAX_STAT, RANK_NAMES, STAT_GLYPHS } from "@/lib/progression";
+import { Messages, currentLang, useLang, useT } from "@/lib/i18n";
 import { COMPANION_NAME } from "@/lib/companion";
 import { Recap, TimeOfDay, dayLabel, monthLabel } from "@/lib/chapter";
 import styles from "./page.module.css";
 
-const TIME_LABELS: Record<TimeOfDay, string> = {
-  morning: "Morning",
-  afternoon: "Afternoon",
-  evening: "Evening",
-  night: "Night",
-};
+const TIMES: TimeOfDay[] = ["morning", "afternoon", "evening", "night"];
 
 export default function RecapPage() {
   const { month } = useParams<{ month: string }>();
@@ -23,6 +19,10 @@ export default function RecapPage() {
   const { recaps, updateRecap, profile, isLoaded } = useProfile();
   const recap = recaps.find((r) => r.month === month);
 
+  const t = useT();
+  const lang = useLang();
+  // Ranks are stored by their English name; show them in the current language
+  const rank = (name: string) => t.rank[RANK_NAMES.indexOf(name as (typeof RANK_NAMES)[number])] ?? name;
   const [summaryFailed, setSummaryFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const requested = useRef(false);
@@ -36,7 +36,7 @@ export default function RecapPage() {
     fetch("/api/recap", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ recap, profile }),
+      body: JSON.stringify({ recap, profile, lang: currentLang() }),
     })
       .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
       .then(({ summary }: { summary: string }) => updateRecap(recap.month, { summary }))
@@ -47,9 +47,9 @@ export default function RecapPage() {
   if (!recap) {
     return (
       <main className={styles.container}>
-        <p className={styles.kicker}>NO RECAP FOR THIS MONTH</p>
+        <p className={styles.kicker}>{t.recap.missing}</p>
         <button className={styles.primary} onClick={() => router.push("/home")}>
-          BACK TO STATUS
+          {t.recap.backToStatus}
         </button>
       </main>
     );
@@ -64,12 +64,12 @@ export default function RecapPage() {
   return (
     <main className={styles.container}>
       <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-        <p className={styles.kicker}>CHAPTER {recap.number} CLEAR</p>
-        <h1 className={styles.title}>{monthLabel(recap.month)}</h1>
+        <p className={styles.kicker}>{t.recap.clear(recap.number)}</p>
+        <h1 className={styles.title}>{monthLabel(recap.month, lang)}</h1>
         <p className={styles.dates}>
-          {dayLabel(recap.startedOn)} – {dayLabel(recap.endedOn)}
+          {dayLabel(recap.startedOn, lang)} – {dayLabel(recap.endedOn, lang)}
           <Link href="/chapters" className={styles.allChapters}>
-            ALL CHAPTERS &gt;
+            {t.recap.allChapters}
           </Link>
         </p>
       </motion.div>
@@ -81,18 +81,18 @@ export default function RecapPage() {
         </div>
       )}
 
-      <Votes recap={recap} />
+      <Votes recap={recap} t={t} />
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>GROWTH</h2>
+        <h2 className={styles.sectionTitle}>{t.recap.growth}</h2>
         {recap.stats.map((s, i) => {
           const focus = recap.mask?.focusStats.includes(s.stat);
           return (
             <div key={s.stat} className={styles.statLine}>
               <div className={styles.statHead}>
                 <span className={styles.statName}>
-                  {STAT_GLYPHS[s.stat]} {s.stat}
-                  {focus && <span className={styles.focusTag}>FOCUS</span>}
+                  {STAT_GLYPHS[s.stat]} {t.stat[s.stat]}
+                  {focus && <span className={styles.focusTag}>{t.recap.focus}</span>}
                 </span>
                 <span className={styles.statGain}>+{s.gained}</span>
               </div>
@@ -107,14 +107,14 @@ export default function RecapPage() {
               </div>
               <p className={styles.statMeta}>
                 {s.start} → {s.end} XP
-                {s.lost > 0 && <> · rust -{s.lost}</>}
+                {s.lost > 0 && t.recap.rust(s.lost)}
                 {s.endRank !== s.startRank ? (
                   <span className={styles.rankUp}>
                     {" "}
-                    · {s.startRank} → {s.endRank}
+                    · {rank(s.startRank)} → {rank(s.endRank)}
                   </span>
                 ) : (
-                  <> · {s.endRank}</>
+                  <> · {rank(s.endRank)}</>
                 )}
               </p>
             </div>
@@ -123,28 +123,28 @@ export default function RecapPage() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>HIGHLIGHTS</h2>
+        <h2 className={styles.sectionTitle}>{t.recap.highlights}</h2>
         <div className={styles.tiles}>
-          <Tile label="Most improved" value={recap.mostImproved ?? "–"} />
-          <Tile label="Longest streak" value={`${recap.longestStreak} day${recap.longestStreak === 1 ? "" : "s"}`} />
-          <Tile label="Active days" value={String(recap.activeDays)} />
-          <Tile label="Weather boosts" value={String(recap.weatherBoosted)} />
+          <Tile label={t.recap.mostImproved} value={recap.mostImproved ? t.stat[recap.mostImproved] : "–"} />
+          <Tile label={t.recap.longestStreak} value={t.recap.days(recap.longestStreak)} />
+          <Tile label={t.recap.activeDays} value={String(recap.activeDays)} />
+          <Tile label={t.recap.weatherBoosts} value={String(recap.weatherBoosted)} />
         </div>
 
         {recap.favoriteTime && (
           <div className={styles.timeBlock}>
             <p className={styles.timeLabel}>
-              YOU USUALLY SHOWED UP IN THE <strong>{TIME_LABELS[recap.favoriteTime].toUpperCase()}</strong>
+              {t.recap.showedUp(t.timeOfDay[recap.favoriteTime])}
             </p>
-            {(Object.keys(TIME_LABELS) as TimeOfDay[]).map((t) => {
-              const count = recap.timeOfDay[t];
+            {TIMES.map((time) => {
+              const count = recap.timeOfDay[time];
               const pct = recap.missionsCleared ? (count / recap.missionsCleared) * 100 : 0;
               return (
-                <div key={t} className={styles.timeRow}>
-                  <span>{TIME_LABELS[t]}</span>
+                <div key={time} className={styles.timeRow}>
+                  <span>{t.timeOfDay[time]}</span>
                   <span className={styles.timeBar}>
                     <span
-                      className={t === recap.favoriteTime ? styles.timeFillTop : styles.timeFill}
+                      className={time === recap.favoriteTime ? styles.timeFillTop : styles.timeFill}
                       style={{ width: `${pct}%` }}
                     />
                   </span>
@@ -157,7 +157,7 @@ export default function RecapPage() {
 
         {recap.topMissions.length > 0 && (
           <>
-            <p className={styles.listLabel}>WHAT YOU KEPT COMING BACK TO</p>
+            <p className={styles.listLabel}>{t.recap.keptComingBack}</p>
             <ul className={styles.list}>
               {recap.topMissions.map((m) => (
                 <li key={m.title}>
@@ -171,7 +171,7 @@ export default function RecapPage() {
 
         {recap.untouchedRoutines.length > 0 && (
           <>
-            <p className={styles.listLabel}>WAITING FOR NEXT CHAPTER</p>
+            <p className={styles.listLabel}>{t.recap.waiting}</p>
             <ul className={`${styles.list} ${styles.muted}`}>
               {recap.untouchedRoutines.map((title) => (
                 <li key={title}>{title}</li>
@@ -182,33 +182,33 @@ export default function RecapPage() {
       </section>
 
       <section className={styles.words}>
-        <h2 className={styles.wordsTitle}>{COMPANION_NAME.toUpperCase()}&apos;S WORDS</h2>
+        <h2 className={styles.wordsTitle}>{t.recap.words(COMPANION_NAME)}</h2>
         {recap.summary ? (
           <motion.p className={styles.summary} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
             {recap.summary}
           </motion.p>
         ) : summaryFailed ? (
           <button className={styles.retry} onClick={retrySummary}>
-            {COMPANION_NAME} couldn&apos;t find the words. Try again
+            {t.recap.retry(COMPANION_NAME)}
           </button>
         ) : (
-          <p className={styles.writing}>{COMPANION_NAME} is writing...</p>
+          <p className={styles.writing}>{t.recap.writing(COMPANION_NAME)}</p>
         )}
       </section>
 
       <div className={styles.actions}>
         <button className={styles.secondary} onClick={() => router.push("/awakening")}>
-          RE-AWAKEN
+          {t.recap.reawaken}
         </button>
         <button className={styles.primary} onClick={() => router.push("/home")}>
-          NEXT CHAPTER
+          {t.recap.nextChapter}
         </button>
       </div>
     </main>
   );
 }
 
-function Votes({ recap }: { recap: Recap }) {
+function Votes({ recap, t }: { recap: Recap; t: Messages }) {
   return (
     <div className={styles.votes}>
       <motion.span
@@ -220,8 +220,8 @@ function Votes({ recap }: { recap: Recap }) {
         {recap.missionsCleared}
       </motion.span>
       <span className={styles.votesLabel}>
-        {recap.mask ? "VOTES FOR WHO YOU'RE BECOMING" : "MISSIONS CLEARED"}
-        {recap.fromRoutines > 0 && <em> · {recap.fromRoutines} from your routines</em>}
+        {recap.mask ? t.recap.votes : t.recap.missions}
+        {recap.fromRoutines > 0 && <em>{t.recap.fromRoutines(recap.fromRoutines)}</em>}
       </span>
     </div>
   );

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import styles from "./MissionProposals.module.css";
 import { Mission } from "@/context/MissionContext";
+import { useT } from "@/lib/i18n";
 
 export type ProposalStatus = "pending" | "accepted" | "dismissed";
 
@@ -18,6 +19,7 @@ interface MissionProposalsProps {
 
 export function MissionProposals({ proposals, onAccept, onDismiss, onAcceptAll }: MissionProposalsProps) {
   const pendingCount = proposals.filter((p) => p.proposalStatus === "pending").length;
+  const t = useT();
 
   return (
     <motion.div
@@ -27,10 +29,10 @@ export function MissionProposals({ proposals, onAccept, onDismiss, onAcceptAll }
       transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.15 }}
     >
       <div className={styles.header}>
-        <span className={styles.headerLabel}>MISSION BRIEFING</span>
+        <span className={styles.headerLabel}>{t.chat.briefing}</span>
         {pendingCount > 1 && (
           <button className={styles.acceptAllBtn} onClick={onAcceptAll}>
-            ACCEPT ALL ({pendingCount})
+            {t.chat.acceptAll(pendingCount)}
           </button>
         )}
       </div>
@@ -43,7 +45,7 @@ export function MissionProposals({ proposals, onAccept, onDismiss, onAcceptAll }
           <div className={styles.cardTop}>
             <h4 className={styles.title}>{p.title}</h4>
             <div className={styles.rewardBadge}>
-              <span className={styles.rewardStat}>{p.rewardStat}</span>
+              <span className={styles.rewardStat}>{t.stat[p.rewardStat]}</span>
               <span className={styles.rewardXp}>+{p.rewardXp} XP</span>
             </div>
           </div>
@@ -54,15 +56,15 @@ export function MissionProposals({ proposals, onAccept, onDismiss, onAcceptAll }
             {p.proposalStatus === "pending" ? (
               <>
                 <button className={styles.acceptBtn} onClick={() => onAccept(i)}>
-                  ACCEPT
+                  {t.chat.accept}
                 </button>
                 <button className={styles.dismissBtn} onClick={() => onDismiss(i)}>
-                  PASS
+                  {t.chat.pass}
                 </button>
               </>
             ) : (
               <span className={styles.stamp}>
-                {p.proposalStatus === "accepted" ? "ACCEPTED" : "PASSED"}
+                {p.proposalStatus === "accepted" ? t.chat.accepted : t.chat.passed}
               </span>
             )}
           </div>

@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import styles from "./RadarChart.module.css";
 import { useProfile, Stats } from "@/context/ProfileContext";
 
-import { MAX_STAT, STATS_ORDER, getRankName } from "@/lib/progression";
+import { MAX_STAT, STATS_ORDER, getRankIndex } from "@/lib/progression";
+import { useT } from "@/lib/i18n";
 
 // Constants for the radar math
 const RADIUS = 120;
@@ -26,6 +27,7 @@ interface RadarChartProps {
 
 export function RadarChart({ selectedStat, onStatClick }: RadarChartProps = {}) {
   const { stats } = useProfile();
+  const t = useT();
   const [floatingXps, setFloatingXps] = useState<FloatingXP[]>([]);
   const prevStatsRef = useRef(stats);
 
@@ -151,10 +153,10 @@ export function RadarChart({ selectedStat, onStatClick }: RadarChartProps = {}) 
               onClick={() => onStatClick && onStatClick(statKey)}
             >
               <text y="0" className={styles.statName}>
-                {statKey}
+                {t.stat[statKey]}
               </text>
               <text y="14" className={styles.statRank}>
-                {getRankName(value)}
+                {t.rank[getRankIndex(value)]}
               </text>
             </g>
           );

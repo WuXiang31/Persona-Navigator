@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
+import { useLang, useT } from "@/lib/i18n";
+import { LangToggle } from "@/components/LangToggle";
 import { useProfile, Stats } from "@/context/ProfileContext";
 import { CaseFileCard } from "@/components/CaseFileCard";
 import { RadarChart } from "@/components/RadarChart";
@@ -18,6 +20,8 @@ import { Chapter, Recap, isLastDayOfMonth } from "@/lib/chapter";
 
 export default function Home() {
   const { mask, hasPersonalMask, stats, chapter, recaps, isLoaded } = useProfile();
+  const t = useT();
+  const lang = useLang();
   const { missions, addMission, completeMission, uncompleteMission, deleteMission, isLoaded: missionsLoaded } = useMissions();
 
   const [selectedStat, setSelectedStat] = useState<keyof Stats | null>(null);
@@ -43,6 +47,7 @@ export default function Home() {
       {/* Red Header Panel */}
       <div className={`${styles.header} halftone-bg`}>
         <div className={styles.account}>
+          <LangToggle />
           <UserButton />
         </div>
         <motion.h1
@@ -51,7 +56,7 @@ export default function Home() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          STATUS
+          {t.home.title}
         </motion.h1>
 
         <motion.div
@@ -67,10 +72,10 @@ export default function Home() {
                 {mask.identity}
               </>
             ) : (
-              "No mask yet. Tell me who you are and I'll forge one for you."
+              t.home.noMask
             )}
             <Link href="/awakening" className={styles.changeMask}>
-              {hasPersonalMask ? "CHANGE MASK >" : "AWAKEN YOUR PERSONAL MASK >"}
+              {hasPersonalMask ? t.home.changeMask : t.home.awakenMask}
             </Link>
           </div>
         </motion.div>
@@ -101,7 +106,7 @@ export default function Home() {
             onClick={() => handleStatClick(statKey)}
           >
             <span className="unskew-content">
-              {statKey.substring(0, 3)} · R{getRankIndex(stats[statKey]) + 1}
+              {lang === "zh" ? t.stat[statKey] : statKey.substring(0, 3)} · R{getRankIndex(stats[statKey]) + 1}
             </span>
           </motion.div>
         ))}
@@ -112,15 +117,15 @@ export default function Home() {
         <WeatherBanner />
         <div className={styles.missionsHeader}>
           <h2 className={styles.sectionTitle}>
-            ACTIVE TARGETS {selectedStat ? `(${selectedStat.toUpperCase()})` : ""}
+            {t.home.activeTargets} {selectedStat ? `(${t.stat[selectedStat]})` : ""}
           </h2>
           <button className={styles.addBtn} onClick={() => setIsModalOpen(true)}>
-            + ADD
+            {t.home.add}
           </button>
         </div>
         
         {filteredMissions.length === 0 ? (
-          <div className={styles.emptyState}>No targets found.</div>
+          <div className={styles.emptyState}>{t.home.noTargets}</div>
         ) : (
           <AnimatePresence>
             {filteredMissions.map((mission) => (
@@ -144,7 +149,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", delay: 0.8 }}
         >
-          <span className="unskew-content">QUICK LOG</span>
+          <span className="unskew-content">{t.home.quickLog}</span>
         </motion.button>
       </div>
 
@@ -161,10 +166,11 @@ export default function Home() {
 
 // Chapter progress, or a banner for a recap the player hasn't opened yet
 function ChapterLine({ chapter, latestRecap }: { chapter: Chapter | null; latestRecap?: Recap }) {
+  const t = useT();
   if (latestRecap && !latestRecap.seen) {
     return (
       <Link href={`/recap/${latestRecap.month}`} className={styles.recapBanner}>
-        CHAPTER {latestRecap.number} CLEAR &middot; VIEW YOUR RECAP &gt;
+        {t.home.chapterClear(latestRecap.number)}
       </Link>
     );
   }
@@ -174,10 +180,10 @@ function ChapterLine({ chapter, latestRecap }: { chapter: Chapter | null; latest
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   return (
     <p className={styles.chapterLine}>
-      CHAPTER {chapter.number} &middot; DAY {now.getDate()}/{daysInMonth}
-      {isLastDayOfMonth(now) && <strong> &middot; ENDS TONIGHT</strong>}
+      {t.home.chapterDay(chapter.number, now.getDate(), daysInMonth)}
+      {isLastDayOfMonth(now) && <strong>{t.home.endsTonight}</strong>}
       <Link href="/chapters" className={styles.pastRecap}>
-        ALL CHAPTERS &gt;
+        {t.home.allChapters}
       </Link>
     </p>
   );
