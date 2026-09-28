@@ -52,13 +52,14 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 | `persona_weather` | `{ condition, fetchedAt }` | `useWeather` | `condition` is `null` when location or the API is unavailable. Per device, not synced. |
 | `persona_reminder_hour` | number | `useReminders` | Local hour this device reminds at. Per device, not synced. |
 | `persona_lang` | `"en" \| "zh"` | `i18n.ts` | UI language chosen with the switch; absent = follow the device. Per device, not synced. |
+| `persona_content_lang` | `{ lang, originals }` | `ContentTranslator` | Language the mask and missions were last translated into, and translated text -> the original it replaced |
 | `persona_owner` | Clerk user ID | `CloudSyncProvider` | Which account the local game state belongs to. Not synced. |
 
 ### Cloud sync
 
 Each account's save lives in Neon Postgres. The browser keeps working on `localStorage`, so every guarantee above (synchronous reads, no double XP) still holds.
 
-- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat, profile, mask, log, chapter, recaps.
+- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat, profile, mask, log, chapter, recaps, content_lang.
 - **Connection** (`src/db/index.ts`): `pg` pool on the pooled `DATABASE_URL`, registered with `attachDatabasePool` from `@vercel/functions` for Fluid Compute.
 - **API** (`src/app/api/state/route.ts`, Clerk-authenticated; signed out -> 401):
   - `GET` -> `{ entries: { key: rawValue } }` for the signed-in user.
@@ -94,6 +95,7 @@ Each account's save lives in Neon Postgres. The browser keeps working on `localS
 - **Switch**: `LangToggle` on the welcome and Status screens.
 - **Clerk**: `ClerkProvider` lives in the client component `AuthProvider`, which passes `zhCN` from `@clerk/localizations` and sets `<html lang>`.
 - **Game terms in Chinese**: stats 知识 / 体魄 / 魅力 / 技艺 / 胆识; ranks 新手 / 学徒 / 熟练 / 专家 / 大师. Ranks in recaps are stored by English name and shown via `RANK_NAMES` index.
+- **Translating the player's content** (`src/components/ContentTranslator.tsx`, `src/lib/contentTranslation.ts`): the mask and missions are data, so switching the UI does not change them. When the UI language differs from `persona_content_lang.lang` (signed in only), `collectTexts` gathers the personal mask's name, identity and routines plus active missions' titles and descriptions that are not yet in the new language (Chinese = contains CJK characters). Texts a previous translation produced go back to their stored originals; the rest go to `POST /api/translate` (`{ texts, lang }` -> `{ translations }`, max 60 texts of 300 characters, one output per input or 502). The results replace the texts in place, sync like any other write, and show a toast. It runs once per switch: text added later in either language is left alone. Completed missions and recaps keep their original wording. A failed request is retried on the next visit.
 - **AI output**: the awakening and recap pages send `lang`, and `writingLanguage` uses it when the player's own words don't reveal a language. Chat already replies in the language the user writes in.
 
 ## Game rules
@@ -251,6 +253,7 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
   - cloud sync hydration rules (`planHydration`)
   - masks: `missionXp` (focus × weather, rounding), focus-stat, mask and profile sanitizing, legacy role presets, language detection
   - chapters: month helpers, streaks, time-of-day buckets, log pruning, every recap statistic, rollover
+  - content translation: what needs translating, applying and pairing translations, restoring originals (`contentTranslation.test.ts`)
 - **Environments**: tests run in Node by default. A file that needs the DOM opts in with a `/** @vitest-environment jsdom */` docblock. The `@/` alias comes from `resolve.tsconfigPaths` in `vitest.config.mts`.
 - **CI**: `.github/workflows/ci.yml` runs lint, `tsc --noEmit`, tests and build on pushes to `main` and on pull requests.
 - **UI flows**: checked in a real browser (headless Chrome driven by puppeteer-core) by seeding `localStorage`, clicking through, and asserting on stored state. For weather, the Open-Meteo request is intercepted to force a condition.

@@ -6,6 +6,7 @@ import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 import { missionXp } from "@/lib/mask";
 import { isBoosted } from "@/lib/weather";
 import { messages } from "@/lib/i18n";
+import { translateMission } from "@/lib/contentTranslation";
 import { useToast } from "./ToastContext";
 import { getWeatherCondition } from "@/lib/useWeather";
 
@@ -33,6 +34,8 @@ interface MissionContextType {
   // Reopens a completed mission and takes back the XP it granted
   uncompleteMission: (id: string) => void;
   deleteMission: (id: string) => void;
+  // Swaps active missions' texts for their translations (original -> translated)
+  translateMissions: (map: Map<string, string>) => void;
   isLoaded: boolean;
 }
 
@@ -90,9 +93,13 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     missionsStore.set((prev) => prev.filter((m) => m.id !== id));
   };
 
+  const translateMissions = (map: Map<string, string>) => {
+    missionsStore.set((prev) => prev.map((m) => translateMission(m, map)));
+  };
+
   return (
     <MissionContext.Provider
-      value={{ missions, addMission, completeMission, uncompleteMission, deleteMission, isLoaded }}
+      value={{ missions, addMission, completeMission, uncompleteMission, deleteMission, translateMissions, isLoaded }}
     >
       {children}
     </MissionContext.Provider>
