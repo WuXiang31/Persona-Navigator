@@ -10,6 +10,7 @@ export const SYNCED_KEYS = [
   "persona_log",
   "persona_chapter",
   "persona_recaps",
+  "persona_content_lang",
 ] as const;
 
 export type SyncedKey = (typeof SYNCED_KEYS)[number];

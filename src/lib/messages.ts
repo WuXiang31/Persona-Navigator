@@ -36,6 +36,7 @@ const en = {
     vote: (mask: string) => `A vote for ${mask}`,
     cleared: (n: number, xp: number) => `${n} mission${n > 1 ? "s" : ""} cleared${xp ? ` +${xp} XP` : ""}`,
     maskAwakened: "Mask awakened",
+    translated: "Your mask and missions are now in English",
   },
   home: {
     title: "STATUS",
@@ -226,6 +227,7 @@ const zh: Messages = {
     vote: (mask) => `为「${mask}」投了一票`,
     cleared: (n, xp) => `完成 ${n} 个任务${xp ? ` +${xp} XP` : ""}`,
     maskAwakened: "面具已觉醒",
+    translated: "你的面具和任务已翻译成中文",
   },
   home: {
     title: "状态",

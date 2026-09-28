@@ -6,6 +6,7 @@ import { ProfileProvider } from "@/context/ProfileContext";
 import { MissionProvider } from "@/context/MissionContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { CloudSyncProvider } from "@/context/CloudSyncContext";
+import { ContentTranslator } from "@/components/ContentTranslator";
 
 const anybody = Anybody({
   variable: "--font-anybody",
@@ -44,7 +45,10 @@ export default function RootLayout({
             {/* Loads the account's saved game before the providers below read it */}
             <CloudSyncProvider>
               <ProfileProvider>
-                <MissionProvider>{children}</MissionProvider>
+                <MissionProvider>
+                  <ContentTranslator />
+                  {children}
+                </MissionProvider>
               </ProfileProvider>
             </CloudSyncProvider>
           </ToastProvider>
