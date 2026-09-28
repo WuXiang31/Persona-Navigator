@@ -61,6 +61,42 @@
   color: var(--color-primary-red);
 }
 
+.chapterLine {
+  position: relative;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.chapterLine strong {
+  color: var(--color-accent-yellow);
+}
+
+.pastRecap {
+  margin-left: 12px;
+  color: #fff;
+  text-decoration: underline;
+}
+
+.recapBanner {
+  position: relative;
+  display: inline-block;
+  margin-top: 6px;
+  padding: 8px 14px;
+  transform: skewX(-8deg);
+  background: var(--color-black);
+  color: var(--color-accent-yellow);
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-decoration: none;
+  box-shadow: 4px 4px 0 var(--color-accent-yellow);
+}
+
 .changeMask {
   display: block;
   margin-top: 8px;
