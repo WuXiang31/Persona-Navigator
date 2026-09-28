@@ -10,6 +10,7 @@ import {
   sanitizeFocusStats,
   sanitizeMask,
   sanitizeProfile,
+  writingLanguage,
 } from "./mask";
 
 const mask: Mask = {
@@ -132,5 +133,14 @@ describe("legacyMask", () => {
     expect(legacyMask("athlete")?.routines).toEqual([]);
     expect(legacyMask(null)).toBeNull();
     expect(legacyMask("unknown")).toBeNull();
+  });
+});
+
+describe("writingLanguage", () => {
+  it("detects CJK scripts in the player's own words", () => {
+    expect(writingLanguage(["计算机专业大三", undefined])).toBe("Simplified Chinese");
+    expect(writingLanguage(["情報工学の学生"])).toBe("Japanese");
+    expect(writingLanguage(["컴퓨터 공학"])).toBe("Korean");
+    expect(writingLanguage(["3rd-year CS"])).toMatch(/English if unclear/);
   });
 });

@@ -146,3 +146,17 @@ export function legacyMask(role: string | null): Mask | null {
   const preset = role ? LEGACY_ROLES[role] : undefined;
   return preset ? { ...preset, routines: [], equippedAt: 0 } : null;
 }
+
+// The language to write in, judged from the player's own words. Models tend to drift back to
+// English (or the persona's language), so a detected language is stated explicitly.
+export function writingLanguage(texts: (string | undefined)[]): string {
+  const joined = texts.filter(Boolean).join(" ");
+  if (/[぀-ヿ]/.test(joined)) return "Japanese";
+  if (/[가-힯]/.test(joined)) return "Korean";
+  if (/[一-鿿]/.test(joined)) return "Simplified Chinese";
+  return "the language of the player's answers (English if unclear)";
+}
+
+export function profileTexts(profile: PlayerProfile | null): string[] {
+  return profile ? [profile.occupationDetail, profile.aspiration, ...profile.situations] : [];
+}

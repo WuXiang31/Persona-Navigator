@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { STATS_ORDER } from "@/lib/progression";
-import { MAX_ROUTINES, describeProfile, sanitizeMask, sanitizeProfile } from "@/lib/mask";
+import { MAX_ROUTINES, describeProfile, profileTexts, sanitizeMask, sanitizeProfile, writingLanguage } from "@/lib/mask";
 import { generateJson } from "@/lib/gemini";
 import { MISSION_RULES, MISSION_SCHEMA } from "@/lib/prompts";
 
@@ -20,7 +20,7 @@ From the player's profile, create:
 
 ${MISSION_RULES}
 
-Language: write EVERY field, including name and identity, in the language the player used for their free-text answers (English if unclear). If they wrote Chinese, the mask name and identity must be Chinese too.`;
+Write EVERY field, including name and identity, in the language given below.`;
 
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     if (!profile) return NextResponse.json({ error: "A valid profile is required" }, { status: 400 });
 
     const result = await generateJson({
-      system: MASK_PROMPT,
+      system: `${MASK_PROMPT}\nLanguage: ${writingLanguage(profileTexts(profile))}.`,
       contents: [{ role: "user", parts: [{ text: describeProfile(profile) }] }],
       schema: RESPONSE_SCHEMA,
       temperature: 0.9,
