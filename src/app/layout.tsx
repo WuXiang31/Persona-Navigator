@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anybody, Outfit } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
@@ -23,6 +23,12 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Persona Navigator",
   description: "A stylish real-life RPG stat growth tracker.",
+  // Full-screen when launched from an iPhone home screen
+  appleWebApp: { capable: true, title: "Navigator", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#E50000",
 };
 
 export default function RootLayout({
