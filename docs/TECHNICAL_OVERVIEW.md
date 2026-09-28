@@ -5,10 +5,10 @@ This is the source of truth for how Persona Navigator works. Update it whenever 
 ## Architecture
 
 - **Framework**: Next.js 16 App Router, React 19 and TypeScript. Pages under `src/app/(app)/` share a layout with the bottom nav.
-- **Client-side app state**: all game state lives in the browser's `localStorage`. There is no database yet (a Neon Postgres store is provisioned on Vercel for the upcoming cloud sync). The only server code is the chat Route Handler, which keeps the Gemini key off the client.
+- **App state**: the game runs on `localStorage` as a synchronous local cache, and each account's copy is synced to Neon Postgres (see [Cloud sync](#cloud-sync)). Server code is two Route Handlers: `/api/chat` (keeps the Gemini key off the client) and `/api/state` (save data).
 - **Accounts**: Clerk (see [Authentication](#authentication-clerk)). Every screen except the welcome and auth pages requires sign-in.
 - **External services**:
-  - Clerk (sign-up, sign-in, sessions), provisioned through the Vercel Marketplace.
+  - Clerk (sign-up, sign-in, sessions) and Neon Postgres (save data), both provisioned through the Vercel Marketplace.
   - Gemini (`generativelanguage.googleapis.com`), called from `src/app/api/chat/route.ts`.
   - Open-Meteo (`api.open-meteo.com`), called directly from the browser. No key needed.
 
@@ -17,13 +17,14 @@ src/proxy.ts  clerkMiddleware: signed-out requests -> /sign-in (pages) or 401 (/
 Browser
   ClerkProvider       session, <SignIn>/<SignUp>/<UserButton>
   ToastProvider
-    ProfileProvider   role, stats, addXp, daily decay
-      MissionProvider missions, complete/undo (weather-boosted XP)
-        pages ---- POST /api/chat ----> Gemini
+    CloudSyncProvider   load account save on sign-in, push local writes <---> /api/state <---> Neon
+      ProfileProvider   role, stats, addXp, daily decay
+        MissionProvider missions, complete/undo (weather-boosted XP)
+          pages ---- POST /api/chat ----> Gemini
   useWeather() ---- geolocation + fetch ----> Open-Meteo
 ```
 
-Providers are nested in `src/app/layout.tsx`. `MissionProvider` uses `useProfile().addXp`, and `ProfileProvider` uses `useToast()`, so the order matters.
+Providers are nested in `src/app/layout.tsx`. `MissionProvider` uses `useProfile().addXp`, and `ProfileProvider` uses `useToast()`, so the order matters. `CloudSyncProvider` must sit above `ProfileProvider`, because `ProfileProvider` charges stat decay on mount and must see the account's data, not stale local data.
 
 ## State and persistence
 
@@ -43,7 +44,28 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 | `persona_decay` | `DecayState` | `ProfileContext` | Per-stat last trained day, plus the last day decay was charged |
 | `persona_missions` | `Mission[]` | `MissionContext` | `awardedXp` is set while a mission is completed |
 | `persona_chat` | `MessageData[]` | chat page | Last 100 messages, including proposal accept/pass state |
-| `persona_weather` | `{ condition, fetchedAt }` | `useWeather` | `condition` is `null` when location or the API is unavailable |
+| `persona_weather` | `{ condition, fetchedAt }` | `useWeather` | `condition` is `null` when location or the API is unavailable. Per device, not synced. |
+| `persona_owner` | Clerk user ID | `CloudSyncProvider` | Which account the local game state belongs to. Not synced. |
+
+### Cloud sync
+
+Each account's save lives in Neon Postgres. The browser keeps working on `localStorage`, so every guarantee above (synchronous reads, no double XP) still holds.
+
+- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat.
+- **Connection** (`src/db/index.ts`): `pg` pool on the pooled `DATABASE_URL`, registered with `attachDatabasePool` from `@vercel/functions` for Fluid Compute.
+- **API** (`src/app/api/state/route.ts`, Clerk-authenticated; signed out -> 401):
+  - `GET` -> `{ entries: { key: rawValue } }` for the signed-in user.
+  - `PUT { changes: { key: rawValue | null } }` -> upserts values and deletes keys set to `null`, in one transaction. Unknown keys and values over 200 000 characters are rejected with 400.
+- **Sign-in** (`CloudSyncProvider`, `src/context/CloudSyncContext.tsx`): the app renders nothing until the account's save is loaded. `planHydration` decides what to load:
+  - the account has cloud data -> replace local state with it;
+  - no cloud data, and the local data has no owner (saved before accounts) or is the same user's -> upload it (first-sign-in import);
+  - otherwise -> start empty, so one account never inherits another's local data.
+  After loading, `persona_owner` is set and `refreshStores()` re-notifies every store.
+- **Writes**: `createLocalStore().set` reports each write through `onStoreWrite`. Changes are batched per key and pushed 500 ms later, and flushed immediately (with `keepalive`) when the tab is hidden or closed. A failed push is retried after 5 s without losing newer writes.
+- **Sign-out**: the synced keys and `persona_owner` are removed from the browser.
+- **Conflicts**: last write wins per key. Playing on two devices at the same moment can overwrite one side's change.
+- **Load failure**: a RETRY screen is shown instead of the app, so an empty local state is never pushed over the cloud copy.
+- **Migrations** (Drizzle Kit, `drizzle/`): edit `src/db/schema.ts`, run `npm run db:generate`, commit the SQL, then run `npm run db:migrate`. `drizzle.config.ts` uses `DATABASE_URL_UNPOOLED`, because migrations need a direct connection.
 
 ## Game rules
 
@@ -105,7 +127,6 @@ Mission cards follow the design handoff:
 - **Status screen**: `<UserButton>` in the header opens account settings and sign-out. "Change mask" links back to `/role-select`.
 - **Theme**: `appearance.variables` on `ClerkProvider` match the red/black/white tokens in `globals.css`.
 - **Sign-in methods** (Google, email code, email + password) are configured in the Clerk Dashboard, not in code.
-- **Known limitation**: game data is still in `localStorage`, so it belongs to the browser rather than the account. Two accounts on one browser see the same data until cloud sync lands.
 
 ## AI chat (`src/app/api/chat/route.ts`)
 
@@ -152,7 +173,8 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
   - decay (grace period, per-stat tracking, idempotence, month boundaries)
   - mission sanitizing
   - retry/backoff
-  - the localStorage store
+  - the localStorage store, including the `onStoreWrite` / `refreshStores` sync hooks
+  - cloud sync hydration rules (`planHydration`)
 - **Environments**: tests run in Node by default. A file that needs the DOM opts in with a `/** @vitest-environment jsdom */` docblock. The `@/` alias comes from `resolve.tsconfigPaths` in `vitest.config.mts`.
 - **CI**: `.github/workflows/ci.yml` runs lint, `tsc --noEmit`, tests and build on pushes to `main` and on pull requests.
 - **UI flows**: checked in a real browser (headless Chrome driven by puppeteer-core) by seeding `localStorage`, clicking through, and asserting on stored state. For weather, the Open-Meteo request is intercepted to force a condition.
@@ -160,6 +182,6 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 
 ## Roadmap
 
-- Cloud sync: move stats, missions, role and chat history from `localStorage` to Neon Postgres, keyed by Clerk user ID, and import existing browser data on first sign-in.
+- Personalized masks: an onboarding questionnaire (age, occupation, current situation, aspiration) that generates a personal mask with an identity statement, two focus stats (XP ×1.25) and a routine mission pool, followed by 4-week chapters with a recap.
 - Squad (friends) features.
 - The desktop three-pane layout from the design handoff.
