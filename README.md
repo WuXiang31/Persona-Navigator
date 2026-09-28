@@ -19,6 +19,7 @@ The visual style is angular red/black/white with halftone textures. All characte
 - **Quick Log**: give +15 XP to a stat you just worked on.
 - **Weather bonus**: missions for today's weather stat give ×1.5 XP (×1.875 if it is also a focus stat). Weather comes from your location via [Open-Meteo](https://open-meteo.com/), which needs no API key.
 - **Stat decay**: a stat that hasn't gained XP for 3 days loses 5 XP per extra day.
+- **Monthly chapters**: each calendar month is a chapter. The first time you open the app in a new month, last month's recap appears: growth per stat and rank-ups, missions cleared ("votes" for your mask), longest streak, active days, the time of day you usually show up, what you kept coming back to, routines still waiting, and warm closing words from your navigator. Status shows the chapter's day count and links to the last recap.
 - **AI navigator chat** (Gemini):
   - Tell it your plans, and it proposes missions you can accept or pass.
   - It sees your profile, mask, stats, ranks, active missions and the weather, so it can suggest missions that fit you, preferring your routines.
@@ -27,7 +28,7 @@ The visual style is angular red/black/white with halftone textures. All characte
 
 - **Accounts** (Clerk): sign up or log in with Google, an email code, or email and password before playing. Returning players skip onboarding and land straight on Status. The avatar button on Status opens account settings and sign-out, and **Change mask** re-runs the Awakening.
 
-- **Cloud save** (Neon Postgres): your stats, missions, profile, mask and chat follow your account, so you can pick up on any device. Progress saved in a browser before accounts existed is uploaded on your first sign-in. Signing out removes the game data from that browser.
+- **Cloud save** (Neon Postgres): your stats, missions, profile, mask, chapters and chat follow your account, so you can pick up on any device. Progress saved in a browser before accounts existed is uploaded on your first sign-in. Signing out removes the game data from that browser.
 
 ## Getting started
 
@@ -98,18 +99,20 @@ src/
     page.tsx              Welcome screen (sign up / log in)
     sign-in/, sign-up/    Clerk auth pages
     awakening/            Questionnaire -> AI-forged personal mask (review, then equip)
+    recap/[month]/        Chapter recap for a finished month
     role-select/          Redirects to /awakening (the old five-role picker)
     (app)/home/           Status: radar chart, stat chips, active missions, Quick Log
     (app)/missions/       Weather banner, active missions, archive
     (app)/chat/           AI navigator chat
     api/chat/route.ts     Gemini call: reply + proposed missions
     api/mask/route.ts     Gemini call: profile -> personal mask
+    api/recap/route.ts    Gemini call: recap numbers -> the navigator's closing words
     api/state/route.ts    Load and save the signed-in user's game data
   proxy.ts                Route protection (Clerk): sign-in required outside the welcome/auth pages
   components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
   context/                CloudSync (account save), Profile (stats, XP, decay), Missions, Toasts
   db/                     Drizzle schema and Postgres connection
-  lib/                    Game rules and helpers (progression, weather, mask, decay, gemini, prompts, retry, localStore, cloudSync)
+  lib/                    Game rules and helpers (progression, weather, mask, chapter, decay, gemini, prompts, retry, localStore, cloudSync)
                           with unit tests next to them (*.test.ts)
 docs/TECHNICAL_OVERVIEW.md  Architecture, data model and game formulas
 design/handoff/             High-fidelity design reference (HTML prototypes, screenshots, videos)
