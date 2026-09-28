@@ -27,7 +27,7 @@ The visual style is angular red/black/white with halftone textures. All characte
   - When Gemini is overloaded, the request is retried automatically and then falls back to a lighter model.
 
 - **Daily reminder** (optional): tap the bell on Status to get a push notification at the hour you pick (default 20:00), only on days you haven't cleared a mission yet. The app can be added to your home screen (PWA); on iPhone that is required for notifications (iOS 16.4+).
-- **English and Chinese UI**: follows the device language, with a 中文 / EN switch on the welcome and Status screens. Clerk's sign-in screens switch too, and the AI writes masks and recaps in the player's language.
+- **English and Chinese UI**: follows the device language, with a 中文 / EN switch on the welcome and Status screens. Clerk's sign-in screens switch too, and the AI writes masks and recaps in the player's language. Switching the language also translates the mask and today's missions once; switching back restores the exact originals.
 - **Accounts** (Clerk): sign up or log in with Google, an email code, or email and password before playing. Returning players skip onboarding and land straight on Status. The avatar button on Status opens account settings and sign-out, and **Change mask** re-runs the Awakening.
 
 - **Cloud save** (Neon Postgres): your stats, missions, profile, mask, chapters and chat follow your account, so you can pick up on any device. Progress saved in a browser before accounts existed is uploaded on your first sign-in. Signing out removes the game data from that browser.
@@ -116,6 +116,7 @@ src/
     api/push/             Reminder subscriptions and test sends; api/push/cron sends due reminders
     manifest.ts           PWA manifest (home screen install)
     api/state/route.ts    Load and save the signed-in user's game data
+    api/translate/route.ts Gemini call: the mask and missions -> the new UI language
   proxy.ts                Route protection (Clerk): sign-in required outside the welcome/auth pages
   components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
   context/                CloudSync (account save), Profile (stats, XP, decay), Missions, Toasts
