@@ -46,6 +46,9 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 | `persona_chat` | `MessageData[]` | chat page | Last 100 messages, including proposal accept/pass state |
 | `persona_profile` | `PlayerProfile` | `ProfileContext` | Awakening answers (see [Personal masks](#personal-masks-maskts)) |
 | `persona_mask` | `Mask` | `ProfileContext` | The personal mask; `null` until the player awakens one |
+| `persona_log` | `XpEvent[]` | `ProfileContext` | Every XP change (missions, Quick Log, decay), last 3 months. Recaps are built from it. |
+| `persona_chapter` | `Chapter` | `ProfileContext` | The month being played: number, start day, stats at the start |
+| `persona_recaps` | `Recap[]` | `ProfileContext` | Finished chapters, newest first (max 24), with the navigator's summary once written |
 | `persona_weather` | `{ condition, fetchedAt }` | `useWeather` | `condition` is `null` when location or the API is unavailable. Per device, not synced. |
 | `persona_owner` | Clerk user ID | `CloudSyncProvider` | Which account the local game state belongs to. Not synced. |
 
@@ -53,7 +56,7 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 
 Each account's save lives in Neon Postgres. The browser keeps working on `localStorage`, so every guarantee above (synchronous reads, no double XP) still holds.
 
-- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat, profile, mask.
+- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat, profile, mask, log, chapter, recaps.
 - **Connection** (`src/db/index.ts`): `pg` pool on the pooled `DATABASE_URL`, registered with `attachDatabasePool` from `@vercel/functions` for Fluid Compute.
 - **API** (`src/app/api/state/route.ts`, Clerk-authenticated; signed out -> 401):
   - `GET` -> `{ entries: { key: rawValue } }` for the signed-in user.
@@ -63,7 +66,7 @@ Each account's save lives in Neon Postgres. The browser keeps working on `localS
   - no cloud data, and the local data has no owner (saved before accounts) or is the same user's -> upload it (first-sign-in import);
   - otherwise -> start empty, so one account never inherits another's local data.
   After loading, `persona_owner` is set and `refreshStores()` re-notifies every store.
-- **Writes**: `createLocalStore().set` reports each write through `onStoreWrite`. Changes are batched per key and pushed 500 ms later, and flushed immediately (with `keepalive`) when the tab is hidden or closed. A failed push is retried after 5 s without losing newer writes.
+- **Writes**: `createLocalStore().set` reports each write through `onStoreWrite`. React runs child effects before parent effects, so providers can write on mount (monthly rollover, stat decay) before the listener exists; when it starts, it also queues every key whose local value differs from the snapshot just loaded. Changes are batched per key and pushed 500 ms later, and flushed immediately (with `keepalive`) when the tab is hidden or closed. A failed push is retried after 5 s without losing newer writes.
 - **Sign-out**: the synced keys and `persona_owner` are removed from the browser.
 - **Conflicts**: last write wins per key. Playing on two devices at the same moment can overwrite one side's change.
 - **Load failure**: a RETRY screen is shown instead of the app, so an empty local state is never pushed over the cloud copy.
@@ -106,6 +109,17 @@ The five preset roles were replaced by a mask generated for each player.
 - **Legacy roles**: players with a `persona_role` but no mask get `legacyMask(role)`, the old role's name, a one-line identity and its focus stats (e.g. athlete -> vitality + nerve), with no routines. Status invites them to "Awaken your personal mask". `useProfile().mask` is the personal mask or this fallback; `hasPersonalMask` tells them apart.
 - **Validation**: `sanitizeProfile` (known ids, trimmed text ≤ 200 chars, ≤ 12 situations) and `sanitizeMask` (name ≤ 40, identity ≤ 160, two distinct valid focus stats, routines through `sanitizeMissions` capped at `MAX_ROUTINES` = 10).
 - `/role-select` now redirects to `/awakening`.
+
+### Chapters and recaps (`chapter.ts`)
+
+A chapter is one calendar month. When it ends, the player gets a recap and closing words from the navigator.
+
+- **XP log**: `addXp(stat, xp, { event })` appends an `XpEvent { t, stat, xp, kind, missionId?, title?, routine?, weather? }` for missions and Quick Log; decay appends negative `decay` events. Undoing a mission removes its event (`unlogMission`). Missions added from routine chips carry `routine: true`. The log keeps the current month and the two before it (`pruneLog`).
+- **Rollover** (`planRollover`, run on mount in `ProfileProvider`, before decay): with no chapter, start chapter 1 today; in a new month, close the old chapter with `buildRecap` and start the next one on the 1st with the current stats as its starting point. The recap therefore appears the first time the app is opened in a new month. A player's first chapter starts the day chapters first ran.
+- **Recap** (`buildRecap`, pure): per-stat start/end/gained/decay lost/rank change, missions cleared (and how many were routines), Quick Logs, active days, longest daily streak, top 3 repeated missions, routines never done, most improved and least trained stat, missions per time of day (morning 5-12, afternoon 12-17, evening 17-22, night 22-5) and the favorite one, weather-boosted count, and a snapshot of the mask.
+- **Recap page** (`src/app/recap/[month]/`, full screen, no bottom nav): opening it marks it seen; the first time, it calls `/api/recap` and saves the summary into the recap. RE-AWAKEN goes to `/awakening`, NEXT CHAPTER to `/home`.
+- **Status**: an unread recap shows a "Chapter N clear · View your recap" banner; otherwise "Chapter N · Day d/D" (plus "Ends tonight" on the last day) and an "All chapters" link.
+- **Chapters page** (`src/app/(app)/chapters/`): the chapter in progress, summarized so far by running `buildRecap` on the current month (votes, active days, best streak), then every finished chapter, newest first, as a card (month, mask, dates, votes, streak, most improved stat, rank-ups, a NEW tag while unread, and the first lines of the navigator's words). Cards open `/recap/[month]`, which links back with "All chapters".
 
 ### Weather bonus (`weather.ts`, `useWeather.ts`)
 
@@ -189,8 +203,15 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 **Response**: `{ mask: Mask }`, or `{ error }` (502 when the output has no usable name or routines).
 
 - The prompt asks for a 2-4 word original name, a first-person identity grounded in the aspiration, the two most relevant focus stats, and 6-10 small, safe, repeatable routines that fit the player's life. Routines must cover the focus stats most, plus at least one vitality and one charm mission. They follow the same `MISSION_RULES` as chat proposals.
-- Every field is written in the language of the player's free-text answers (Chinese answers get a Chinese name, identity and routines).
+- Every field is written in the player's language. `writingLanguage` detects Chinese, Japanese or Korean in the player's own words and states it explicitly, because the model (or a custom persona) tends to drift back to English.
 - Temperature 0.9, so REROLL gives a different mask.
+
+## Recap summary (`src/app/api/recap/route.ts`)
+
+**Request** (`POST /api/recap`, signed in): `{ recap: Recap, profile?: PlayerProfile }`. **Response**: `{ summary }`, or `{ error }`.
+
+- The navigator sets its usual teasing aside and writes 4-6 warm sentences, like a companion at the end of an arc: honor specific efforts from the numbers, invite the player to look back and thank the self who kept trying, mention untouched things softly as something for the next chapter, and tie it to the chosen identity.
+- The language comes from `writingLanguage` (profile answers plus the mask's name and identity).
 
 ## Testing
 
@@ -202,7 +223,8 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
   - retry/backoff
   - the localStorage store, including the `onStoreWrite` / `refreshStores` sync hooks
   - cloud sync hydration rules (`planHydration`)
-  - masks: `missionXp` (focus × weather, rounding), focus-stat, mask and profile sanitizing, legacy role presets
+  - masks: `missionXp` (focus × weather, rounding), focus-stat, mask and profile sanitizing, legacy role presets, language detection
+  - chapters: month helpers, streaks, time-of-day buckets, log pruning, every recap statistic, rollover
 - **Environments**: tests run in Node by default. A file that needs the DOM opts in with a `/** @vitest-environment jsdom */` docblock. The `@/` alias comes from `resolve.tsconfigPaths` in `vitest.config.mts`.
 - **CI**: `.github/workflows/ci.yml` runs lint, `tsc --noEmit`, tests and build on pushes to `main` and on pull requests.
 - **UI flows**: checked in a real browser (headless Chrome driven by puppeteer-core) by seeding `localStorage`, clicking through, and asserting on stored state. For weather, the Open-Meteo request is intercepted to force a condition.
@@ -210,6 +232,5 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 
 ## Roadmap
 
-- Chapters: wearing a mask starts a 4-week chapter; at the end, a recap (XP per stat, missions cleared, most/least trained stat, an AI summary) and a prompt to re-awaken.
-- Squad (friends) features.
+- Squad (friends) features, and sharing a recap as an image.
 - The desktop three-pane layout from the design handoff.

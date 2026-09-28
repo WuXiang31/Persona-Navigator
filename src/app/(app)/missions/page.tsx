@@ -102,7 +102,7 @@ export default function MissionsPage() {
                 <button
                   key={`${routine.title}-${i}`}
                   className={styles.routineChip}
-                  onClick={() => addMission(routine)}
+                  onClick={() => addMission({ ...routine, routine: true })}
                   disabled={active}
                   title={routine.description || undefined}
                 >

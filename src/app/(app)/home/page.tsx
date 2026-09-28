@@ -14,9 +14,10 @@ import { NewMissionModal } from "@/components/NewMissionModal";
 import { QuickLogModal } from "@/components/QuickLogModal";
 import { WeatherBanner } from "@/components/WeatherBanner";
 import { STATS_ORDER, getRankColor, getRankIndex } from "@/lib/progression";
+import { Chapter, Recap, isLastDayOfMonth } from "@/lib/chapter";
 
 export default function Home() {
-  const { mask, hasPersonalMask, stats, isLoaded } = useProfile();
+  const { mask, hasPersonalMask, stats, chapter, recaps, isLoaded } = useProfile();
   const { missions, addMission, completeMission, uncompleteMission, deleteMission, isLoaded: missionsLoaded } = useMissions();
 
   const [selectedStat, setSelectedStat] = useState<keyof Stats | null>(null);
@@ -73,6 +74,8 @@ export default function Home() {
             </Link>
           </div>
         </motion.div>
+
+        <ChapterLine chapter={chapter} latestRecap={recaps[0]} />
       </div>
 
       {/* Case File & Radar Chart */}
@@ -153,5 +156,29 @@ export default function Home() {
         onSave={addMission}
       />
     </main>
+  );
+}
+
+// Chapter progress, or a banner for a recap the player hasn't opened yet
+function ChapterLine({ chapter, latestRecap }: { chapter: Chapter | null; latestRecap?: Recap }) {
+  if (latestRecap && !latestRecap.seen) {
+    return (
+      <Link href={`/recap/${latestRecap.month}`} className={styles.recapBanner}>
+        CHAPTER {latestRecap.number} CLEAR &middot; VIEW YOUR RECAP &gt;
+      </Link>
+    );
+  }
+  if (!chapter) return null;
+
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return (
+    <p className={styles.chapterLine}>
+      CHAPTER {chapter.number} &middot; DAY {now.getDate()}/{daysInMonth}
+      {isLastDayOfMonth(now) && <strong> &middot; ENDS TONIGHT</strong>}
+      <Link href="/chapters" className={styles.pastRecap}>
+        ALL CHAPTERS &gt;
+      </Link>
+    </p>
   );
 }

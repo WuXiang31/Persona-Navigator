@@ -6,6 +6,7 @@ import { clampStat, getRankIndex, getRankName } from "@/lib/progression";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 import { DecayState, applyDecay, initialDecayState, todayKey } from "@/lib/decay";
 import { Mask, PlayerProfile, legacyMask } from "@/lib/mask";
+import { Chapter, Recap, XpEvent, planRollover, pruneLog } from "@/lib/chapter";
 
 export type RoleType = "scholar" | "professional" | "creative" | "athlete" | "explorer" | null;
 
@@ -31,7 +32,16 @@ interface ProfileContextType {
   equipMask: (mask: Mask) => void;
   // Applies an XP change (negative to undo), clamped to 0-500; returns the change actually applied.
   // `quiet` skips the per-change toast (rank-ups still show)
-  addXp: (stat: keyof Stats, xp: number, options?: { quiet?: boolean }) => number;
+  // `event` records the change in the XP log that chapter recaps are built from
+  addXp: (stat: keyof Stats, xp: number, options?: { quiet?: boolean; event?: XpEventMeta }) => number;
+  // Removes a completed mission's entry from the XP log when it is undone
+  unlogMission: (missionId: string) => void;
+  // The month being played, and recaps of finished months (newest first)
+  chapter: Chapter | null;
+  recaps: Recap[];
+  // XP changes of the last few months, for chapter statistics
+  log: XpEvent[];
+  updateRecap: (month: string, changes: Partial<Recap>) => void;
   isLoaded: boolean;
 }
 
@@ -52,6 +62,18 @@ const statsStore = createLocalStore<Stats>("persona_stats", defaultStats);
 const decayStore = createLocalStore<DecayState | null>("persona_decay", null);
 const profileStore = createLocalStore<PlayerProfile | null>("persona_profile", null);
 const maskStore = createLocalStore<Mask | null>("persona_mask", null);
+const logStore = createLocalStore<XpEvent[]>("persona_log", []);
+const chapterStore = createLocalStore<Chapter | null>("persona_chapter", null);
+const recapsStore = createLocalStore<Recap[]>("persona_recaps", []);
+
+// Recaps older than this many months are dropped
+const MAX_RECAPS = 24;
+
+export type XpEventMeta = Omit<XpEvent, "t" | "stat" | "xp">;
+
+function logEvents(events: XpEvent[]) {
+  if (events.length > 0) logStore.set((log) => pruneLog([...log, ...events]));
+}
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
@@ -60,12 +82,28 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const stats = useLocalStore(statsStore);
   const profile = useLocalStore(profileStore);
   const personalMask = useLocalStore(maskStore);
+  const chapter = useLocalStore(chapterStore);
+  const recaps = useLocalStore(recapsStore);
+  const log = useLocalStore(logStore);
   const mask = personalMask ?? legacyMask(role);
   const isLoaded = useIsClient();
   const { showToast } = useToast();
 
-  // Stats left untrained past the grace period lose XP; charged once per day on load
   useEffect(() => {
+    // A new month closes the previous chapter with a recap. This runs before decay,
+    // so the closing chapter ends with the stats the player left it with.
+    const rollover = planRollover(
+      chapterStore.get(),
+      statsStore.get(),
+      logStore.get(),
+      maskStore.get() ?? legacyMask(roleStore.get())
+    );
+    if (rollover.action !== "none") chapterStore.set(rollover.chapter);
+    if (rollover.action === "close") {
+      recapsStore.set((list) => [rollover.recap, ...list].slice(0, MAX_RECAPS));
+    }
+
+    // Stats left untrained past the grace period lose XP; charged once per day on load
     const today = todayKey();
     const { stats: decayed, state, losses } = applyDecay(
       statsStore.get(),
@@ -77,17 +115,24 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     const lost = Object.entries(losses);
     if (lost.length > 0) {
       statsStore.set(decayed);
+      const t = Date.now();
+      logEvents(lost.map(([stat, xp]) => ({ t, stat: stat as keyof Stats, xp: -xp, kind: "decay" })));
       showToast(`Getting rusty: ${lost.map(([stat, xp]) => `${stat} -${xp}`).join(", ")}`, "info", 1200);
     }
   }, [showToast]);
 
-  const addXp = (stat: keyof Stats, xp: number, { quiet = false }: { quiet?: boolean } = {}) => {
+  const addXp = (
+    stat: keyof Stats,
+    xp: number,
+    { quiet = false, event }: { quiet?: boolean; event?: XpEventMeta } = {}
+  ) => {
     const prev = statsStore.get();
     const nextValue = clampStat(prev[stat] + xp);
     const applied = nextValue - prev[stat];
     if (applied === 0) return 0;
 
     statsStore.set({ ...prev, [stat]: nextValue });
+    if (event) logEvents([{ ...event, t: Date.now(), stat, xp: applied }]);
     if (applied > 0) {
       const today = todayKey();
       decayStore.set((state) => {
@@ -115,6 +160,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         hasPersonalMask: personalMask !== null,
         equipMask: maskStore.set,
         addXp,
+        unlogMission: (missionId) => logStore.set((log) => log.filter((e) => e.missionId !== missionId)),
+        chapter,
+        recaps,
+        log,
+        updateRecap: (month, changes) =>
+          recapsStore.set((list) => list.map((r) => (r.month === month ? { ...r, ...changes } : r))),
         isLoaded,
       }}
     >
