@@ -53,8 +53,8 @@ export default function RootLayout({
           appearance={clerkAppearance}
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
-          // New accounts pick a role first; returning players go straight to Status
-          signUpFallbackRedirectUrl="/role-select"
+          // New accounts awaken their mask first; returning players go straight to Status
+          signUpFallbackRedirectUrl="/awakening"
           signInFallbackRedirectUrl="/home"
           afterSignOutUrl="/"
         >

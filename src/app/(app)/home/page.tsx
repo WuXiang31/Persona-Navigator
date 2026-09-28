@@ -16,7 +16,7 @@ import { WeatherBanner } from "@/components/WeatherBanner";
 import { STATS_ORDER, getRankColor, getRankIndex } from "@/lib/progression";
 
 export default function Home() {
-  const { role, stats, isLoaded } = useProfile();
+  const { mask, hasPersonalMask, stats, isLoaded } = useProfile();
   const { missions, addMission, completeMission, uncompleteMission, deleteMission, isLoaded: missionsLoaded } = useMissions();
 
   const [selectedStat, setSelectedStat] = useState<keyof Stats | null>(null);
@@ -60,9 +60,16 @@ export default function Home() {
           transition={{ type: "spring", delay: 0.2 }}
         >
           <div className={styles.speechBubble}>
-            Looking sharp! Your {role ? role.toUpperCase() : "PERSONA"} mask is resonating with your actions. Keep pushing those limits!
-            <Link href="/role-select" className={styles.changeMask}>
-              CHANGE MASK &gt;
+            {mask ? (
+              <>
+                <span className={styles.maskName}>{mask.name}</span>
+                {mask.identity}
+              </>
+            ) : (
+              "No mask yet. Tell me who you are and I'll forge one for you."
+            )}
+            <Link href="/awakening" className={styles.changeMask}>
+              {hasPersonalMask ? "CHANGE MASK >" : "AWAKEN YOUR PERSONAL MASK >"}
             </Link>
           </div>
         </motion.div>

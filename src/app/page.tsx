@@ -10,11 +10,11 @@ import styles from "./page.module.css";
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { role, isLoaded } = useProfile();
+  const { mask, isLoaded } = useProfile();
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
 
-  // Signed-in players who already picked a role skip onboarding and go straight to Status
-  const isReturning = isSignedIn && role;
+  // Signed-in players who already wear a mask (or an original role) skip onboarding and go straight to Status
+  const isReturning = isSignedIn && mask;
   useEffect(() => {
     if (isLoaded && authLoaded && isReturning) router.replace("/home");
   }, [isLoaded, authLoaded, isReturning, router]);
@@ -45,8 +45,8 @@ export default function WelcomeScreen() {
 
       <motion.button
         className={styles.begin}
-        // New visitors create an account first; signed-in players without a role go pick one
-        onClick={() => router.push(isSignedIn ? "/role-select" : "/sign-up")}
+        // New visitors create an account first; signed-in players without a mask go awaken one
+        onClick={() => router.push(isSignedIn ? "/awakening" : "/sign-up")}
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", delay: 0.4 }}
