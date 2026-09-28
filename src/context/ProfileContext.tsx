@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect } from "react";
 import { useToast } from "./ToastContext";
 import { clampStat, getRankIndex } from "@/lib/progression";
+import { translateMask } from "@/lib/contentTranslation";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 import { DecayState, applyDecay, initialDecayState, todayKey } from "@/lib/decay";
 import { Mask, PlayerProfile, legacyMask } from "@/lib/mask";
@@ -31,6 +32,8 @@ interface ProfileContextType {
   // True once the player has awakened a personal mask (not just a legacy role preset)
   hasPersonalMask: boolean;
   equipMask: (mask: Mask) => void;
+  // Swaps the personal mask's texts for their translations (original -> translated)
+  translateMask: (map: Map<string, string>) => void;
   // Applies an XP change (negative to undo), clamped to 0-500; returns the change actually applied.
   // `quiet` skips the per-change toast (rank-ups still show)
   // `event` records the change in the XP log that chapter recaps are built from
@@ -162,6 +165,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         mask,
         hasPersonalMask: personalMask !== null,
         equipMask: maskStore.set,
+        translateMask: (map) => maskStore.set((m) => (m ? translateMask(m, map) : m)),
         addXp,
         unlogMission: (missionId) => logStore.set((log) => log.filter((e) => e.missionId !== missionId)),
         chapter,

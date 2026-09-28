@@ -1,0 +1,91 @@
+.note {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--color-surface-alt);
+  border-left: 4px solid var(--color-accent-yellow);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text-main);
+}
+
+.row {
+  display: flex;
+  margin-bottom: 18px;
+}
+
+/* Two-sided ON / OFF switch in the skewed button style */
+.switch {
+  display: flex;
+  transform: skewX(-8deg);
+  border: 2px solid var(--color-text-main);
+}
+
+.switch span {
+  padding: 8px 20px;
+  font-family: var(--font-anybody);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+}
+
+.switch .active {
+  background: var(--color-text-main);
+  color: var(--color-black);
+}
+
+.switchOn .active {
+  background: var(--color-primary-red);
+  color: #fff;
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--color-text-muted);
+}
+
+.select {
+  padding: 8px 12px;
+  background: var(--color-surface-alt);
+  border: 2px solid #333;
+  color: var(--color-text-main);
+  font-family: var(--font-outfit);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.test {
+  margin-top: 18px;
+  padding: 8px 16px;
+  transform: skewX(-8deg);
+  background: var(--color-black);
+  border: 2px solid var(--color-text-main);
+  color: var(--color-text-main);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.test:disabled {
+  opacity: 0.5;
+}
+
+.error {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-red-hover);
+}

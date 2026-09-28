@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anybody, Outfit } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
@@ -6,6 +6,7 @@ import { ProfileProvider } from "@/context/ProfileContext";
 import { MissionProvider } from "@/context/MissionContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { CloudSyncProvider } from "@/context/CloudSyncContext";
+import { ContentTranslator } from "@/components/ContentTranslator";
 
 const anybody = Anybody({
   variable: "--font-anybody",
@@ -23,6 +24,12 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Persona Navigator",
   description: "A stylish real-life RPG stat growth tracker.",
+  // Full-screen when launched from an iPhone home screen
+  appleWebApp: { capable: true, title: "Navigator", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#E50000",
 };
 
 export default function RootLayout({
@@ -38,7 +45,10 @@ export default function RootLayout({
             {/* Loads the account's saved game before the providers below read it */}
             <CloudSyncProvider>
               <ProfileProvider>
-                <MissionProvider>{children}</MissionProvider>
+                <MissionProvider>
+                  <ContentTranslator />
+                  {children}
+                </MissionProvider>
               </ProfileProvider>
             </CloudSyncProvider>
           </ToastProvider>

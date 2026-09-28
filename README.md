@@ -26,7 +26,8 @@ The visual style is angular red/black/white with halftone textures. All characte
   - Chat history persists across reloads.
   - When Gemini is overloaded, the request is retried automatically and then falls back to a lighter model.
 
-- **English and Chinese UI**: follows the device language, with a 中文 / EN switch on the welcome and Status screens. Clerk's sign-in screens switch too, and the AI writes masks and recaps in the player's language.
+- **Daily reminder** (optional): tap the bell on Status to get a push notification at the hour you pick (default 20:00), only on days you haven't cleared a mission yet. The app can be added to your home screen (PWA); on iPhone that is required for notifications (iOS 16.4+).
+- **English and Chinese UI**: follows the device language, with a 中文 / EN switch on the welcome and Status screens. Clerk's sign-in screens switch too, and the AI writes masks and recaps in the player's language. Switching the language also translates the mask and today's missions once; switching back restores the exact originals.
 - **Accounts** (Clerk): sign up or log in with Google, an email code, or email and password before playing. Returning players skip onboarding and land straight on Status. The avatar button on Status opens account settings and sign-out, and **Change mask** re-runs the Awakening.
 
 - **Cloud save** (Neon Postgres): your stats, missions, profile, mask, chapters and chat follow your account, so you can pick up on any device. Progress saved in a browser before accounts existed is uploaded on your first sign-in. Signing out removes the game data from that browser.
@@ -49,10 +50,13 @@ Open [http://localhost:3000](http://localhost:3000). Allow location access if yo
 ```bash
 GEMINI_API_KEY=your-key-here
 
-# Set by `vercel env pull` (from the Clerk and Neon integrations)
+# Set by `vercel env pull` (from the Clerk and Neon integrations, plus the reminder keys)
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
 CLERK_SECRET_KEY=...
 DATABASE_URL=...
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=...   # Web Push keys: npx web-push generate-vapid-keys
+VAPID_PRIVATE_KEY=...
+CRON_SECRET=...                    # Vercel Cron sends it as a Bearer token
 
 # Optional: Gemini models (these are the defaults; set the fallback to "none" to disable it)
 GEMINI_MODEL=gemini-flash-latest
@@ -109,12 +113,15 @@ src/
     api/chat/route.ts     Gemini call: reply + proposed missions
     api/mask/route.ts     Gemini call: profile -> personal mask
     api/recap/route.ts    Gemini call: recap numbers -> the navigator's closing words
+    api/push/             Reminder subscriptions and test sends; api/push/cron sends due reminders
+    manifest.ts           PWA manifest (home screen install)
     api/state/route.ts    Load and save the signed-in user's game data
+    api/translate/route.ts Gemini call: the mask and missions -> the new UI language
   proxy.ts                Route protection (Clerk): sign-in required outside the welcome/auth pages
   components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
   context/                CloudSync (account save), Profile (stats, XP, decay), Missions, Toasts
   db/                     Drizzle schema and Postgres connection
-  lib/                    Game rules and helpers (progression, weather, mask, chapter, i18n, decay, gemini, prompts, retry, localStore, cloudSync)
+  lib/                    Game rules and helpers (progression, weather, mask, chapter, i18n, messages, reminders, push, decay, gemini, prompts, retry, localStore, cloudSync)
                           with unit tests next to them (*.test.ts)
 docs/TECHNICAL_OVERVIEW.md  Architecture, data model and game formulas
 design/handoff/             High-fidelity design reference (HTML prototypes, screenshots, videos)

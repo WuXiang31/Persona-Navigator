@@ -50,14 +50,16 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 | `persona_chapter` | `Chapter` | `ProfileContext` | The month being played: number, start day, stats at the start |
 | `persona_recaps` | `Recap[]` | `ProfileContext` | Finished chapters, newest first (max 24), with the navigator's summary once written |
 | `persona_weather` | `{ condition, fetchedAt }` | `useWeather` | `condition` is `null` when location or the API is unavailable. Per device, not synced. |
+| `persona_reminder_hour` | number | `useReminders` | Local hour this device reminds at. Per device, not synced. |
 | `persona_lang` | `"en" \| "zh"` | `i18n.ts` | UI language chosen with the switch; absent = follow the device. Per device, not synced. |
+| `persona_content_lang` | `{ lang, originals }` | `ContentTranslator` | Language the mask and missions were last translated into, and translated text -> the original it replaced |
 | `persona_owner` | Clerk user ID | `CloudSyncProvider` | Which account the local game state belongs to. Not synced. |
 
 ### Cloud sync
 
 Each account's save lives in Neon Postgres. The browser keeps working on `localStorage`, so every guarantee above (synchronous reads, no double XP) still holds.
 
-- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat, profile, mask, log, chapter, recaps.
+- **Table** (`src/db/schema.ts`, Drizzle ORM): `user_state(user_id, key, value, updated_at)`, primary key `(user_id, key)`. `value` is the raw `localStorage` string, so each store's codec (JSON, or the bare role string) round-trips unchanged. Synced keys are listed in `SYNCED_KEYS` (`src/lib/cloudSync.ts`): role, stats, decay, missions, chat, profile, mask, log, chapter, recaps, content_lang.
 - **Connection** (`src/db/index.ts`): `pg` pool on the pooled `DATABASE_URL`, registered with `attachDatabasePool` from `@vercel/functions` for Fluid Compute.
 - **API** (`src/app/api/state/route.ts`, Clerk-authenticated; signed out -> 401):
   - `GET` -> `{ entries: { key: rawValue } }` for the signed-in user.
@@ -73,6 +75,18 @@ Each account's save lives in Neon Postgres. The browser keeps working on `localS
 - **Load failure**: a RETRY screen is shown instead of the app, so an empty local state is never pushed over the cloud copy.
 - **Migrations** (Drizzle Kit, `drizzle/`): edit `src/db/schema.ts`, run `npm run db:generate`, commit the SQL, then run `npm run db:migrate`. `drizzle.config.ts` uses `DATABASE_URL_UNPOOLED`, because migrations need a direct connection.
 
+## Daily reminders (PWA + Web Push)
+
+- **Installable app**: `src/app/manifest.ts` (standalone, starts at `/home`, icons in `public/` made from `design/brand/app_icon.png`), `src/app/apple-icon.png`, and `appleWebApp` metadata in the root layout. iOS only allows Web Push for apps added to the home screen (16.4+).
+- **Service worker** (`public/sw.js`, served with no-cache headers from `next.config.ts`): shows pushed notifications (one `daily-reminder` tag, so a newer one replaces an unread one) and opens or focuses the app on tap.
+- **Opting in** (`useReminders`, `ReminderPanel`, the bell on Status): the tap asks for notification permission, registers `/sw.js`, subscribes with `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, and `PUT /api/push` saves the subscription with the device's IANA time zone, the chosen hour (06:00-23:00, default 20:00) and the UI language. Turning it off deletes the row and unsubscribes. SEND A TEST calls `POST /api/push`. On iPhone outside the home screen the panel explains how to add the app; with permission denied it explains how to allow it.
+- **Table** `push_subscriptions(endpoint PK, user_id, p256dh, auth, time_zone, hour, lang, last_sent_day, created_at)`, one row per device. Changing the hour clears `last_sent_day`.
+- **Schedule**: Vercel Hobby cron jobs may run at most once a day, with ±59 min precision, but a project may have 100. `vercel.json` therefore defines 24 daily jobs (`0 H * * *`, paths `/api/push/cron?h=H`), one per UTC hour. `/api/push/cron` checks `Authorization: Bearer CRON_SECRET` and is public in `src/proxy.ts`.
+- **Who gets a reminder** (`src/lib/reminders.ts`): a device is due when its local hour is in `[hour, hour + 3)` and `last_sent_day` is not today (local). If the player's `persona_log` (read from `user_state`) already has a mission completed on that local day, the reminder is skipped. Either way `last_sent_day` is set, so at most one reminder a day. A failed send is retried next hour; 404/410 from the push service deletes the subscription.
+- **Text**: `MESSAGES[lang].reminder.notifyTitle/notifyBody`, naming the mask when there is one ("No votes for {mask} yet today. One small mission is enough."). The catalog lives in `src/lib/messages.ts` (pure data) so API routes can import it; `i18n.ts` adds the React hooks.
+- **Sign-out** unsubscribes the device, so the previous account's reminders stop.
+- **Env**: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `CRON_SECRET` (set in all Vercel environments); optional `VAPID_SUBJECT` (defaults to the production URL).
+
 ## Languages (`src/lib/i18n.ts`)
 
 - **Messages**: one `en` object holds all UI copy (strings, plus functions for interpolated text such as `chapterDay(n, day, days)`); `zh` is typed `Messages = typeof en`, so a missing key is a type error. `i18n.test.ts` also compares every leaf key (including the `Record` maps for questionnaire options) and checks every option and rank is covered.
@@ -81,6 +95,7 @@ Each account's save lives in Neon Postgres. The browser keeps working on `localS
 - **Switch**: `LangToggle` on the welcome and Status screens.
 - **Clerk**: `ClerkProvider` lives in the client component `AuthProvider`, which passes `zhCN` from `@clerk/localizations` and sets `<html lang>`.
 - **Game terms in Chinese**: stats 知识 / 体魄 / 魅力 / 技艺 / 胆识; ranks 新手 / 学徒 / 熟练 / 专家 / 大师. Ranks in recaps are stored by English name and shown via `RANK_NAMES` index.
+- **Translating the player's content** (`src/components/ContentTranslator.tsx`, `src/lib/contentTranslation.ts`): the mask and missions are data, so switching the UI does not change them. When the UI language differs from `persona_content_lang.lang` (signed in only), `collectTexts` gathers the personal mask's name, identity and routines plus active missions' titles and descriptions that are not yet in the new language (Chinese = contains CJK characters). Texts a previous translation produced go back to their stored originals; the rest go to `POST /api/translate` (`{ texts, lang }` -> `{ translations }`, max 60 texts of 300 characters, one output per input or 502). The results replace the texts in place, sync like any other write, and show a toast. It runs once per switch: text added later in either language is left alone. Completed missions and recaps keep their original wording. A failed request is retried on the next visit.
 - **AI output**: the awakening and recap pages send `lang`, and `writingLanguage` uses it when the player's own words don't reveal a language. Chat already replies in the language the user writes in.
 
 ## Game rules
@@ -226,6 +241,8 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 
 ## Testing
 
+- **Reminders**: time-zone day/hour, the due window, once-a-day, and "played today" detection (`reminders.test.ts`).
+
 - **Unit tests**: Vitest (`npm test`). Test files sit next to the code as `src/lib/*.test.ts` and cover:
   - ranks and stat clamping
   - WMO code mapping and the weather bonus
@@ -236,6 +253,7 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
   - cloud sync hydration rules (`planHydration`)
   - masks: `missionXp` (focus × weather, rounding), focus-stat, mask and profile sanitizing, legacy role presets, language detection
   - chapters: month helpers, streaks, time-of-day buckets, log pruning, every recap statistic, rollover
+  - content translation: what needs translating, applying and pairing translations, restoring originals (`contentTranslation.test.ts`)
 - **Environments**: tests run in Node by default. A file that needs the DOM opts in with a `/** @vitest-environment jsdom */` docblock. The `@/` alias comes from `resolve.tsconfigPaths` in `vitest.config.mts`.
 - **CI**: `.github/workflows/ci.yml` runs lint, `tsc --noEmit`, tests and build on pushes to `main` and on pull requests.
 - **UI flows**: checked in a real browser (headless Chrome driven by puppeteer-core) by seeding `localStorage`, clicking through, and asserting on stored state. For weather, the Open-Meteo request is intercepted to force a condition.

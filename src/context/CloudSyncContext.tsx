@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { onStoreWrite, refreshStores } from "@/lib/localStore";
 import { messages } from "@/lib/i18n";
+import { dropDeviceReminder } from "@/lib/useReminders";
 import { OWNER_KEY, SYNCED_KEYS, SyncedEntries, isSyncedKey, planHydration } from "@/lib/cloudSync";
 
 const PUSH_DELAY_MS = 500;
@@ -63,6 +64,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
         writeLocal({});
         localStorage.removeItem(OWNER_KEY);
         refreshStores();
+        dropDeviceReminder().catch(() => {});
       }
       return;
     }
