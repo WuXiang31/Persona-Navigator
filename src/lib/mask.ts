@@ -149,11 +149,13 @@ export function legacyMask(role: string | null): Mask | null {
 
 // The language to write in, judged from the player's own words. Models tend to drift back to
 // English (or the persona's language), so a detected language is stated explicitly.
-export function writingLanguage(texts: (string | undefined)[]): string {
+// With no telling text, the app's UI language (`uiLang`) decides.
+export function writingLanguage(texts: (string | undefined)[], uiLang?: unknown): string {
   const joined = texts.filter(Boolean).join(" ");
   if (/[぀-ヿ]/.test(joined)) return "Japanese";
   if (/[가-힯]/.test(joined)) return "Korean";
   if (/[一-鿿]/.test(joined)) return "Simplified Chinese";
+  if (uiLang === "zh") return "Simplified Chinese";
   return "the language of the player's answers (English if unclear)";
 }
 

@@ -142,5 +142,8 @@ describe("writingLanguage", () => {
     expect(writingLanguage(["情報工学の学生"])).toBe("Japanese");
     expect(writingLanguage(["컴퓨터 공학"])).toBe("Korean");
     expect(writingLanguage(["3rd-year CS"])).toMatch(/English if unclear/);
+    // No telling text: the UI language decides
+    expect(writingLanguage(["", undefined], "zh")).toBe("Simplified Chinese");
+    expect(writingLanguage(["3rd-year CS"], "en")).toMatch(/English if unclear/);
   });
 });
