@@ -22,7 +22,7 @@ The visual style is angular red/black/white with halftone textures. All characte
 
 - **Accounts** (Clerk): sign up or log in with Google, an email code, or email and password before playing. Returning players skip the welcome and role screens and land straight on Status. The avatar button on Status opens account settings and sign-out, and **Change mask** picks a different role.
 
-Game data still lives in the browser's `localStorage`. Syncing it to your account (Neon Postgres) is the next step.
+- **Cloud save** (Neon Postgres): your stats, missions, role and chat follow your account, so you can pick up on any device. Progress saved in a browser before accounts existed is uploaded on your first sign-in. Signing out removes the game data from that browser.
 
 ## Getting started
 
@@ -70,6 +70,8 @@ COMPANION_PERSONA="You are ... (tone, style, how to address the user)"
 | `npm run lint` | ESLint |
 | `npm test` | Unit tests (Vitest), run once |
 | `npm run test:watch` | Unit tests in watch mode |
+| `npm run db:generate` | Generate a SQL migration after editing `src/db/schema.ts` |
+| `npm run db:migrate` | Apply pending migrations to the Neon database |
 
 GitHub Actions runs lint, type-check, tests and build on every push to `main` and on every pull request (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
@@ -95,10 +97,12 @@ src/
     (app)/missions/       Weather banner, active missions, archive
     (app)/chat/           AI navigator chat
     api/chat/route.ts     Gemini call: reply + proposed missions
+    api/state/route.ts    Load and save the signed-in user's game data
   proxy.ts                Route protection (Clerk): sign-in required outside the welcome/auth pages
   components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
-  context/                Profile (stats, XP, decay), Missions, Toasts
-  lib/                    Game rules and helpers (progression, weather, decay, retry, localStore)
+  context/                CloudSync (account save), Profile (stats, XP, decay), Missions, Toasts
+  db/                     Drizzle schema and Postgres connection
+  lib/                    Game rules and helpers (progression, weather, decay, retry, localStore, cloudSync)
                           with unit tests next to them (*.test.ts)
 docs/TECHNICAL_OVERVIEW.md  Architecture, data model and game formulas
 design/handoff/             High-fidelity design reference (HTML prototypes, screenshots, videos)
@@ -113,4 +117,4 @@ archive/flutter_legacy/     Previous Flutter implementation, kept for reference 
 
 ## Tech stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Clerk · Vitest · Gemini API · Open-Meteo
+Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Clerk · Neon Postgres + Drizzle · Vitest · Gemini API · Open-Meteo
