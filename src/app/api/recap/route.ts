@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     if (!isRecap(body?.recap)) return NextResponse.json({ error: "A recap is required" }, { status: 400 });
     const profile = sanitizeProfile(body.profile);
     const recap: Recap = body.recap;
-    const language = writingLanguage([...profileTexts(profile), recap.mask?.name, recap.mask?.identity]);
+    const language = writingLanguage([...profileTexts(profile), recap.mask?.name, recap.mask?.identity], body.lang);
 
     const result = await generateJson({
       system: `${companionPersona()}\n\n${RECAP_PROMPT}\n\nWrite the summary in ${language}. Refer to the mask by its exact name.`,

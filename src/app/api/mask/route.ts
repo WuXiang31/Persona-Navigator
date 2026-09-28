@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     if (!profile) return NextResponse.json({ error: "A valid profile is required" }, { status: 400 });
 
     const result = await generateJson({
-      system: `${MASK_PROMPT}\nLanguage: ${writingLanguage(profileTexts(profile))}.`,
+      system: `${MASK_PROMPT}\nLanguage: ${writingLanguage(profileTexts(profile), body?.lang)}.`,
       contents: [{ role: "user", parts: [{ text: describeProfile(profile) }] }],
       schema: RESPONSE_SCHEMA,
       temperature: 0.9,

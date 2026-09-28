@@ -2,11 +2,12 @@
 
 import React, { createContext, useContext, useEffect } from "react";
 import { useToast } from "./ToastContext";
-import { clampStat, getRankIndex, getRankName } from "@/lib/progression";
+import { clampStat, getRankIndex } from "@/lib/progression";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 import { DecayState, applyDecay, initialDecayState, todayKey } from "@/lib/decay";
 import { Mask, PlayerProfile, legacyMask } from "@/lib/mask";
 import { Chapter, Recap, XpEvent, planRollover, pruneLog } from "@/lib/chapter";
+import { messages } from "@/lib/i18n";
 
 export type RoleType = "scholar" | "professional" | "creative" | "athlete" | "explorer" | null;
 
@@ -117,7 +118,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       statsStore.set(decayed);
       const t = Date.now();
       logEvents(lost.map(([stat, xp]) => ({ t, stat: stat as keyof Stats, xp: -xp, kind: "decay" })));
-      showToast(`Getting rusty: ${lost.map(([stat, xp]) => `${stat} -${xp}`).join(", ")}`, "info", 1200);
+      const copy = messages();
+      showToast(copy.toast.rusty(lost.map(([stat, xp]) => `${copy.stat[stat as keyof Stats]} -${xp}`).join(", ")), "info", 1200);
     }
   }, [showToast]);
 
@@ -141,9 +143,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    if (!quiet) showToast(`${applied > 0 ? "+" : ""}${applied} XP ${stat}`, "xp");
+    const t = messages();
+    if (!quiet) showToast(t.toast.xp(applied, t.stat[stat]), "xp");
     if (getRankIndex(nextValue) > getRankIndex(prev[stat])) {
-      showToast(`Rank up! ${stat} → ${getRankName(nextValue)}`, "rank", 900);
+      showToast(t.toast.rankUp(t.stat[stat], t.rank[getRankIndex(nextValue)]), "rank", 900);
     }
     return applied;
   };

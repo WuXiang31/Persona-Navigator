@@ -117,6 +117,13 @@
   color: var(--color-text-main);
 }
 
+.lang {
+  position: absolute;
+  top: 24px;
+  right: 22px;
+  z-index: 2;
+}
+
 .footer {
   position: absolute;
   bottom: 46px;

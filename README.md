@@ -26,6 +26,7 @@ The visual style is angular red/black/white with halftone textures. All characte
   - Chat history persists across reloads.
   - When Gemini is overloaded, the request is retried automatically and then falls back to a lighter model.
 
+- **English and Chinese UI**: follows the device language, with a 中文 / EN switch on the welcome and Status screens. Clerk's sign-in screens switch too, and the AI writes masks and recaps in the player's language.
 - **Accounts** (Clerk): sign up or log in with Google, an email code, or email and password before playing. Returning players skip onboarding and land straight on Status. The avatar button on Status opens account settings and sign-out, and **Change mask** re-runs the Awakening.
 
 - **Cloud save** (Neon Postgres): your stats, missions, profile, mask, chapters and chat follow your account, so you can pick up on any device. Progress saved in a browser before accounts existed is uploaded on your first sign-in. Signing out removes the game data from that browser.
@@ -113,7 +114,7 @@ src/
   components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
   context/                CloudSync (account save), Profile (stats, XP, decay), Missions, Toasts
   db/                     Drizzle schema and Postgres connection
-  lib/                    Game rules and helpers (progression, weather, mask, chapter, decay, gemini, prompts, retry, localStore, cloudSync)
+  lib/                    Game rules and helpers (progression, weather, mask, chapter, i18n, decay, gemini, prompts, retry, localStore, cloudSync)
                           with unit tests next to them (*.test.ts)
 docs/TECHNICAL_OVERVIEW.md  Architecture, data model and game formulas
 design/handoff/             High-fidelity design reference (HTML prototypes, screenshots, videos)

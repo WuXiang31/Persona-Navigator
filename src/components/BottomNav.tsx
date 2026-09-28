@@ -4,15 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import styles from "./BottomNav.module.css";
+import { useT } from "@/lib/i18n";
 
 const NAV_ITEMS = [
-  { path: "/home", label: "HOME" },
-  { path: "/missions", label: "MISSIONS" },
-  { path: "/chat", label: "CHAT" },
-];
+  { path: "/home", key: "home" },
+  { path: "/missions", key: "missions" },
+  { path: "/chat", key: "chat" },
+] as const;
 
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav className={styles.navContainer}>
@@ -35,7 +37,7 @@ export function BottomNav() {
               />
             )}
             <span className={`${styles.navButton} ${isActive ? styles.activeText : styles.inactiveText}`}>
-              {item.label}
+              {t.nav[item.key]}
             </span>
           </Link>
         );

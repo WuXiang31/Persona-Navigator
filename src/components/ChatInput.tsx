@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styles from "./ChatInput.module.css";
+import { useT } from "@/lib/i18n";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
@@ -9,6 +10,7 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   const [text, setText] = useState("");
+  const t = useT();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,13 +25,13 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
       <input
         type="text"
         className={styles.input}
-        placeholder="Type a message..."
-        aria-label="Message"
+        placeholder={t.chat.placeholder}
+        aria-label={t.chat.placeholder}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
       <button type="submit" className={styles.sendBtn} disabled={!text.trim() || disabled}>
-        SEND
+        {t.chat.send}
       </button>
     </form>
   );

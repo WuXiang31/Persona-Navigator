@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { onStoreWrite, refreshStores } from "@/lib/localStore";
+import { messages } from "@/lib/i18n";
 import { OWNER_KEY, SYNCED_KEYS, SyncedEntries, isSyncedKey, planHydration } from "@/lib/cloudSync";
 
 const PUSH_DELAY_MS = 500;
@@ -152,12 +153,12 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
     return (
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, textAlign: "center" }}>
         <div>
-          <p style={{ fontWeight: 800, letterSpacing: 1, marginBottom: 16 }}>COULDN&apos;T REACH YOUR SAVE DATA.</p>
+          <p style={{ fontWeight: 800, letterSpacing: 1, marginBottom: 16 }}>{messages().sync.failed}</p>
           <button
             onClick={() => setAttempt((n) => n + 1)}
             style={{ background: "var(--color-primary-red)", color: "#fff", padding: "10px 24px", fontWeight: 900 }}
           >
-            RETRY
+            {messages().sync.retry}
           </button>
         </div>
       </main>

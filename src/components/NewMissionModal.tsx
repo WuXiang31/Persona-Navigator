@@ -4,6 +4,7 @@ import { OverlayPanel } from "./OverlayPanel";
 import { Mission } from "@/context/MissionContext";
 import { Stats } from "@/context/ProfileContext";
 import { STATS_ORDER, STAT_GLYPHS } from "@/lib/progression";
+import { useT } from "@/lib/i18n";
 
 interface NewMissionModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ const DEFAULT_XP = 25;
 
 export function NewMissionModal({ isOpen, onClose, onSave }: NewMissionModalProps) {
   const [title, setTitle] = useState("");
+  const t = useT();
   const [rewardStat, setRewardStat] = useState<keyof Stats>(DEFAULT_STAT);
   const [rewardXp, setRewardXp] = useState(DEFAULT_XP);
 
@@ -34,19 +36,19 @@ export function NewMissionModal({ isOpen, onClose, onSave }: NewMissionModalProp
   };
 
   return (
-    <OverlayPanel isOpen={isOpen} onClose={close} title="New mission" subtitle="NAME IT. PICK A STAT. SET REWARD.">
+    <OverlayPanel isOpen={isOpen} onClose={close} title={t.newMission.title} subtitle={t.newMission.subtitle}>
       <form onSubmit={handleSubmit}>
         <input
           className={styles.nameInput}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="MISSION NAME..."
-          aria-label="Mission name"
+          placeholder={t.newMission.namePlaceholder}
+          aria-label={t.newMission.namePlaceholder}
           autoFocus
         />
 
-        <div className={styles.label}>TARGET STAT</div>
-        <div className={styles.statPicks} role="radiogroup" aria-label="Target stat">
+        <div className={styles.label}>{t.newMission.targetStat}</div>
+        <div className={styles.statPicks} role="radiogroup" aria-label={t.newMission.targetStat}>
           {STATS_ORDER.map((stat) => (
             <button
               key={stat}
@@ -57,13 +59,13 @@ export function NewMissionModal({ isOpen, onClose, onSave }: NewMissionModalProp
               onClick={() => setRewardStat(stat)}
             >
               <span>{STAT_GLYPHS[stat]}</span>
-              <span>{stat}</span>
+              <span>{t.stat[stat]}</span>
             </button>
           ))}
         </div>
 
         <label className={styles.label} htmlFor="new-mission-xp">
-          XP REWARD &mdash; {rewardXp}
+          {t.newMission.xpReward(rewardXp)}
         </label>
         <input
           id="new-mission-xp"
@@ -78,10 +80,10 @@ export function NewMissionModal({ isOpen, onClose, onSave }: NewMissionModalProp
 
         <div className={styles.actions}>
           <button type="button" className={styles.cancelBtn} onClick={close}>
-            CANCEL
+            {t.newMission.cancel}
           </button>
           <button type="submit" className={styles.submitBtn} disabled={!title.trim()}>
-            ADD MISSION
+            {t.newMission.add}
           </button>
         </div>
       </form>

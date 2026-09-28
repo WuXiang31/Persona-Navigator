@@ -50,6 +50,7 @@ Every persisted value goes through `createLocalStore` in `src/lib/localStore.ts`
 | `persona_chapter` | `Chapter` | `ProfileContext` | The month being played: number, start day, stats at the start |
 | `persona_recaps` | `Recap[]` | `ProfileContext` | Finished chapters, newest first (max 24), with the navigator's summary once written |
 | `persona_weather` | `{ condition, fetchedAt }` | `useWeather` | `condition` is `null` when location or the API is unavailable. Per device, not synced. |
+| `persona_lang` | `"en" \| "zh"` | `i18n.ts` | UI language chosen with the switch; absent = follow the device. Per device, not synced. |
 | `persona_owner` | Clerk user ID | `CloudSyncProvider` | Which account the local game state belongs to. Not synced. |
 
 ### Cloud sync
@@ -71,6 +72,16 @@ Each account's save lives in Neon Postgres. The browser keeps working on `localS
 - **Conflicts**: last write wins per key. Playing on two devices at the same moment can overwrite one side's change.
 - **Load failure**: a RETRY screen is shown instead of the app, so an empty local state is never pushed over the cloud copy.
 - **Migrations** (Drizzle Kit, `drizzle/`): edit `src/db/schema.ts`, run `npm run db:generate`, commit the SQL, then run `npm run db:migrate`. `drizzle.config.ts` uses `DATABASE_URL_UNPOOLED`, because migrations need a direct connection.
+
+## Languages (`src/lib/i18n.ts`)
+
+- **Messages**: one `en` object holds all UI copy (strings, plus functions for interpolated text such as `chapterDay(n, day, days)`); `zh` is typed `Messages = typeof en`, so a missing key is a type error. `i18n.test.ts` also compares every leaf key (including the `Record` maps for questionnaire options) and checks every option and rank is covered.
+- **Choosing**: `persona_lang` if set, else the device (`navigator.languages` starting with `zh` -> Chinese). Server render and hydration always use English, and `useIsClient` switches to the device language right after, so there is no hydration mismatch.
+- **Reading**: components call `useT()` (and `useLang()` for date locales); code outside render (toasts in callbacks and effects) calls `messages()`, which reads the language at call time.
+- **Switch**: `LangToggle` on the welcome and Status screens.
+- **Clerk**: `ClerkProvider` lives in the client component `AuthProvider`, which passes `zhCN` from `@clerk/localizations` and sets `<html lang>`.
+- **Game terms in Chinese**: stats 知识 / 体魄 / 魅力 / 技艺 / 胆识; ranks 新手 / 学徒 / 熟练 / 专家 / 大师. Ranks in recaps are stored by English name and shown via `RANK_NAMES` index.
+- **AI output**: the awakening and recap pages send `lang`, and `writingLanguage` uses it when the player's own words don't reveal a language. Chat already replies in the language the user writes in.
 
 ## Game rules
 
