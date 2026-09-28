@@ -35,6 +35,12 @@
   text-transform: uppercase;
 }
 
+.allChapters {
+  margin-left: 14px;
+  color: var(--color-text-main);
+  text-decoration: underline;
+}
+
 .maskCard {
   margin-top: 24px;
   padding: 16px 20px;

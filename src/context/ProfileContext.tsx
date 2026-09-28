@@ -39,6 +39,8 @@ interface ProfileContextType {
   // The month being played, and recaps of finished months (newest first)
   chapter: Chapter | null;
   recaps: Recap[];
+  // XP changes of the last few months, for chapter statistics
+  log: XpEvent[];
   updateRecap: (month: string, changes: Partial<Recap>) => void;
   isLoaded: boolean;
 }
@@ -82,6 +84,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const personalMask = useLocalStore(maskStore);
   const chapter = useLocalStore(chapterStore);
   const recaps = useLocalStore(recapsStore);
+  const log = useLocalStore(logStore);
   const mask = personalMask ?? legacyMask(role);
   const isLoaded = useIsClient();
   const { showToast } = useToast();
@@ -160,6 +163,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         unlogMission: (missionId) => logStore.set((log) => log.filter((e) => e.missionId !== missionId)),
         chapter,
         recaps,
+        log,
         updateRecap: (month, changes) =>
           recapsStore.set((list) => list.map((r) => (r.month === month ? { ...r, ...changes } : r))),
         isLoaded,

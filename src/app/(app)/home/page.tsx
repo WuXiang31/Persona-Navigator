@@ -176,11 +176,9 @@ function ChapterLine({ chapter, latestRecap }: { chapter: Chapter | null; latest
     <p className={styles.chapterLine}>
       CHAPTER {chapter.number} &middot; DAY {now.getDate()}/{daysInMonth}
       {isLastDayOfMonth(now) && <strong> &middot; ENDS TONIGHT</strong>}
-      {latestRecap && (
-        <Link href={`/recap/${latestRecap.month}`} className={styles.pastRecap}>
-          LAST RECAP &gt;
-        </Link>
-      )}
+      <Link href="/chapters" className={styles.pastRecap}>
+        ALL CHAPTERS &gt;
+      </Link>
     </p>
   );
 }

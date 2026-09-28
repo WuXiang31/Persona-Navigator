@@ -198,3 +198,15 @@ export function planRollover(
     chapter: { month, number: current.number + 1, startedOn: `${month}-01`, startStats: stats },
   };
 }
+
+// "August 2026"
+export function monthLabel(month: MonthKey): string {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("en", { month: "long", year: "numeric" });
+}
+
+// "Aug 31"
+export function dayLabel(key: string): string {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en", { month: "short", day: "numeric" });
+}

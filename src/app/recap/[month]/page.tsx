@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useProfile } from "@/context/ProfileContext";
 import { MAX_STAT, STAT_GLYPHS } from "@/lib/progression";
 import { COMPANION_NAME } from "@/lib/companion";
-import type { Recap, TimeOfDay } from "@/lib/chapter";
+import { Recap, TimeOfDay, dayLabel, monthLabel } from "@/lib/chapter";
 import styles from "./page.module.css";
 
 const TIME_LABELS: Record<TimeOfDay, string> = {
@@ -14,14 +15,6 @@ const TIME_LABELS: Record<TimeOfDay, string> = {
   afternoon: "Afternoon",
   evening: "Evening",
   night: "Night",
-};
-
-const formatDay = (key: string) =>
-  new Date(`${key}T12:00:00`).toLocaleDateString("en", { month: "short", day: "numeric" });
-
-const monthName = (month: string) => {
-  const [y, m] = month.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("en", { month: "long", year: "numeric" });
 };
 
 export default function RecapPage() {
@@ -72,9 +65,12 @@ export default function RecapPage() {
     <main className={styles.container}>
       <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
         <p className={styles.kicker}>CHAPTER {recap.number} CLEAR</p>
-        <h1 className={styles.title}>{monthName(recap.month)}</h1>
+        <h1 className={styles.title}>{monthLabel(recap.month)}</h1>
         <p className={styles.dates}>
-          {formatDay(recap.startedOn)} – {formatDay(recap.endedOn)}
+          {dayLabel(recap.startedOn)} – {dayLabel(recap.endedOn)}
+          <Link href="/chapters" className={styles.allChapters}>
+            ALL CHAPTERS &gt;
+          </Link>
         </p>
       </motion.div>
 
