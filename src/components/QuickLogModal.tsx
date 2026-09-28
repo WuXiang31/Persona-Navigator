@@ -13,7 +13,7 @@ export function QuickLogModal({ isOpen, onClose }: QuickLogModalProps) {
   const { addXp } = useProfile();
 
   const handleLog = (stat: keyof Stats) => {
-    addXp(stat, QUICK_LOG_XP);
+    addXp(stat, QUICK_LOG_XP, { event: { kind: "quicklog" } });
     onClose();
   };
 

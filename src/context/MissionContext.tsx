@@ -4,6 +4,7 @@ import React, { createContext, useContext } from "react";
 import { Stats, useProfile } from "./ProfileContext";
 import { createLocalStore, useIsClient, useLocalStore } from "@/lib/localStore";
 import { missionXp } from "@/lib/mask";
+import { isBoosted } from "@/lib/weather";
 import { useToast } from "./ToastContext";
 import { getWeatherCondition } from "@/lib/useWeather";
 
@@ -19,6 +20,8 @@ export interface Mission {
   createdAt: number;
   // XP actually granted on completion (includes the weather bonus, capped at the stat maximum)
   awardedXp?: number;
+  // Added from the mask's routines
+  routine?: boolean;
 }
 
 interface MissionContextType {
@@ -39,7 +42,7 @@ const MissionContext = createContext<MissionContextType | undefined>(undefined);
 export function MissionProvider({ children }: { children: React.ReactNode }) {
   const missions = useLocalStore(missionsStore);
   const isLoaded = useIsClient();
-  const { addXp, mask, hasPersonalMask } = useProfile();
+  const { addXp, unlogMission, mask, hasPersonalMask } = useProfile();
   const { showToast } = useToast();
 
   const addMission = (missionData: Omit<Mission, "id" | "status" | "createdAt">) => {
@@ -56,8 +59,18 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     const mission = missionsStore.get().find((m) => m.id === id);
     if (!mission || mission.status === "completed") return;
 
-    const xp = missionXp(mission.rewardXp, mission.rewardStat, getWeatherCondition(), mask);
-    const awardedXp = addXp(mission.rewardStat, xp, options);
+    const weather = getWeatherCondition();
+    const xp = missionXp(mission.rewardXp, mission.rewardStat, weather, mask);
+    const awardedXp = addXp(mission.rewardStat, xp, {
+      ...options,
+      event: {
+        kind: "mission",
+        missionId: mission.id,
+        title: mission.title,
+        routine: mission.routine,
+        weather: isBoosted(weather, mission.rewardStat),
+      },
+    });
     missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "completed", awardedXp } : m)));
     // Each finished mission is a vote for the identity the player chose
     if (hasPersonalMask && mask && !options?.quiet) showToast(`A vote for ${mask.name}`, "info", 500);
@@ -68,6 +81,7 @@ export function MissionProvider({ children }: { children: React.ReactNode }) {
     if (!mission || mission.status === "active") return;
 
     addXp(mission.rewardStat, -(mission.awardedXp ?? mission.rewardXp));
+    unlogMission(mission.id);
     missionsStore.set((prev) => prev.map((m) => (m.id === id ? { ...m, status: "active", awardedXp: undefined } : m)));
   };
 
