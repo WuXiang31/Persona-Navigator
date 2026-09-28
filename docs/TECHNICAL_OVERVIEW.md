@@ -118,7 +118,8 @@ A chapter is one calendar month. When it ends, the player gets a recap and closi
 - **Rollover** (`planRollover`, run on mount in `ProfileProvider`, before decay): with no chapter, start chapter 1 today; in a new month, close the old chapter with `buildRecap` and start the next one on the 1st with the current stats as its starting point. The recap therefore appears the first time the app is opened in a new month. A player's first chapter starts the day chapters first ran.
 - **Recap** (`buildRecap`, pure): per-stat start/end/gained/decay lost/rank change, missions cleared (and how many were routines), Quick Logs, active days, longest daily streak, top 3 repeated missions, routines never done, most improved and least trained stat, missions per time of day (morning 5-12, afternoon 12-17, evening 17-22, night 22-5) and the favorite one, weather-boosted count, and a snapshot of the mask.
 - **Recap page** (`src/app/recap/[month]/`, full screen, no bottom nav): opening it marks it seen; the first time, it calls `/api/recap` and saves the summary into the recap. RE-AWAKEN goes to `/awakening`, NEXT CHAPTER to `/home`.
-- **Status**: an unread recap shows a "Chapter N clear · View your recap" banner; otherwise "Chapter N · Day d/D" (plus "Ends tonight" on the last day) and a link to the last recap.
+- **Status**: an unread recap shows a "Chapter N clear · View your recap" banner; otherwise "Chapter N · Day d/D" (plus "Ends tonight" on the last day) and an "All chapters" link.
+- **Chapters page** (`src/app/(app)/chapters/`): the chapter in progress, summarized so far by running `buildRecap` on the current month (votes, active days, best streak), then every finished chapter, newest first, as a card (month, mask, dates, votes, streak, most improved stat, rank-ups, a NEW tag while unread, and the first lines of the navigator's words). Cards open `/recap/[month]`, which links back with "All chapters".
 
 ### Weather bonus (`weather.ts`, `useWeather.ts`)
 
@@ -231,6 +232,5 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 
 ## Roadmap
 
-- A history page listing all past recaps.
-- Squad (friends) features.
+- Squad (friends) features, and sharing a recap as an image.
 - The desktop three-pane layout from the design handoff.

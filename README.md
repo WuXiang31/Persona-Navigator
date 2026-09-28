@@ -19,7 +19,7 @@ The visual style is angular red/black/white with halftone textures. All characte
 - **Quick Log**: give +15 XP to a stat you just worked on.
 - **Weather bonus**: missions for today's weather stat give ×1.5 XP (×1.875 if it is also a focus stat). Weather comes from your location via [Open-Meteo](https://open-meteo.com/), which needs no API key.
 - **Stat decay**: a stat that hasn't gained XP for 3 days loses 5 XP per extra day.
-- **Monthly chapters**: each calendar month is a chapter. The first time you open the app in a new month, last month's recap appears: growth per stat and rank-ups, missions cleared ("votes" for your mask), longest streak, active days, the time of day you usually show up, what you kept coming back to, routines still waiting, and warm closing words from your navigator. Status shows the chapter's day count and links to the last recap.
+- **Monthly chapters**: each calendar month is a chapter. The first time you open the app in a new month, last month's recap appears: growth per stat and rank-ups, missions cleared ("votes" for your mask), longest streak, active days, the time of day you usually show up, what you kept coming back to, routines still waiting, and warm closing words from your navigator. Status shows the chapter's day count, and the **Chapters** page shows the month in progress plus every past chapter.
 - **AI navigator chat** (Gemini):
   - Tell it your plans, and it proposes missions you can accept or pass.
   - It sees your profile, mask, stats, ranks, active missions and the weather, so it can suggest missions that fit you, preferring your routines.
@@ -99,6 +99,7 @@ src/
     page.tsx              Welcome screen (sign up / log in)
     sign-in/, sign-up/    Clerk auth pages
     awakening/            Questionnaire -> AI-forged personal mask (review, then equip)
+    (app)/chapters/       Chapter in progress + all past recaps
     recap/[month]/        Chapter recap for a finished month
     role-select/          Redirects to /awakening (the old five-role picker)
     (app)/home/           Status: radar chart, stat chips, active missions, Quick Log
