@@ -48,6 +48,8 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
   const [syncedFor, setSyncedFor] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // What the server holds right after loading, to catch writes made before the push listener starts
+  const serverSnapshot = useRef<SyncedEntries>({});
 
   // Load (or import) the account's state whenever the signed-in user changes
   useEffect(() => {
@@ -76,6 +78,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
       else if (plan.action === "import-local") await pushChanges(plan.entries);
       else writeLocal({});
       if (cancelled) return;
+      serverSnapshot.current = plan.action === "start-fresh" ? {} : plan.entries;
 
       localStorage.setItem(OWNER_KEY, userId);
       refreshStores();
@@ -117,6 +120,17 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
       pending.current[key] = localStorage.getItem(key);
       if (!timer.current) timer.current = setTimeout(flush, PUSH_DELAY_MS);
     });
+    // React runs child effects first, so the providers below may already have written on mount
+    // (monthly rollover, stat decay) before this listener existed. Push anything that differs
+    // from what was just loaded.
+    for (const key of SYNCED_KEYS) {
+      const raw = localStorage.getItem(key);
+      if (raw !== (serverSnapshot.current[key] ?? null)) pending.current[key] = raw;
+    }
+    if (Object.keys(pending.current).length > 0 && !timer.current) {
+      timer.current = setTimeout(flush, PUSH_DELAY_MS);
+    }
+
     // Send unsaved changes before the tab closes or goes to the background
     const onHide = () => flush(true);
     window.addEventListener("pagehide", onHide);
