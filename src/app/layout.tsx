@@ -5,6 +5,7 @@ import "./globals.css";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { MissionProvider } from "@/context/MissionContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { CloudSyncProvider } from "@/context/CloudSyncContext";
 
 const anybody = Anybody({
   variable: "--font-anybody",
@@ -58,9 +59,12 @@ export default function RootLayout({
           afterSignOutUrl="/"
         >
           <ToastProvider>
-            <ProfileProvider>
-              <MissionProvider>{children}</MissionProvider>
-            </ProfileProvider>
+            {/* Loads the account's saved game before the providers below read it */}
+            <CloudSyncProvider>
+              <ProfileProvider>
+                <MissionProvider>{children}</MissionProvider>
+              </ProfileProvider>
+            </CloudSyncProvider>
           </ToastProvider>
         </ClerkProvider>
       </body>

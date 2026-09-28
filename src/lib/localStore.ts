@@ -1,5 +1,19 @@
 import { useSyncExternalStore } from "react";
 
+// Hooks for the cloud sync layer: hear about every local write, and re-notify stores
+// after their keys were rewritten underneath them (e.g. hydrated from the server)
+const writeListeners = new Set<(key: string) => void>();
+const storeNotifiers = new Map<string, () => void>();
+
+export function onStoreWrite(listener: (key: string) => void): () => void {
+  writeListeners.add(listener);
+  return () => writeListeners.delete(listener);
+}
+
+export function refreshStores() {
+  storeNotifiers.forEach((notify) => notify());
+}
+
 // A value in localStorage (JSON-encoded by default) that components can subscribe to with useSyncExternalStore.
 // Reads are synchronous, so callers always act on the latest saved value.
 export function createLocalStore<T>(
@@ -33,7 +47,9 @@ export function createLocalStore<T>(
       localStorage.setItem(key, codec.stringify(next));
     }
     listeners.forEach((l) => l());
+    writeListeners.forEach((l) => l(key));
   };
+  storeNotifiers.set(key, () => listeners.forEach((l) => l()));
 
   const subscribe = (listener: () => void) => {
     listeners.add(listener);

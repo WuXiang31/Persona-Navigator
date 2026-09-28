@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createLocalStore } from "./localStore";
+import { createLocalStore, onStoreWrite, refreshStores } from "./localStore";
 
 beforeEach(() => localStorage.clear());
 
@@ -52,5 +52,26 @@ describe("createLocalStore", () => {
       stringify: (v) => v ?? "",
     });
     expect(store.get()).toBe("scholar");
+  });
+
+  it("reports every write to onStoreWrite listeners", () => {
+    const store = createLocalStore("k", 0);
+    const listener = vi.fn();
+    const unsubscribe = onStoreWrite(listener);
+    store.set(1);
+    store.set(null as unknown as number);
+    unsubscribe();
+    store.set(2);
+    expect(listener.mock.calls).toEqual([["k"], ["k"]]);
+  });
+
+  it("refreshStores re-notifies subscribers after localStorage is rewritten directly", () => {
+    const store = createLocalStore("k", 0);
+    const listener = vi.fn();
+    store.subscribe(listener);
+    localStorage.setItem("k", "5");
+    refreshStores();
+    expect(listener).toHaveBeenCalled();
+    expect(store.get()).toBe(5);
   });
 });
