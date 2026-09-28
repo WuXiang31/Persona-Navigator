@@ -5,6 +5,7 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { useLang, useT } from "@/lib/i18n";
 import { LangToggle } from "@/components/LangToggle";
+import { ReminderPanel } from "@/components/ReminderPanel";
 import { useProfile, Stats } from "@/context/ProfileContext";
 import { CaseFileCard } from "@/components/CaseFileCard";
 import { RadarChart } from "@/components/RadarChart";
@@ -27,6 +28,7 @@ export default function Home() {
   const [selectedStat, setSelectedStat] = useState<keyof Stats | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
 
   if (!isLoaded || !missionsLoaded) return null;
 
@@ -47,6 +49,11 @@ export default function Home() {
       {/* Red Header Panel */}
       <div className={`${styles.header} halftone-bg`}>
         <div className={styles.account}>
+          <button className={styles.bell} onClick={() => setIsReminderOpen(true)} aria-label={t.reminder.title}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M12 2a6 6 0 0 0-6 6v4.5L4 16v1h16v-1l-2-3.5V8a6 6 0 0 0-6-6zm0 20a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22z" />
+            </svg>
+          </button>
           <LangToggle />
           <UserButton />
         </div>
@@ -154,6 +161,7 @@ export default function Home() {
       </div>
 
       <QuickLogModal isOpen={isQuickLogOpen} onClose={() => setIsQuickLogOpen(false)} />
+      <ReminderPanel isOpen={isReminderOpen} onClose={() => setIsReminderOpen(false)} />
 
       <NewMissionModal
         isOpen={isModalOpen}

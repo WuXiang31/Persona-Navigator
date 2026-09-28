@@ -28,6 +28,22 @@
   gap: 12px;
 }
 
+.bell {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  transform: skewX(-8deg);
+  background: var(--color-black);
+  border: 2px solid var(--color-text-main);
+  color: var(--color-text-main);
+}
+
+.bell:hover {
+  background: var(--color-text-main);
+  color: var(--color-black);
+}
+
 .title {
   font-family: var(--font-anybody);
   font-weight: 900;
