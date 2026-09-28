@@ -20,7 +20,9 @@ The visual style is angular red/black/white with halftone textures. All characte
   - Chat history persists across reloads.
   - When Gemini is overloaded, the request is retried automatically and then falls back to a lighter model.
 
-All data lives in the browser's `localStorage`. There are no accounts or backend yet.
+- **Accounts** (Clerk): sign up or log in with Google, an email code, or email and password before playing. Returning players skip the welcome and role screens and land straight on Status. The avatar button on Status opens account settings and sign-out, and **Change mask** picks a different role.
+
+Game data still lives in the browser's `localStorage`. Syncing it to your account (Neon Postgres) is the next step.
 
 ## Getting started
 
@@ -28,7 +30,8 @@ Requirements: Node.js 22+ and a [Gemini API key](https://aistudio.google.com/api
 
 ```bash
 npm install
-touch .env.local   # then fill it in, see below
+npm i -g vercel && vercel link   # link to the Vercel project
+vercel env pull                  # writes Clerk + database keys to .env.local
 npm run dev
 ```
 
@@ -38,6 +41,11 @@ Open [http://localhost:3000](http://localhost:3000). Allow location access if yo
 
 ```bash
 GEMINI_API_KEY=your-key-here
+
+# Set by `vercel env pull` (from the Clerk and Neon integrations)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
+CLERK_SECRET_KEY=...
+DATABASE_URL=...
 
 # Optional: Gemini models (these are the defaults; set the fallback to "none" to disable it)
 GEMINI_MODEL=gemini-flash-latest
@@ -70,7 +78,8 @@ GitHub Actions runs lint, type-check, tests and build on every push to `main` an
 1. Sign in at [vercel.com](https://vercel.com) with GitHub and choose **Add New... > Project**.
 2. Import the `Persona-Navigator` repository. Vercel detects Next.js automatically, so keep the default build settings.
 3. Under **Environment Variables**, add `GEMINI_API_KEY`. Add the optional variables above only if you need them.
-4. Click **Deploy**. Every push to `main` redeploys automatically, and pull requests get preview URLs.
+4. Add Clerk and Neon from the Vercel Marketplace (`vercel integration add clerk`, `vercel integration add neon`). Their keys are added to every environment automatically. Turn on the sign-in methods (Google, email code, password) in the Clerk Dashboard.
+5. Click **Deploy**. Every push to `main` redeploys automatically, and pull requests get preview URLs.
 
 The site is served over HTTPS, which browsers require for location access (and therefore the weather bonus). A public deployment should keep the default Vesper companion; only set `NEXT_PUBLIC_COMPANION_NAME` / `COMPANION_PERSONA` for private use.
 
@@ -79,12 +88,14 @@ The site is served over HTTPS, which browsers require for location access (and t
 ```
 src/
   app/
-    page.tsx              Welcome screen
+    page.tsx              Welcome screen (sign up / log in)
+    sign-in/, sign-up/    Clerk auth pages
     role-select/          Choose a role
     (app)/home/           Status: radar chart, stat chips, active missions, Quick Log
     (app)/missions/       Weather banner, active missions, archive
     (app)/chat/           AI navigator chat
     api/chat/route.ts     Gemini call: reply + proposed missions
+  proxy.ts                Route protection (Clerk): sign-in required outside the welcome/auth pages
   components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
   context/                Profile (stats, XP, decay), Missions, Toasts
   lib/                    Game rules and helpers (progression, weather, decay, retry, localStore)
@@ -102,4 +113,4 @@ archive/flutter_legacy/     Previous Flutter implementation, kept for reference 
 
 ## Tech stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Vitest · Gemini API · Open-Meteo
+Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Clerk · Vitest · Gemini API · Open-Meteo

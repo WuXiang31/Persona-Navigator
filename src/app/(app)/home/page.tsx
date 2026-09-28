@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 import { useProfile, Stats } from "@/context/ProfileContext";
 import { CaseFileCard } from "@/components/CaseFileCard";
 import { RadarChart } from "@/components/RadarChart";
@@ -39,6 +41,9 @@ export default function Home() {
     <main className={styles.container}>
       {/* Red Header Panel */}
       <div className={`${styles.header} halftone-bg`}>
+        <div className={styles.account}>
+          <UserButton />
+        </div>
         <motion.h1
           className={styles.title}
           initial={{ opacity: 0, x: -20 }}
@@ -56,6 +61,9 @@ export default function Home() {
         >
           <div className={styles.speechBubble}>
             Looking sharp! Your {role ? role.toUpperCase() : "PERSONA"} mask is resonating with your actions. Keep pushing those limits!
+            <Link href="/role-select" className={styles.changeMask}>
+              CHANGE MASK &gt;
+            </Link>
           </div>
         </motion.div>
       </div>

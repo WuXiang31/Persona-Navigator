@@ -18,6 +18,12 @@
   z-index: 5;
 }
 
+.account {
+  position: absolute;
+  top: 40px;
+  right: 20px;
+}
+
 .title {
   font-family: var(--font-anybody);
   font-weight: 900;
@@ -42,6 +48,15 @@
   display: inline-block;
   max-width: 80%;
   box-shadow: 5px 5px 0 var(--color-black); /* Clip-path usually hides box-shadow, but we will add a wrapper shadow if needed */
+}
+
+.changeMask {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-red);
+  text-decoration: none;
 }
 
 /* To get a shadow on a clip-path element, we use a wrapper approach like CaseFileCard. For now, filter: drop-shadow works. */

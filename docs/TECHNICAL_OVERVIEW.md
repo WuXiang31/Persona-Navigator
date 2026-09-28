@@ -5,13 +5,17 @@ This is the source of truth for how Persona Navigator works. Update it whenever 
 ## Architecture
 
 - **Framework**: Next.js 16 App Router, React 19 and TypeScript. Pages under `src/app/(app)/` share a layout with the bottom nav.
-- **Client-side app state**: all game state lives in the browser's `localStorage`. There is no database or auth yet. The only server code is the chat Route Handler, which keeps the Gemini key off the client.
+- **Client-side app state**: all game state lives in the browser's `localStorage`. There is no database yet (a Neon Postgres store is provisioned on Vercel for the upcoming cloud sync). The only server code is the chat Route Handler, which keeps the Gemini key off the client.
+- **Accounts**: Clerk (see [Authentication](#authentication-clerk)). Every screen except the welcome and auth pages requires sign-in.
 - **External services**:
+  - Clerk (sign-up, sign-in, sessions), provisioned through the Vercel Marketplace.
   - Gemini (`generativelanguage.googleapis.com`), called from `src/app/api/chat/route.ts`.
   - Open-Meteo (`api.open-meteo.com`), called directly from the browser. No key needed.
 
 ```
+src/proxy.ts  clerkMiddleware: signed-out requests -> /sign-in (pages) or 401 (/api)
 Browser
+  ClerkProvider       session, <SignIn>/<SignUp>/<UserButton>
   ToastProvider
     ProfileProvider   role, stats, addXp, daily decay
       MissionProvider missions, complete/undo (weather-boosted XP)
@@ -88,6 +92,21 @@ Mission cards follow the design handoff:
 - New users, and users upgrading from a version without decay, start with every stat trained "today", so there is no retroactive penalty.
 - Losses are reported in one "Getting rusty" toast.
 
+## Authentication (Clerk)
+
+- **Setup**: Clerk was added with `vercel integration add clerk`, which sets `CLERK_SECRET_KEY` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` for Production, Preview and Development. Locally, `vercel env pull` writes them to `.env.local`. The build does not need the keys, so CI runs without them.
+- **Route protection** (`src/proxy.ts`, the Next.js 16 name for middleware):
+  - Public: `/`, `/sign-in/*`, `/sign-up/*`.
+  - Pages: signed-out visitors are redirected to `/sign-in?redirect_url=...`. The proxy passes `signInUrl`, so the redirect goes to our page, not Clerk's hosted portal.
+  - `/api/*`: signed-out calls get `401 { error: "Sign in required" }` instead of a redirect.
+- **Pages**: `src/app/sign-in/[[...sign-in]]` and `src/app/sign-up/[[...sign-up]]` render Clerk's `<SignIn>` / `<SignUp>` inside a shared frame (`src/app/auth.module.css`).
+- **Redirects** (props on `ClerkProvider` in `src/app/layout.tsx`): after sign-up -> `/role-select`, after sign-in -> `/home`, after sign-out -> `/`.
+- **Welcome screen**: signed-in players with a saved role are sent straight to `/home`. Otherwise BEGIN goes to `/sign-up` (signed out) or `/role-select` (signed in), and a LOG IN link is shown to signed-out visitors.
+- **Status screen**: `<UserButton>` in the header opens account settings and sign-out. "Change mask" links back to `/role-select`.
+- **Theme**: `appearance.variables` on `ClerkProvider` match the red/black/white tokens in `globals.css`.
+- **Sign-in methods** (Google, email code, email + password) are configured in the Clerk Dashboard, not in code.
+- **Known limitation**: game data is still in `localStorage`, so it belongs to the browser rather than the account. Two accounts on one browser see the same data until cloud sync lands.
+
 ## AI chat (`src/app/api/chat/route.ts`)
 
 **Request** (`POST /api/chat`)
@@ -141,6 +160,6 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 
 ## Roadmap
 
-- Accounts and cloud sync (Firebase was used in the Flutter version).
+- Cloud sync: move stats, missions, role and chat history from `localStorage` to Neon Postgres, keyed by Clerk user ID, and import existing browser data on first sign-in.
 - Squad (friends) features.
 - The desktop three-pane layout from the design handoff.

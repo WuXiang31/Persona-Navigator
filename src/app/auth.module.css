@@ -1,0 +1,9 @@
+/* Shared frame for the Clerk sign-in and sign-up screens */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background-color: var(--color-background);
+}
