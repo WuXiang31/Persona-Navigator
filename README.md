@@ -110,19 +110,21 @@ src/
     (app)/home/           Status: radar chart, stat chips, active missions, Quick Log
     (app)/missions/       Weather banner, active missions, archive
     (app)/chat/           AI navigator chat
-    api/chat/route.ts     Gemini call: reply + proposed missions
-    api/mask/route.ts     Gemini call: profile -> personal mask
-    api/recap/route.ts    Gemini call: recap numbers -> the navigator's closing words
-    api/push/             Reminder subscriptions and test sends; api/push/cron sends due reminders
-    manifest.ts           PWA manifest (home screen install)
-    api/state/route.ts    Load and save the signed-in user's game data
-    api/translate/route.ts Gemini call: the mask and missions -> the new UI language
+    api/chat/route.ts       Gemini call: reply + proposed missions
+    api/mask/route.ts       Gemini call: profile -> personal mask
+    api/recap/route.ts      Gemini call: recap numbers -> the navigator's closing words
+    api/translate/route.ts  Gemini call: the mask and missions -> the new UI language
+    api/state/route.ts      Load and save the signed-in user's game data
+    api/push/               Reminder subscriptions and test sends; api/push/cron sends due reminders
+    manifest.ts             PWA manifest (home screen install)
   proxy.ts                Route protection (Clerk): sign-in required outside the welcome/auth pages
-  components/             UI components (MissionCard, RadarChart, WeatherBanner, OverlayPanel, ...)
+  components/             UI components (MissionCard, RadarChart, ReminderPanel, ContentTranslator, ...)
   context/                CloudSync (account save), Profile (stats, XP, decay), Missions, Toasts
   db/                     Drizzle schema and Postgres connection
-  lib/                    Game rules and helpers (progression, weather, mask, chapter, i18n, messages, reminders, push, decay, gemini, prompts, retry, localStore, cloudSync)
+  lib/                    Game rules and helpers (progression, weather, mask, chapter, i18n, messages, contentTranslation, reminders, push, decay, gemini, prompts, retry, localStore, cloudSync)
                           with unit tests next to them (*.test.ts)
+public/                     Service worker (sw.js, shows reminders) and PWA icons
+vercel.json                 Hourly cron jobs for daily reminders
 docs/TECHNICAL_OVERVIEW.md  Architecture, data model and game formulas
 design/handoff/             High-fidelity design reference (HTML prototypes, screenshots, videos)
 design/brand/               App icon source (SVG/PNG) and exported iOS/macOS icon sets
@@ -136,4 +138,4 @@ archive/flutter_legacy/     Previous Flutter implementation, kept for reference 
 
 ## Tech stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Clerk · Neon Postgres + Drizzle · Vitest · Gemini API · Open-Meteo
+Next.js 16 (App Router) · React 19 · TypeScript · CSS Modules · framer-motion · Clerk · Neon Postgres + Drizzle · Web Push (PWA) · Vitest · Gemini API · Open-Meteo

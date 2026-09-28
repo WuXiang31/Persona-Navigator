@@ -5,11 +5,12 @@ This is the source of truth for how Persona Navigator works. Update it whenever 
 ## Architecture
 
 - **Framework**: Next.js 16 App Router, React 19 and TypeScript. Pages under `src/app/(app)/` share a layout with the bottom nav.
-- **App state**: the game runs on `localStorage` as a synchronous local cache, and each account's copy is synced to Neon Postgres (see [Cloud sync](#cloud-sync)). Server code is two Route Handlers: `/api/chat` (keeps the Gemini key off the client) and `/api/state` (save data).
+- **App state**: the game runs on `localStorage` as a synchronous local cache, and each account's copy is synced to Neon Postgres (see [Cloud sync](#cloud-sync)). Server code is Route Handlers: `/api/chat`, `/api/mask`, `/api/recap` and `/api/translate` call Gemini (keeping the key off the client), `/api/state` loads and saves the account's data, and `/api/push` plus `/api/push/cron` handle daily reminders.
 - **Accounts**: Clerk (see [Authentication](#authentication-clerk)). Every screen except the welcome and auth pages requires sign-in.
 - **External services**:
   - Clerk (sign-up, sign-in, sessions) and Neon Postgres (save data), both provisioned through the Vercel Marketplace.
-  - Gemini (`generativelanguage.googleapis.com`), called from `src/app/api/chat/route.ts`.
+  - Gemini (`generativelanguage.googleapis.com`), called from the chat, mask, recap and translate routes through `src/lib/gemini.ts`.
+  - Web Push: the browser's push service (FCM, Apple, Mozilla) delivers reminders sent with `web-push`; Vercel Cron triggers `/api/push/cron` hourly (see [Daily reminders](#daily-reminders-pwa--web-push)).
   - Open-Meteo (`api.open-meteo.com`), called directly from the browser. No key needed.
 
 ```
@@ -20,7 +21,10 @@ Browser
     CloudSyncProvider   load account save on sign-in, push local writes <---> /api/state <---> Neon
       ProfileProvider   role, profile, mask, stats, addXp, daily decay
         MissionProvider missions, complete/undo (weather-boosted XP)
-          pages ---- POST /api/chat ----> Gemini
+          ContentTranslator  on a language switch ---- POST /api/translate ----> Gemini
+          pages ---- POST /api/chat, /api/mask, /api/recap ----> Gemini
+  useReminders() ---- PUT /api/push (subscription) ----> Neon
+  Vercel Cron ---- /api/push/cron ----> web-push ----> the device's push service
   useWeather() ---- geolocation + fetch ----> Open-Meteo
 ```
 
@@ -241,8 +245,6 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
 
 ## Testing
 
-- **Reminders**: time-zone day/hour, the due window, once-a-day, and "played today" detection (`reminders.test.ts`).
-
 - **Unit tests**: Vitest (`npm test`). Test files sit next to the code as `src/lib/*.test.ts` and cover:
   - ranks and stat clamping
   - WMO code mapping and the weather bonus
@@ -253,6 +255,8 @@ Of the models listed for this key, `gemini-2.5-flash` and `gemini-2.5-flash-lite
   - cloud sync hydration rules (`planHydration`)
   - masks: `missionXp` (focus × weather, rounding), focus-stat, mask and profile sanitizing, legacy role presets, language detection
   - chapters: month helpers, streaks, time-of-day buckets, log pruning, every recap statistic, rollover
+  - reminders: time-zone day/hour, the due window, once-a-day, and "played today" detection (`reminders.test.ts`)
+  - i18n: every English key has a Chinese one, including option maps (`i18n.test.ts`)
   - content translation: what needs translating, applying and pairing translations, restoring originals (`contentTranslation.test.ts`)
 - **Environments**: tests run in Node by default. A file that needs the DOM opts in with a `/** @vitest-environment jsdom */` docblock. The `@/` alias comes from `resolve.tsconfigPaths` in `vitest.config.mts`.
 - **CI**: `.github/workflows/ci.yml` runs lint, `tsc --noEmit`, tests and build on pushes to `main` and on pull requests.
